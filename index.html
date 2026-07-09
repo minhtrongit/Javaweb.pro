@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
@@ -575,8 +578,21 @@ function closeModal(){
   document.getElementById('videoFrame').src="";
 }
 if ("serviceWorker" in navigator) {
+  // Khi SW mới chiếm quyền điều khiển (sau khi cập nhật), tự tải lại trang
+  // 1 lần để người dùng thấy ngay bản mới, không cần xoá cache/lịch sử.
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
+
   navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("✅ App Ready"))
+    .then((reg) => {
+      console.log("✅ App Ready");
+      // Chủ động kiểm tra bản cập nhật mỗi khi mở lại trang
+      reg.update();
+    })
     .catch(err => console.log("SW lỗi:", err));
 }
 </script>

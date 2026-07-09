@@ -2,6 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tạo mã QR từ Excel — Công cụ chuyển dữ liệu Excel thành mã QR hàng loạt</title>
 <meta name="description" content="Công cụ miễn phí chuyển dữ liệu từ một hoặc nhiều file Excel thành mã QR hàng loạt, chạy hoàn toàn trên trình duyệt, không tải dữ liệu lên máy chủ. Chọn nhiều file hoặc cả thư mục, chọn cột mã hoá, xuất ra 1 file Excel kèm ảnh QR.">
@@ -1565,6 +1568,19 @@
   }
 
 })();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register("sw.js")
+    .then((reg) => reg.update())
+    .catch(err => console.log("SW lỗi:", err));
+}
 </script>
 </body>
 </html>
