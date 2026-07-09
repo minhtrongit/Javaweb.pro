@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher Studio — Mã hoá &amp; Giải mã đa năng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D13;
+    --surface:#12161F;
+    --surface-2:#1A2029;
+    --surface-3:#212837;
+    --border:#252C3A;
+    --text:#E8EAEF;
+    --text-muted:#8892A6;
+    --text-faint:#5B6478;
+    --encode:#E8A33D;
+    --encode-dim:#3A2E1A;
+    --decode:#4FD1C5;
+    --decode-dim:#173330;
+    --danger:#E5626B;
+    --radius-lg:16px;
+    --radius-md:10px;
+    --radius-sm:6px;
+    --mono:'JetBrains Mono', monospace;
+    --display:'Sora', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, #1a2440 0%, transparent 60%),
+      radial-gradient(ellipse 700px 400px at 100% 0%, #241a35 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  ::selection{ background:var(--encode); color:#1a1204; }
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px clamp(20px,4vw,48px);
+    border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:50;
+    background:rgba(10,13,19,0.85);
+    backdrop-filter:blur(14px);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, var(--encode) 0%, var(--decode) 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:600; font-size:15px; color:#0A0D13;
+    flex-shrink:0;
+  }
+  .brand-text h1{
+    font-family:var(--display); font-size:17px; font-weight:700; letter-spacing:0.2px;
+  }
+  .brand-text p{ font-size:12px; color:var(--text-muted); font-family:var(--mono); margin-top:1px;}
+  .topbar-tag{
+    font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+    border:1px solid var(--border); padding:6px 12px; border-radius:100px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .topbar-tag .dot{ width:6px; height:6px; border-radius:50%; background:var(--decode); box-shadow:0 0 8px var(--decode); }
+
+  /* ---------- Layout ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:270px 1fr;
+    max-width:1400px;
+    margin:0 auto;
+    min-height:calc(100vh - 82px);
+  }
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    border-right:1px solid var(--border);
+    padding:28px 18px;
+    position:sticky; top:83px; align-self:start;
+    max-height:calc(100vh - 83px); overflow-y:auto;
+  }
+  .sidebar-group{ margin-bottom:26px; }
+  .sidebar-group-label{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--text-faint); padding:0 10px 10px;
+  }
+  .cipher-btn{
+    width:100%; text-align:left; background:none; border:1px solid transparent;
+    color:var(--text-muted); padding:9px 10px; border-radius:var(--radius-sm);
+    font-size:13.5px; font-weight:500; display:flex; align-items:center; justify-content:space-between;
+    transition:all .15s ease; margin-bottom:2px;
+  }
+  .cipher-btn:hover{ background:var(--surface-2); color:var(--text); }
+  .cipher-btn.active{
+    background:var(--surface-2); color:var(--text); border-color:var(--border);
+    box-shadow:inset 3px 0 0 var(--encode);
+  }
+  .cipher-btn .badge{
+    font-family:var(--mono); font-size:9.5px; color:var(--text-faint);
+    border:1px solid var(--border); padding:1px 6px; border-radius:4px;
+  }
+  .cipher-btn.active .badge{ color:var(--decode); border-color:var(--decode-dim); }
+
+  /* ---------- Main ---------- */
+  .main{ padding:32px clamp(18px,3.5vw,44px) 60px; }
+  .main-head{ margin-bottom:24px; }
+  .eyebrow{
+    font-family:var(--mono); font-size:11.5px; color:var(--encode); letter-spacing:1px;
+    text-transform:uppercase; margin-bottom:8px; display:block;
+  }
+  .main-head h2{ font-family:var(--display); font-size:26px; font-weight:700; margin-bottom:6px;}
+  .main-head p{ color:var(--text-muted); font-size:14px; max-width:600px; }
+
+  .hash-note{
+    margin-top:14px; display:flex; gap:10px; align-items:flex-start;
+    background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--danger);
+    padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; color:var(--text-muted);
+  }
+  .hash-note b{ color:var(--text); }
+
+  /* Source tabs */
+  .source-tabs{
+    display:inline-flex; background:var(--surface); border:1px solid var(--border);
+    border-radius:100px; padding:4px; margin-bottom:22px; gap:2px;
+  }
+  .source-tab{
+    background:none; border:none; padding:9px 18px; border-radius:100px;
+    font-size:13px; font-weight:600; color:var(--text-muted); transition:all .15s ease;
+  }
+  .source-tab.active{ background:var(--surface-3); color:var(--text); }
+
+  /* ---------- Convert panel ---------- */
+  .convert-grid{
+    display:grid; grid-template-columns:1fr auto 1fr; gap:0; align-items:stretch;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  @media (max-width:800px){ .convert-grid{ grid-template-columns:1fr; } .switch-col{ padding:14px 20px !important; flex-direction:row !important; } }
+
+  .panel{ display:flex; flex-direction:column; min-height:340px; }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--border);
+  }
+  .panel-title{ font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.5px; display:flex; align-items:center; gap:8px;}
+  .panel-title .pip{ width:7px; height:7px; border-radius:50%; }
+  .panel-in .pip{ background:var(--text-faint); }
+  .panel-out .pip{ background:var(--encode); box-shadow:0 0 8px var(--encode); }
+  .panel[data-mode="decode"] .panel-out .pip{ background:var(--decode); box-shadow:0 0 8px var(--decode); }
+  .panel-actions{ display:flex; gap:6px; }
+  .icon-btn{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-muted);
+    width:28px; height:28px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center;
+    font-size:13px; transition:all .15s ease;
+  }
+  .icon-btn:hover{ color:var(--text); border-color:var(--text-faint); }
+
+  textarea{
+    flex:1; background:transparent; border:none; outline:none; resize:none;
+    padding:18px; color:var(--text); font-family:var(--mono); font-size:13.5px; line-height:1.6;
+  }
+  textarea::placeholder{ color:var(--text-faint); }
+  textarea[readonly]{ color:#CFEFEC; }
+
+  .char-count{ padding:8px 18px; font-family:var(--mono); font-size:11px; color:var(--text-faint); border-top:1px solid var(--border);}
+
+  /* Signature switch column */
+  .switch-col{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px 14px; gap:16px; background:var(--surface-2);
+    border-left:1px solid var(--border); border-right:1px solid var(--border);
+  }
+  .flow-arrow{
+    font-family:var(--mono); font-size:18px; color:var(--text-faint);
+    transition:transform .35s cubic-bezier(.65,0,.35,1), color .3s ease;
+  }
+  .flow-arrow.decode{ transform:scaleX(-1); color:var(--decode); }
+  .flow-arrow.encode{ color:var(--encode); }
+
+  .mode-switch{
+    position:relative; width:64px; height:130px; background:var(--surface); border:1px solid var(--border);
+    border-radius:100px; cursor:pointer; display:flex; flex-direction:column; align-items:center;
+    justify-content:space-between; padding:8px 0; user-select:none;
+  }
+  .mode-switch.disabled{ opacity:0.4; cursor:not-allowed; }
+  .mode-switch .knob{
+    position:absolute; left:6px; width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(160deg, var(--encode), #b9791f);
+    top:6px;
+    transition:top .3s cubic-bezier(.65,0,.35,1), background .3s ease;
+    box-shadow:0 4px 14px rgba(232,163,61,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:10px; color:#1a1204;
+  }
+  .mode-switch[data-mode="decode"] .knob{
+    top:72px; background:linear-gradient(160deg, var(--decode), #2b9a8f);
+    color:#062521; box-shadow:0 4px 14px rgba(79,209,197,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .mode-switch .lbl{
+    font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--text-faint); z-index:1;
+  }
+
+  .shift-control{
+    display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:4px;
+  }
+  .shift-control label{ font-family:var(--mono); font-size:10px; color:var(--text-faint); letter-spacing:0.5px;}
+  .shift-control input{
+    width:56px; text-align:center; background:var(--surface); border:1px solid var(--border);
+    color:var(--text); border-radius:var(--radius-sm); padding:6px 4px; font-family:var(--mono); font-size:13px;
+  }
+
+  /* ---------- Excel mode ---------- */
+  .excel-wrap{ display:none; }
+  .excel-wrap.active{ display:block; }
+  .convert-grid.excel-active{ display:none; }
+
+  .dropzone{
+    border:2px dashed var(--border); border-radius:var(--radius-lg); padding:44px 20px;
+    text-align:center; background:var(--surface); transition:all .2s ease; cursor:pointer;
+  }
+  .dropzone:hover, .dropzone.dragover{ border-color:var(--encode); background:var(--surface-2); }
+  .dropzone .icon{ font-size:30px; margin-bottom:12px; }
+  .dropzone h3{ font-family:var(--display); font-size:16px; margin-bottom:6px; }
+  .dropzone p{ font-size:13px; color:var(--text-muted); }
+  .dropzone input{ display:none; }
+
+  .excel-controls{
+    display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin:18px 0;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px;
+  }
+  .excel-controls .field{ display:flex; flex-direction:column; gap:5px; }
+  .excel-controls label{ font-family:var(--mono); font-size:10.5px; color:var(--text-faint); letter-spacing:0.5px;}
+  .excel-controls select, .excel-controls input[type=number]{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    border-radius:var(--radius-sm); padding:8px 10px; font-size:13px; font-family:var(--mono);
+  }
+  .check-field{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-muted); }
+
+  .btn{
+    font-weight:600; font-size:13px; padding:9px 18px; border-radius:100px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); transition:all .15s ease; display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn:hover{ border-color:var(--text-faint); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--encode), #cf8a2c); color:#1a1204; border:none;
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; filter:none; }
+  .btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+
+  .table-wrap{
+    margin-top:18px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;
+    max-height:420px; overflow-y:auto;
+  }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; font-family:var(--mono);}
+  thead th{
+    position:sticky; top:0; background:var(--surface-3); text-align:left; padding:10px 14px;
+    font-size:10.5px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-faint); border-bottom:1px solid var(--border);
+  }
+  tbody td{ padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:top; word-break:break-word; }
+  tbody td.result-col{ color:#CFEFEC; }
+  tbody tr:hover{ background:var(--surface-2); }
+  tbody td.err{ color:var(--danger); }
+
+  .excel-footbar{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; flex-wrap:wrap; gap:10px;}
+  .file-chip{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted);
+    background:var(--surface); border:1px solid var(--border); padding:7px 12px; border-radius:100px;
+  }
+  .file-chip b{ color:var(--text); font-weight:600; }
+  .file-chip .rm{ color:var(--danger); cursor:pointer; font-weight:700; margin-left:4px; }
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--surface-3); border:1px solid var(--border); padding:11px 20px; border-radius:100px;
+    font-size:13px; font-weight:500; opacity:0; pointer-events:none; transition:all .25s ease; z-index:100;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast .pip{ width:7px; height:7px; border-radius:50%; background:var(--decode); }
+
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:100px; border:2px solid var(--surface); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+
+  :focus-visible{ outline:2px solid var(--decode); outline-offset:2px; }
+
+  /* ---------- Mobile overrides (kept last so it always wins the cascade) ---------- */
+  @media (max-width:900px){
+    .shell{ grid-template-columns:1fr; }
+    .sidebar{
+      border-right:none; border-bottom:1px solid var(--border);
+      position:static !important; top:auto; max-height:none; overflow-y:visible;
+      padding:18px 16px;
+    }
+    .sidebar-group{ margin-bottom:16px; }
+    .topbar{ padding:16px 18px; }
+    .topbar-tag{ display:none; }
+    .switch-col{ padding:14px 20px; flex-direction:row; }
+    .convert-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">IT</div>
+    <div class="brand-text">
+      <h1>Cipher Studio</h1>
+      <p>javaweb.pro — mã hoá &amp; giải mã đa năng</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:22px;">
+    <nav style="display:flex;gap:18px;font-family:var(--body);font-size:14px;">
+      <a href="index.html" style="color:var(--text-muted);text-decoration:none;">Trang chủ</a>
+      <a href="mahoa.html" style="color:var(--text);text-decoration:none;font-weight:600;">Mã hóa</a>
+      <a href="scanqr.html" style="color:var(--text-muted);text-decoration:none;">Scan QR</a>
+    </nav>
+    <div class="topbar-tag"><span class="dot"></span> Chạy hoàn toàn trên trình duyệt — không gửi dữ liệu đi đâu cả</div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div class="main-head">
+      <span class="eyebrow">Bảng mã đang chọn</span>
+      <h2 id="cipherTitle">Base64</h2>
+      <p id="cipherDesc">Mã hoá dữ liệu nhị phân/văn bản thành chuỗi ký tự an toàn để truyền tải qua web, email, URL.</p>
+      <div class="hash-note" id="hashNote" style="display:none;">
+        <span>⚠️</span>
+        <div><b>Hàm băm một chiều:</b> không thể giải mã ngược lại giá trị gốc. Công cụ chỉ cung cấp chức năng mã hoá (băm) cho loại này.</div>
+      </div>
+    </div>
+
+    <div class="source-tabs">
+      <button class="source-tab active" data-source="text">✍️ Nhập trực tiếp</button>
+      <button class="source-tab" data-source="excel">📊 Từ file Excel</button>
+    </div>
+
+    <!-- ---------- TEXT MODE ---------- -->
+    <section id="textMode">
+      <div class="convert-grid">
+        <div class="panel panel-in">
+          <div class="panel-head">
+            <div class="panel-title"><span class="pip"></span> ĐẦU VÀO</div>
+            <div class="panel-actions">
+              <button class="icon-btn" id="clearInBtn" title="Xoá">✕</button>
+              <button class="icon-btn" id="pasteBtn" title="Dán từ clipboard">📋</button>
+            </div>
+          </div>
+          <textarea id="inputText" placeholder="Nhập hoặc dán văn bản vào đây..." spellcheck="false"></textarea>
+          <div class="char-count" id="inCount">0 ký tự</div>
+        </div>
+
+        <div class="switch-col">
+          <div class="flow-arrow encode" id="flowArrow">➔</div>
+          <div class="mode-switch" id="modeSwitch" data-mode="encode" role="button" tabindex="0" aria-label="Chuyển đổi mã hoá / giải mã">
+            <span class="lbl">MÃ HOÁ</span>
+            <div class="knob" id="knob">E</div>
+            <span class="lbl">GIẢI MÃ</span>
+          </div>
+          <div class="shift-control" id="shiftControl" style="display:none;">
+            <label for="shiftInput">ĐỘ DỊCH</label>
+            <input type="number" id="shiftInput" value="3" min="-25" max="25">
+          </div>
+        </div>
+
+        <div class="panel panel-out" data-mode="encode">
+          <div class="panel-head">
+            <div class="panel-title"><span class="pip"></span> KẾT QUẢ</div>
+            <div class="panel-actions">
+              <button class="icon-btn" id="copyBtn" title="Sao chép">⧉</button>
+              <button class="icon-btn" id="downloadTxtBtn" title="Tải xuống .txt">⬇</button>
+            </div>
+          </div>
+          <textarea id="outputText" placeholder="Kết quả sẽ hiện ở đây..." readonly spellcheck="false"></textarea>
+          <div class="char-count" id="outCount">0 ký tự</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- EXCEL MODE ---------- -->
+    <section id="excelMode" class="excel-wrap">
+      <div class="dropzone" id="dropzone">
+        <div class="icon">📁</div>
+        <h3>Kéo thả file Excel vào đây</h3>
+        <p>Hỗ trợ .xlsx, .xls, .csv — hoặc bấm để chọn file</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      </div>
+
+      <div id="excelBody" style="display:none;">
+        <div class="excel-footbar">
+          <div class="file-chip" id="fileChip"></div>
+        </div>
+
+        <div class="excel-controls">
+          <div class="field">
+            <label>CỘT XỬ LÝ</label>
+            <select id="columnSelect"></select>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <label class="check-field"><input type="checkbox" id="headerCheck" checked> Dòng đầu là tiêu đề</label>
+          </div>
+          <div class="field" id="excelShiftField" style="display:none;">
+            <label>ĐỘ DỊCH</label>
+            <input type="number" id="excelShiftInput" value="3" min="-25" max="25" style="width:70px;">
+          </div>
+          <div class="field" style="margin-left:auto;">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="processExcelBtn">⚙ Xử lý cột</button>
+          </div>
+        </div>
+
+        <div class="table-wrap" id="tableWrap" style="display:none;">
+          <table>
+            <thead><tr><th>#</th><th>Giá trị gốc</th><th id="resultHeader">Kết quả (mã hoá)</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="excel-footbar" id="excelResultBar" style="display:none;">
+          <span style="font-size:12.5px; color:var(--text-muted); font-family:var(--mono);" id="rowCountLabel"></span>
+          <button class="btn btn-primary" id="downloadXlsxBtn">⬇ Tải kết quả (.xlsx)</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"><span class="pip"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ============================================================
+   CIPHER ENGINE
+============================================================ */
+function leftRotate(x,c){ return ((x<<c) | (x>>>(32-c))) >>> 0; }
+
+function md5(str){
+  const bytes = Array.from(new TextEncoder().encode(str));
+  const bitLen = bytes.length * 8;
+  let padded = bytes.concat([0x80]);
+  while (padded.length % 64 !== 56) padded.push(0);
+  let lenLow = bitLen >>> 0;
+  let lenHigh = Math.floor(bitLen / 4294967296) >>> 0;
+  for (let i=0;i<4;i++) padded.push((lenLow >>> (8*i)) & 0xff);
+  for (let i=0;i<4;i++) padded.push((lenHigh >>> (8*i)) & 0xff);
+
+  const K = new Array(64);
+  for (let i=0;i<64;i++) K[i] = Math.floor(Math.abs(Math.sin(i+1)) * 4294967296) >>> 0;
+  const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+             5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+             4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+             6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  let a0=0x67452301, b0=0xefcdab89, c0=0x98badcfe, d0=0x10325476;
+
+  for (let chunkStart=0; chunkStart<padded.length; chunkStart+=64){
+    const M = new Array(16);
+    for (let i=0;i<16;i++){
+      M[i] = (padded[chunkStart+i*4] | (padded[chunkStart+i*4+1]<<8) | (padded[chunkStart+i*4+2]<<16) | (padded[chunkStart+i*4+3]<<24)) >>> 0;
+    }
+    let A=a0,B=b0,C=c0,D=d0;
+    for (let i=0;i<64;i++){
+      let F,g;
+      if (i<16){ F=(B&C)|(~B&D); g=i; }
+      else if (i<32){ F=(D&B)|(~D&C); g=(5*i+1)%16; }
+      else if (i<48){ F=B^C^D; g=(3*i+5)%16; }
+      else { F=C^(B|(~D)); g=(7*i)%16; }
+      F = (F + A + K[i] + M[g]) >>> 0;
+      A=D; D=C; C=B;
+      B = (B + leftRotate(F, S[i])) >>> 0;
+    }
+    a0=(a0+A)>>>0; b0=(b0+B)>>>0; c0=(c0+C)>>>0; d0=(d0+D)>>>0;
+  }
+  const toHexLE = w => { let h=''; for(let i=0;i<4;i++) h += ((w>>>(8*i))&0xff).toString(16).padStart(2,'0'); return h; };
+  return [a0,b0,c0,d0].map(toHexLE).join('');
+}
+
+async function digestHex(algo, str){
+  const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+const B32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bits=0, value=0, out='';
+  for (let i=0;i<bytes.length;i++){
+    value = (value<<8) | bytes[i]; bits += 8;
+    while (bits>=5){ out += B32_ALPHABET[(value>>>(bits-5)) & 31]; bits -= 5; }
+  }
+  if (bits>0) out += B32_ALPHABET[(value << (5-bits)) & 31];
+  while (out.length % 8 !== 0) out += '=';
+  return out;
+}
+function base32Decode(str){
+  const clean = str.replace(/=+$/,'').toUpperCase().replace(/\s/g,'');
+  let bits=0, value=0; const bytes=[];
+  for (let i=0;i<clean.length;i++){
+    const idx = B32_ALPHABET.indexOf(clean[i]);
+    if (idx===-1) continue;
+    value = (value<<5) | idx; bits += 5;
+    if (bits>=8){ bytes.push((value >>> (bits-8)) & 0xff); bits -= 8; }
+  }
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+function rot13(s){ return s.replace(/[a-zA-Z]/g, c => { const base = c<='Z'?65:97; return String.fromCharCode((c.charCodeAt(0)-base+13)%26+base); }); }
+function rot47(s){ return s.replace(/[!-~]/g, c => String.fromCharCode(33 + ((c.charCodeAt(0)-33+47)%94))); }
+function caesar(s, shift){
+  const n = ((Number(shift)%26)+26)%26;
+  return s.replace(/[a-zA-Z]/g, c => { const base = c<='Z'?65:97; return String.fromCharCode((c.charCodeAt(0)-base+n)%26+base); });
+}
+
+const MORSE = {A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+  '.':'.-.-.-',',':'--..--','?':'..--..',"'":'.----.','!':'-.-.--','/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...',':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.','-':'-....-','_':'..--.-','"':'.-..-.','@':'.--.-.'};
+const MORSE_REV = Object.fromEntries(Object.entries(MORSE).map(([k,v])=>[v,k]));
+function morseEncode(s){
+  return s.toUpperCase().split(' ').map(word =>
+    Array.from(word).map(ch => MORSE[ch] !== undefined ? MORSE[ch] : ch).join(' ')
+  ).join(' / ');
+}
+function morseDecode(s){
+  return s.trim().split('/').map(word =>
+    word.trim().split(/\s+/).filter(Boolean).map(code => MORSE_REV[code] !== undefined ? MORSE_REV[code] : code).join('')
+  ).join(' ');
+}
+
+const CIPHERS = {
+  base64: { label:'Base64', group:'Văn bản & Web', desc:'Mã hoá dữ liệu nhị phân/văn bản thành chuỗi ký tự an toàn để truyền tải qua web, email, URL.',
+    encode: s => btoa(unescape(encodeURIComponent(s))),
+    decode: s => decodeURIComponent(escape(atob(s.trim().replace(/\s/g,'')))) },
+  base64url: { label:'Base64 (URL-safe)', group:'Văn bản & Web', desc:'Biến thể Base64 thay thế +, / bằng -, _ để dùng an toàn trong URL và tên file.',
+    encode: s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),
+    decode: s => { let t=s.trim().replace(/-/g,'+').replace(/_/g,'/'); while(t.length%4) t+='='; return decodeURIComponent(escape(atob(t))); } },
+  url: { label:'URL / URI', group:'Văn bản & Web', desc:'Chuyển ký tự đặc biệt thành dạng %XX để nhúng an toàn vào đường dẫn URL hoặc query string.',
+    encode: s => encodeURIComponent(s), decode: s => decodeURIComponent(s) },
+  html: { label:'HTML Entities', group:'Văn bản & Web', desc:'Chuyển các ký tự &, <, >, ", \' thành thực thể HTML để hiển thị an toàn trên trang web.',
+    encode: s => s.replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c])),
+    decode: s => { const el=document.createElement('textarea'); el.innerHTML=s; return el.value; } },
+  unicode: { label:'Unicode Escape', group:'Văn bản & Web', desc:'Biểu diễn từng ký tự dưới dạng \\uXXXX — thường dùng trong JSON, JavaScript.',
+    encode: s => Array.from(s).map(c=>'\\u'+c.codePointAt(0).toString(16).padStart(4,'0')).join(''),
+    decode: s => s.replace(/\\u([0-9a-fA-F]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16))) },
+
+  hex: { label:'Hex (Base16)', group:'Hệ cơ số', desc:'Biểu diễn mỗi byte dữ liệu dưới dạng 2 chữ số thập lục phân (00–FF).',
+    encode: s => Array.from(new TextEncoder().encode(s)).map(b=>b.toString(16).padStart(2,'0')).join(' '),
+    decode: s => new TextDecoder().decode(new Uint8Array(s.trim().split(/\s+/).map(h=>parseInt(h,16)))) },
+  binary: { label:'Nhị phân (Binary)', group:'Hệ cơ số', desc:'Biểu diễn mỗi byte dữ liệu dưới dạng 8 chữ số nhị phân (0/1).',
+    encode: s => Array.from(new TextEncoder().encode(s)).map(b=>b.toString(2).padStart(8,'0')).join(' '),
+    decode: s => new TextDecoder().decode(new Uint8Array(s.trim().split(/\s+/).map(b=>parseInt(b,2)))) },
+  octal: { label:'Bát phân (Octal)', group:'Hệ cơ số', desc:'Biểu diễn mỗi byte dữ liệu dưới dạng số bát phân, thường gặp trong quyền file Unix.',
+    encode: s => Array.from(new TextEncoder().encode(s)).map(b=>b.toString(8).padStart(3,'0')).join(' '),
+    decode: s => new TextDecoder().decode(new Uint8Array(s.trim().split(/\s+/).map(o=>parseInt(o,8)))) },
+  ascii: { label:'Mã ASCII (thập phân)', group:'Hệ cơ số', desc:'Biểu diễn mỗi byte dữ liệu dưới dạng số thập phân, cách nhau bằng khoảng trắng.',
+    encode: s => Array.from(new TextEncoder().encode(s)).join(' '),
+    decode: s => new TextDecoder().decode(new Uint8Array(s.trim().split(/\s+/).map(Number))) },
+  base32: { label:'Base32', group:'Hệ cơ số', desc:'Mã hoá dữ liệu bằng 32 ký tự (A-Z, 2-7), thường dùng trong hệ thống không phân biệt hoa/thường.',
+    encode: base32Encode, decode: base32Decode },
+
+  rot13: { label:'ROT13', group:'Mật mã cổ điển', desc:'Dịch mỗi chữ cái đi 13 vị trí trong bảng chữ cái. Áp dụng 2 lần sẽ trả về nguyên bản.',
+    encode: rot13, decode: rot13 },
+  rot47: { label:'ROT47', group:'Mật mã cổ điển', desc:'Biến thể ROT13 áp dụng cho toàn bộ ký tự ASCII in được (33–126), không chỉ chữ cái.',
+    encode: rot47, decode: rot47 },
+  caesar: { label:'Caesar (dịch chữ)', group:'Mật mã cổ điển', desc:'Dịch mỗi chữ cái đi N vị trí tuỳ chỉnh trong bảng chữ cái — mật mã cổ điển kinh điển.',
+    needsShift:true, encode: (s,shift) => caesar(s, shift), decode: (s,shift) => caesar(s, -shift) },
+  morse: { label:'Mã Morse', group:'Mật mã cổ điển', desc:'Biểu diễn ký tự bằng chuỗi tín hiệu chấm (.) và gạch (-), các từ cách nhau bởi " / ".',
+    encode: morseEncode, decode: morseDecode },
+
+  md5: { label:'MD5', group:'Băm một chiều', desc:'Hàm băm 128-bit — dùng để kiểm tra toàn vẹn dữ liệu. Không thể giải mã ngược.',
+    hashOnly:true, encode: s => md5(s) },
+  sha1: { label:'SHA-1', group:'Băm một chiều', desc:'Hàm băm 160-bit — không thể giải mã ngược. Không khuyến nghị cho bảo mật hiện đại.',
+    hashOnly:true, isAsync:true, encode: s => digestHex('SHA-1', s) },
+  sha256: { label:'SHA-256', group:'Băm một chiều', desc:'Hàm băm 256-bit thuộc họ SHA-2 — tiêu chuẩn phổ biến cho chữ ký số, blockchain. Không thể giải mã ngược.',
+    hashOnly:true, isAsync:true, encode: s => digestHex('SHA-256', s) },
+  sha512: { label:'SHA-512', group:'Băm một chiều', desc:'Hàm băm 512-bit thuộc họ SHA-2, an toàn hơn SHA-256. Không thể giải mã ngược.',
+    hashOnly:true, isAsync:true, encode: s => digestHex('SHA-512', s) },
+};
+
+const GROUP_ORDER = ['Văn bản & Web', 'Hệ cơ số', 'Mật mã cổ điển', 'Băm một chiều'];
+
+/* ============================================================
+   STATE & DOM
+============================================================ */
+let state = { cipherKey:'base64', mode:'encode', source:'text' };
+
+const $ = id => document.getElementById(id);
+const sidebar = $('sidebar');
+const inputText = $('inputText'), outputText = $('outputText');
+const modeSwitch = $('modeSwitch'), knob = $('knob'), flowArrow = $('flowArrow');
+const shiftControl = $('shiftControl'), shiftInput = $('shiftInput');
+const cipherTitle = $('cipherTitle'), cipherDesc = $('cipherDesc'), hashNote = $('hashNote');
+const panelOut = document.querySelector('.panel-out');
+
+function buildSidebar(){
+  sidebar.innerHTML = '';
+  GROUP_ORDER.forEach(group => {
+    const wrap = document.createElement('div');
+    wrap.className = 'sidebar-group';
+    const label = document.createElement('div');
+    label.className = 'sidebar-group-label';
+    label.textContent = group;
+    wrap.appendChild(label);
+    Object.entries(CIPHERS).filter(([,c]) => c.group === group).forEach(([key, c]) => {
+      const btn = document.createElement('button');
+      btn.className = 'cipher-btn' + (key === state.cipherKey ? ' active' : '');
+      btn.dataset.key = key;
+      btn.innerHTML = `<span>${c.label}</span>` + (c.hashOnly ? `<span class="badge">CHỈ BĂM</span>` : '');
+      btn.addEventListener('click', () => selectCipher(key));
+      wrap.appendChild(btn);
+    });
+    sidebar.appendChild(wrap);
+  });
+}
+
+function selectCipher(key){
+  state.cipherKey = key;
+  const c = CIPHERS[key];
+  if (c.hashOnly) state.mode = 'encode';
+  document.querySelectorAll('.cipher-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  cipherTitle.textContent = c.label;
+  cipherDesc.textContent = c.desc;
+  hashNote.style.display = c.hashOnly ? 'flex' : 'none';
+  modeSwitch.classList.toggle('disabled', !!c.hashOnly);
+  shiftControl.style.display = c.needsShift ? 'flex' : 'none';
+  $('excelShiftField').style.display = c.needsShift ? 'flex' : 'none';
+  applyModeUI();
+  runConvert();
+  populateColumnHint();
+}
+
+function applyModeUI(){
+  modeSwitch.dataset.mode = state.mode;
+  panelOut.dataset.mode = state.mode;
+  knob.textContent = state.mode === 'encode' ? 'E' : 'D';
+  flowArrow.className = 'flow-arrow ' + state.mode;
+  document.querySelector('#excelMode .btn-primary#processExcelBtn').textContent = state.mode === 'encode' ? '⚙ Mã hoá cột' : '⚙ Giải mã cột';
+  $('resultHeader').textContent = state.mode === 'encode' ? 'Kết quả (mã hoá)' : 'Kết quả (giải mã)';
+}
+
+function toggleMode(){
+  const c = CIPHERS[state.cipherKey];
+  if (c.hashOnly) return;
+  state.mode = state.mode === 'encode' ? 'decode' : 'encode';
+  applyModeUI();
+  runConvert();
+}
+modeSwitch.addEventListener('click', toggleMode);
+modeSwitch.addEventListener('keydown', e => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleMode(); } });
+
+async function runConvert(){
+  const c = CIPHERS[state.cipherKey];
+  const val = inputText.value;
+  $('inCount').textContent = val.length + ' ký tự';
+  if (!val){ outputText.value=''; $('outCount').textContent='0 ký tự'; return; }
+  const fn = state.mode === 'encode' ? c.encode : c.decode;
+  try{
+    let result = c.needsShift ? fn(val, shiftInput.value) : fn(val);
+    if (c.isAsync) result = await result;
+    outputText.value = result;
+    outputText.style.color = '';
+  }catch(err){
+    outputText.value = 'Lỗi: dữ liệu đầu vào không hợp lệ cho kiểu ' + (state.mode==='encode'?'mã hoá':'giải mã') + ' này.';
+    outputText.style.color = 'var(--danger)';
+  }
+  $('outCount').textContent = outputText.value.length + ' ký tự';
+}
+
+let debounceT;
+inputText.addEventListener('input', () => { clearTimeout(debounceT); debounceT = setTimeout(runConvert, 120); });
+shiftInput.addEventListener('input', runConvert);
+
+$('clearInBtn').addEventListener('click', () => { inputText.value=''; runConvert(); inputText.focus(); });
+$('pasteBtn').addEventListener('click', async () => {
+  try{ const t = await navigator.clipboard.readText(); inputText.value = t; runConvert(); }
+  catch{ showToast('Không thể truy cập clipboard'); }
+});
+$('copyBtn').addEventListener('click', async () => {
+  if (!outputText.value) return;
+  await navigator.clipboard.writeText(outputText.value);
+  showToast('Đã sao chép kết quả');
+});
+$('downloadTxtBtn').addEventListener('click', () => {
+  if (!outputText.value) return;
+  downloadBlob(outputText.value, `ketqua_${state.cipherKey}_${state.mode}.txt`, 'text/plain');
+});
+
+function downloadBlob(content, filename, type){
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+let toastT;
+function showToast(msg){
+  clearTimeout(toastT);
+  $('toastMsg').textContent = msg;
+  $('toast').classList.add('show');
+  toastT = setTimeout(() => $('toast').classList.remove('show'), 2200);
+}
+
+/* ---------- Source tabs ---------- */
+document.querySelectorAll('.source-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.source = tab.dataset.source;
+    $('textMode').style.display = state.source === 'text' ? 'block' : 'none';
+    $('excelMode').classList.toggle('active', state.source === 'excel');
+  });
+});
+
+/* ============================================================
+   EXCEL MODE
+============================================================ */
+let workbookRows = [];
+let currentFile = null;
+
+const dropzone = $('dropzone'), fileInput = $('fileInput');
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file){
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try{
+      const wb = XLSX.read(evt.target.result, { type:'binary' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      workbookRows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+      $('fileChip').innerHTML = `📄 <b>${file.name}</b> · ${workbookRows.length} dòng <span class="rm" id="rmFileBtn">✕</span>`;
+      $('rmFileBtn').addEventListener('click', resetExcel);
+      populateColumnSelect();
+      $('excelBody').style.display = 'block';
+      $('tableWrap').style.display = 'none';
+      $('excelResultBar').style.display = 'none';
+    }catch(err){
+      showToast('Không đọc được file — kiểm tra định dạng .xlsx/.csv');
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function resetExcel(){
+  workbookRows = []; currentFile = null; fileInput.value = '';
+  $('excelBody').style.display = 'none';
+}
+
+function populateColumnSelect(){
+  const sel = $('columnSelect');
+  sel.innerHTML = '';
+  const maxCols = Math.max(1, ...workbookRows.map(r => r.length));
+  const headerRow = $('headerCheck').checked ? workbookRows[0] : null;
+  for (let i=0;i<maxCols;i++){
+    const opt = document.createElement('option');
+    const colLetter = String.fromCharCode(65+i);
+    const headerName = headerRow && headerRow[i] ? ` — "${headerRow[i]}"` : '';
+    opt.value = i;
+    opt.textContent = `Cột ${colLetter}${headerName}`;
+    sel.appendChild(opt);
+  }
+}
+$('headerCheck').addEventListener('change', populateColumnSelect);
+function populateColumnHint(){ if (workbookRows.length) populateColumnSelect(); }
+
+$('processExcelBtn').addEventListener('click', async () => {
+  if (!workbookRows.length){ showToast('Hãy chọn file trước'); return; }
+  const c = CIPHERS[state.cipherKey];
+  const colIdx = Number($('columnSelect').value);
+  const hasHeader = $('headerCheck').checked;
+  const shift = $('excelShiftInput').value;
+  const rows = hasHeader ? workbookRows.slice(1) : workbookRows;
+  const fn = state.mode === 'encode' ? c.encode : c.decode;
+
+  const tbody = $('tableBody');
+  tbody.innerHTML = '';
+  const resultsForExport = [];
+  if (hasHeader && workbookRows[0]) resultsForExport.push([...workbookRows[0], state.mode === 'encode' ? 'Kết quả mã hoá' : 'Kết quả giải mã']);
+
+  for (let i=0;i<rows.length;i++){
+    const raw = rows[i][colIdx];
+    const original = raw === undefined || raw === null ? '' : String(raw);
+    let resultVal = '', isErr = false;
+    if (original === ''){
+      resultVal = '';
+    } else {
+      try{
+        let r = c.needsShift ? fn(original, shift) : fn(original);
+        if (c.isAsync) r = await r;
+        resultVal = r;
+      }catch(err){
+        resultVal = 'Lỗi dữ liệu'; isErr = true;
+      }
+    }
+    resultsForExport.push([...rows[i], resultVal]);
+    if (i < 200){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(original)}</td><td class="result-col ${isErr?'err':''}">${escapeHtml(resultVal)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+  $('tableWrap').style.display = 'block';
+  $('excelResultBar').style.display = 'flex';
+  $('rowCountLabel').textContent = `Đã xử lý ${rows.length} dòng${rows.length>200 ? ' (hiển thị 200 dòng đầu, file tải về có đầy đủ)' : ''}`;
+  window.__exportRows = resultsForExport;
+  showToast('Xử lý xong ' + rows.length + ' dòng');
+});
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+$('downloadXlsxBtn').addEventListener('click', () => {
+  if (!window.__exportRows) return;
+  const ws = XLSX.utils.aoa_to_sheet(window.__exportRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Kết quả');
+  XLSX.writeFile(wb, `ketqua_${state.cipherKey}_${state.mode}.xlsx`);
+});
+
+/* ---------- Init ---------- */
+buildSidebar();
+selectCipher('base64');
+</script>
+</body>
+</html>
