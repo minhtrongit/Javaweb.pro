@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -8,7 +8,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
-<title>Software Pro Store</title>
+
+<title>Software Pro Store — Phần mềm tiện ích: Tách Excel, Gửi Mail Tự Động, Đổi Tên File Hàng Loạt | javaweb.pro</title>
+<meta name="description" content="Kho phần mềm tiện ích văn phòng của javaweb.pro: Excel Splitter Pro (tách file Excel), gửi mail tự động hàng loạt, đổi tên file tự động, chuyển Excel sang PDF, tạo mã QR, mã hoá dữ liệu... Dùng thử miễn phí.">
+<meta name="keywords" content="phần mềm tách excel, gửi mail tự động, đổi tên file hàng loạt, chuyển excel sang pdf, tạo mã qr, phần mềm văn phòng, javaweb.pro">
+<meta name="robots" content="index, follow">
+<meta name="author" content="javaweb.pro">
+<link rel="canonical" href="https://javaweb.pro/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:site_name" content="Software Pro Store">
+<meta property="og:title" content="Software Pro Store — Phần mềm tiện ích văn phòng | javaweb.pro">
+<meta property="og:description" content="Tách Excel, gửi mail tự động, đổi tên file hàng loạt, chuyển Excel sang PDF, tạo mã QR, mã hoá dữ liệu — tất cả trong 1 nơi.">
+<meta property="og:url" content="https://javaweb.pro/">
+<meta property="og:image" content="https://javaweb.pro/logo.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Software Pro Store — Phần mềm tiện ích văn phòng">
+<meta name="twitter:description" content="Tách Excel, gửi mail tự động, đổi tên file hàng loạt, tạo mã QR, mã hoá dữ liệu.">
+<meta name="twitter:image" content="https://javaweb.pro/logo.png">
+
+<!-- Google Search Console: thay YOUR_VERIFICATION_CODE bằng mã thật lấy tại
+     https://search.google.com/search-console (Chọn "Thẻ HTML" khi xác minh quyền sở hữu) -->
+<meta name="google-site-verification" content="YOUR_VERIFICATION_CODE">
+
+<!-- Google Analytics 4: thay G-06C3LFSGJC bằng Measurement ID thật lấy tại
+     https://analytics.google.com (Admin > Data Streams > Web) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-06C3LFSGJC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-06C3LFSGJC');
+</script>
+
+<!-- Dữ liệu có cấu trúc cho Google (SEO) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "javaweb.pro",
+  "url": "https://javaweb.pro/",
+  "logo": "https://javaweb.pro/logo.png",
+  "email": "minhtrongit@gmail.com",
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Software Pro Store",
+  "url": "https://javaweb.pro/"
+}
+</script>
 
 <style>
 /* body{margin:0;font-family:Inter,Arial;background:#f4f6fb} */
@@ -391,6 +447,34 @@ body{
   color:#22c55e;
 }
 
+.visit-stats{
+  margin:14px 0;
+  display:inline-flex;
+  gap:18px;
+  flex-wrap:wrap;
+  justify-content:center;
+  font-size:13.5px;
+  color:#94a3b8;
+  background:rgba(255,255,255,0.05);
+  padding:8px 16px;
+  border-radius:999px;
+}
+
+.visit-stats .online-dot{
+  display:inline-block;
+  width:8px;height:8px;
+  border-radius:50%;
+  background:#22c55e;
+  margin-right:5px;
+  box-shadow:0 0 6px #22c55e;
+  animation:pulseDot 1.4s infinite;
+}
+
+@keyframes pulseDot{
+  0%,100%{opacity:1}
+  50%{opacity:.4}
+}
+
 /* MOBILE */
 @media (max-width: 1024px){
   .slide-content{display:none}
@@ -433,10 +517,18 @@ body{
 <div class="footer">
   📞 Hotline: <strong>0947999665</strong><br>
   📧 Email: <strong>minhtrongit@gmail.com</strong><br>
+
+  <div class="visit-stats">
+    <span>👀 Tổng lượt truy cập: <strong id="statTotalVisits">—</strong></span>
+    <span><span class="online-dot"></span>Đang online: <strong id="statOnlineNow">—</strong></span>
+  </div>
+
   © Copyright javaweb.pro
 </div>
 
 <!-- ===== JS GIỮ NGUYÊN ===== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 const softwares = [
   {name:"Excel Splitter - Tách Excel", img:"images/3.2.tachexcel_splitter_1QR_active1.png", desc:"Send personalized emails automatically.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1JaakktXNklYsX2PYX9p0tH3nS1D5kjYI?usp=sharingg"},
@@ -577,6 +669,82 @@ function closeModal(){
   document.getElementById('modal').classList.remove('active');
   document.getElementById('videoFrame').src="";
 }
+
+/* ============================================================
+   THỐNG KÊ "Tổng lượt truy cập" & "Đang online"
+   Dùng Firebase Realtime Database (miễn phí) vì GitHub Pages
+   là hosting tĩnh, không tự lưu được số liệu này.
+
+   CÁCH LẤY firebaseConfig:
+   1. Vào https://console.firebase.google.com → Tạo project mới (miễn phí)
+   2. Vào "Build" > "Realtime Database" > "Create Database"
+      (chọn "Start in test mode" trước, sau đó áp rules bên dưới)
+   3. Vào Project settings (⚙️) > tab "General" > mục "Your apps" >
+      chọn Web (</>) > copy đoạn firebaseConfig dán đè vào bên dưới.
+   4. Vào tab "Rules" của Realtime Database, dán rules sau rồi Publish:
+      {
+        "rules": {
+          "stats": {
+            "totalVisits": {
+              ".read": true,
+              ".write": true,
+              ".validate": "newData.isNumber() && newData.val() == data.val() + 1"
+            },
+            "onlineUsers": {
+              ".read": true,
+              "$uid": {
+                ".write": true,
+                ".validate": "newData.val() == true"
+              }
+            }
+          }
+        }
+      }
+============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCF9ZM-AXpOX7Hz14S-zKsaMYP6NlnM4jk",
+  authDomain: "javawebpro-e0a9a.firebaseapp.com",
+  databaseURL: "https://javawebpro-e0a9a-default-rtdb.firebaseio.com",
+  projectId: "javawebpro-e0a9a",
+};
+
+(function initVisitStats(){
+  if(firebaseConfig.apiKey === "YOUR_API_KEY"){
+    console.warn("⚠️ Chưa cấu hình firebaseConfig cho thống kê truy cập — xem hướng dẫn phía trên trong index.html.");
+    return;
+  }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Đếm tổng lượt truy cập: chỉ +1 mỗi phiên trình duyệt (session), tránh đếm trùng khi chuyển trang
+    if(!sessionStorage.getItem("gonn_visited_session")){
+      sessionStorage.setItem("gonn_visited_session", "1");
+      db.ref("stats/totalVisits").transaction((cur) => (cur || 0) + 1);
+    }
+
+    // Đếm số người đang online: mỗi tab mở là 1 node, tự xoá khi đóng tab/mất kết nối
+    const presenceRef = db.ref("stats/onlineUsers").push();
+    presenceRef.set(true);
+    presenceRef.onDisconnect().remove();
+    window.addEventListener("beforeunload", () => presenceRef.remove());
+
+    const elTotal = document.getElementById("statTotalVisits");
+    const elOnline = document.getElementById("statOnlineNow");
+
+    db.ref("stats/totalVisits").on("value", (snap) => {
+      if(elTotal) elTotal.textContent = (snap.val() || 0).toLocaleString("vi-VN");
+    });
+
+    db.ref("stats/onlineUsers").on("value", (snap) => {
+      const count = snap.exists() ? Object.keys(snap.val() || {}).length : 0;
+      if(elOnline) elOnline.textContent = count.toLocaleString("vi-VN");
+    });
+  }catch(err){
+    console.warn("Không khởi tạo được thống kê truy cập:", err);
+  }
+})();
+
 if ("serviceWorker" in navigator) {
   // Khi SW mới chiếm quyền điều khiển (sau khi cập nhật), tự tải lại trang
   // 1 lần để người dùng thấy ngay bản mới, không cần xoá cache/lịch sử.
