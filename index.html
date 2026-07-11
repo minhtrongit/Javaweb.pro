@@ -97,33 +97,40 @@ body{
   display:flex;
   align-items:center;
   gap:10px;
+  position:relative;
 }
 
 .logo-box img{
   height:45px;
   border-radius:10px;
+  position:relative;
+  z-index:1;
 
-  /* hiệu ứng glow */
+  /* viền glow tĩnh, không animate để tránh repaint main-thread */
   box-shadow:
     0 0 10px #00eaff,
-    0 0 20px #00eaff,
-    0 0 40px #00eaff;
-
-  animation: glow 2s infinite alternate;
+    0 0 20px #00eaff;
 }
 
-@keyframes glow{
-  from{
-    box-shadow:
-      0 0 5px #00eaff,
-      0 0 10px #00eaff;
-  }
-  to{
-    box-shadow:
-      0 0 20px #00eaff,
-      0 0 40px #00eaff,
-      0 0 60px #00eaff;
-  }
+/* Lớp glow phụ nằm dưới ảnh, chỉ animate opacity (composited, chạy trên GPU) */
+.logo-box::before{
+  content:'';
+  position:absolute;
+  left:0; top:0;
+  width:45px; height:45px;
+  border-radius:10px;
+  box-shadow:
+    0 0 20px #00eaff,
+    0 0 40px #00eaff,
+    0 0 60px #00eaff;
+  opacity:0;
+  animation: glowPulse 2s infinite alternate;
+  pointer-events:none;
+}
+
+@keyframes glowPulse{
+  from{ opacity:0; }
+  to{ opacity:1; }
 }
 
 .logo-text{
@@ -539,13 +546,13 @@ const softwares = [
 //  {name:"Merge All To PDF", img:"images/10.MergeAllPdf.webp", desc:"Merge all files into one PDF.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"PDF Splitter", img:"images/4.TachPdf.webp", desc:"Split PDF into multiple files.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"ZipFile Pro", img:"images/7.NenFileZip.webp", desc:"Compress files efficiently.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
-//  {name:"Convert Size Image", img:"images/21.ConvertSizeImage.webpg", desc:"Reduce image size without losing quality.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
+//  {name:"Convert Size Image", img:"images/21.ConvertSizeImage.webp", desc:"Reduce image size without losing quality.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
   {name:"File Rename Pro - Đổi tên file tự động", img:"images/47.DoiTenFile_active4.webp", desc:"Rename files in bulk.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1UoJAbusslMFNUViLef-1jqWAXuro8g-w?usp=sharing"},
 //  {name:"Secure Folder Enterprise", img:"images/49.Baomatthumuc_SecureFolderEnterprise.webp", desc:"Protect folders with password.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"QR Scan Bank", img:"images/53.QrScanBank.webp", desc:"Generate bulk QR payment codes.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
   {name:"Excel To PDF - Chuyển excel sang PDF", img:"images/59.ChuyenExcelSangPDF_active.webp", desc:"Excel To PDF.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing"},
 
-//  {name:"Change Json To Excel", img:"images/54.ChangeJsonToExcel.webp, desc:"Convert JSON to Excel easily.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"}
+//  {name:"Change Json To Excel", img:"images/54.ChangeJsonToExcel.webp", desc:"Convert JSON to Excel easily.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"}
 ];
 
 const slider=document.getElementById('slider');
