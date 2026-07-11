@@ -539,7 +539,7 @@ body{
 <!-- ===== JS GIỮ NGUYÊN ===== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script defer>
+<script>
 const softwares = [
   {name:"Excel Splitter - Tách Excel", img:"images/3.2.tachexcel_splitter_1QR_active1.webp", desc:"Send personalized emails automatically.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1JaakktXNklYsX2PYX9p0tH3nS1D5kjYI?usp=sharingg"},
   {name:"Send Mail Auto - Gửi mail tự động", img:"images/10.SendMail_active3.webp", desc:"Automate bulk email sending.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1bFtNInfz3GmUqoqa1fVlA1DhUTOLnDEq?usp=sharing"},
@@ -718,7 +718,7 @@ const firebaseConfig = {
   projectId: "javawebpro-e0a9a",
 };
 
-(function initVisitStats(){
+function initVisitStats(){
   if(firebaseConfig.apiKey === "YOUR_API_KEY"){
     console.warn("⚠️ Chưa cấu hình firebaseConfig cho thống kê truy cập — xem hướng dẫn phía trên trong index.html.");
     return;
@@ -753,7 +753,16 @@ const firebaseConfig = {
   }catch(err){
     console.warn("Không khởi tạo được thống kê truy cập:", err);
   }
-})();
+}
+
+// Firebase SDK được tải kiểu "defer" (không chặn render trang) — phải đợi
+// DOMContentLoaded để chắc chắn firebase-app-compat.js / firebase-database-compat.js
+// đã tải và chạy xong trước khi gọi firebase.initializeApp(), tránh lỗi "firebase is not defined".
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", initVisitStats);
+}else{
+  initVisitStats();
+}
 
 if ("serviceWorker" in navigator) {
   // Khi SW mới chiếm quyền điều khiển (sau khi cập nhật), tự tải lại trang
