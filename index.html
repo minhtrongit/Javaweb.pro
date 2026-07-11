@@ -2,6 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://www.google-analytics.com">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -489,7 +492,7 @@ body{
 <!-- HEADER MỚI -->
 <div class="topbar">
   <div class="logo-box">
-    <img src="logo.webp">
+    <img src="logo.webp" width="45" height="45">
     <div class="logo-text">Software Pro Store</div>
   </div>
 
@@ -527,22 +530,22 @@ body{
 </div>
 
 <!-- ===== JS GIỮ NGUYÊN ===== -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
+<script defer>
 const softwares = [
   {name:"Excel Splitter - Tách Excel", img:"images/3.2.tachexcel_splitter_1QR_active1.webp", desc:"Send personalized emails automatically.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1JaakktXNklYsX2PYX9p0tH3nS1D5kjYI?usp=sharingg"},
   {name:"Send Mail Auto - Gửi mail tự động", img:"images/10.SendMail_active3.webp", desc:"Automate bulk email sending.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1bFtNInfz3GmUqoqa1fVlA1DhUTOLnDEq?usp=sharing"},
 //  {name:"Merge All To PDF", img:"images/10.MergeAllPdf.webp", desc:"Merge all files into one PDF.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"PDF Splitter", img:"images/4.TachPdf.webp", desc:"Split PDF into multiple files.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"ZipFile Pro", img:"images/7.NenFileZip.webp", desc:"Compress files efficiently.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
-//  {name:"Convert Size Image", img:"images/21.ConvertSizeImage.webp", desc:"Reduce image size without losing quality.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
+//  {name:"Convert Size Image", img:"images/21.ConvertSizeImage.webpg", desc:"Reduce image size without losing quality.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
   {name:"File Rename Pro - Đổi tên file tự động", img:"images/47.DoiTenFile_active4.webp", desc:"Rename files in bulk.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1UoJAbusslMFNUViLef-1jqWAXuro8g-w?usp=sharing"},
 //  {name:"Secure Folder Enterprise", img:"images/49.Baomatthumuc_SecureFolderEnterprise.webp", desc:"Protect folders with password.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
 //  {name:"QR Scan Bank", img:"images/53.QrScanBank.webp", desc:"Generate bulk QR payment codes.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"},
   {name:"Excel To PDF - Chuyển excel sang PDF", img:"images/59.ChuyenExcelSangPDF_active.webp", desc:"Excel To PDF.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing"},
 
-//  {name:"Change Json To Excel", img:"images/54.ChangeJsonToExcel.webp", desc:"Convert JSON to Excel easily.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"}
+//  {name:"Change Json To Excel", img:"images/54.ChangeJsonToExcel.webp, desc:"Convert JSON to Excel easily.", video:"https://vt.tiktok.com/ZSHVphFbp/", download:"https://drive.google.com/drive/folders/1o4QK_TVy6tAab7CW_XL4SGUc3Zg1Phe1?usp=sharing"}
 ];
 
 const slider=document.getElementById('slider');
@@ -556,10 +559,10 @@ softwares.forEach((s,i)=>{
   if(i===0) slide.classList.add('active');
 slide.innerHTML = `
   <!-- nền blur -->
-  <img src="${s.img}" class="bg-blur">
+  <img src="${s.img}" class="bg-blur" width="1600" height="300" alt="">
 
   <!-- ảnh chính -->
-  <img src="${s.img}" class="bg-main">
+  <img src="${s.img}" class="bg-main" width="1600" height="300" alt="${s.name}">
 
   <!-- nội dung -->
   <div class="slide-content">
@@ -608,7 +611,7 @@ function render(){
   home.innerHTML='';
   softwares.forEach((s,i)=>{
     home.innerHTML+=`<div class="card" onclick="show(${i})">
-      <div class="img-wrap"><img src="${s.img}"></div>
+      <div class="img-wrap"><img src="${s.img}" width="400" height="267" loading="lazy" alt="${s.name}"></div>
       <h3>${s.name}</h3>
     </div>`;
   });
@@ -621,13 +624,13 @@ function show(i){
   detail.innerHTML=`
   <div class="back" onclick="back()">← Back</div>
   <h2>${s.name}</h2>
-  <img src="${s.img}">
+  <img src="${s.img}" width="700" height="467" alt="${s.name}">
   <p>${s.desc}</p>
   <div class="screenshots">
-    <img src="${s.img}"><img src="${s.img}"><img src="${s.img}">
+    <img src="${s.img}" width="120" height="80" loading="lazy" alt="Ảnh 1"><img src="${s.img}" width="120" height="80" loading="lazy" alt="Ảnh 2"><img src="${s.img}" width="120" height="80" loading="lazy" alt="Ảnh 3">
   </div>
   <div class="video-box" onclick="playVideo('${s.video}')">
-    <img src="${getThumbnail(s.video)}">
+    <img src="${getThumbnail(s.video)}" width="480" height="360" loading="lazy" alt="Video thumbnail">
     <div class="play-btn">▶</div>
   </div>
   <br><br>
