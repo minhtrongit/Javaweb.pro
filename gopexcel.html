@@ -316,7 +316,7 @@
   <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
   <div style="flex:1;">
     <h1>Gộp Excel</h1>
-  <!--  <p>Gộp nhiều file Excel thành 1 file, chạy hoàn toàn trong trình duyệt</p> -->
+    <p>Gộp nhiều file Excel thành 1 file, chạy hoàn toàn trong trình duyệt</p>
   </div>
   <nav style="display:flex;gap:16px;font-size:13.5px;flex:none;flex-wrap:wrap;">
     <a href="index.html" style="color:#C9D2E0;text-decoration:none;">Trang chủ</a>
@@ -606,7 +606,9 @@
   function buildWorkbookFromSheets(sheetsArr){
     const wb = XLSX.utils.book_new();
     for(const { name, rows } of sheetsArr){
-      const ws = XLSX.utils.aoa_to_sheet(rows.length ? rows : [[]]);
+      // dense:true — bắt buộc với sheet nhiều dòng/cột (vd hàng trăm nghìn dòng),
+      // nếu không sẽ gặp lỗi "Too many properties to enumerate" của trình duyệt/V8
+      const ws = XLSX.utils.aoa_to_sheet(rows.length ? rows : [[]], { dense: true });
       XLSX.utils.book_append_sheet(wb, ws, name);
     }
     return wb;
@@ -897,7 +899,7 @@
 
   btnRedownload.addEventListener("click", () => {
     if(state.lastWorkbook && state.lastFilename){
-      XLSX.writeFile(state.lastWorkbook, state.lastFilename);
+      XLSX.writeFile(state.lastWorkbook, state.lastFilename, { bookSST: true });
     }
   });
 
@@ -939,7 +941,10 @@
       const wb = buildWorkbookFromSheets(sheetsArr);
       state.lastWorkbook = wb;
       state.lastFilename = outName;
-      XLSX.writeFile(wb, outName);
+      // bookSST:true — dữ liệu văn bản trùng lặp (tỉnh/thành, trạng thái...) chỉ lưu 1 lần
+      // trong bộ nhớ thay vì lặp lại theo từng ô, giúp giảm đáng kể RAM với file lớn.
+      await nextFrame(); // nhường 1 nhịp cho trình duyệt dọn rác trước bước nặng nhất
+      XLSX.writeFile(wb, outName, { bookSST: true });
       updateProgress(100);
       logMsg(`✅ XONG — đã tải file "${outName}"`, "ok");
       btnRedownload.disabled = false;
