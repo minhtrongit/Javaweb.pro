@@ -316,7 +316,7 @@
   <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
   <div style="flex:1;">
     <h1>Gộp Excel</h1>
-    <p>Gộp nhiều file Excel thành 1 file, chạy hoàn toàn trong trình duyệt</p>
+ 
   </div>
   <nav style="display:flex;gap:16px;font-size:13.5px;flex:none;flex-wrap:wrap;">
     <a href="index.html" style="color:#C9D2E0;text-decoration:none;">Trang chủ</a>
@@ -404,7 +404,7 @@
       <span class="step-num">03</span>
       <div>
         <h3 id="step3-h">Đặt tên file kết quả &amp; bắt đầu gộp</h3>
-        <p class="hint">Kết quả sẽ tự tải về máy sau khi gộp xong.</p>
+        <p class="hint">Kết quả sẽ tự tải về máy. Dữ liệu lớn có thể tách thành nhiều file — trình duyệt sẽ hỏi xác nhận, hãy chọn "Cho phép" (Allow) để tải hết.</p>
       </div>
     </div>
 
@@ -413,12 +413,16 @@
         <label for="outputName">Tên file kết quả</label>
         <input type="text" id="outputName" value="ket_qua_gop.xlsx">
       </div>
+      <div class="field">
+        <label for="rowsPerFile">Số dòng tối đa mỗi file xuất ra</label>
+        <input type="number" id="rowsPerFile" value="300000" min="50000" max="900000" step="50000">
+        <p class="field-hint">Dữ liệu lớn (vd 1 triệu dòng) sẽ tự động chia thành nhiều file <code>_1</code>, <code>_2</code>... và tải về lần lượt để tránh trình duyệt hết bộ nhớ. Giảm số này nếu vẫn bị lỗi "Out of Memory".</p>
+      </div>
     </div>
 
     <div class="btn-row" style="justify-content:flex-start;">
       <button type="button" class="btn-primary" id="btnStart">▶ Bắt đầu gộp</button>
       <button type="button" class="btn-secondary" id="btnCancel" disabled>■ Hủy</button>
-      <button type="button" class="btn-secondary" id="btnRedownload" disabled>⬇ Tải lại kết quả</button>
     </div>
 
     <div class="progress-wrap">
@@ -557,49 +561,134 @@
   }
 
   // ============================================================
-  // SheetWriter: ghi dữ liệu, tự tách sheet mới khi > 900.000 dòng
+  // StreamingFileWriter: tích luỹ dòng dữ liệu, MỘT KHI đủ
+  // `rowsPerFile` dòng thì tự đóng gói + tải file NGAY LẬP TỨC rồi
+  // giải phóng bộ nhớ, thay vì giữ toàn bộ dữ liệu (có thể cả triệu
+  // dòng) trong RAM tới cuối mới ghi 1 lần — đây chính là nguyên
+  // nhân gây lỗi "Out of Memory" với file rất lớn.
+  // Chỉ đánh số _1, _2... vào tên file khi thực sự có > 1 file.
   // ============================================================
-  class SheetWriter{
-    constructor(baseName, headerRows){
-      this.baseName = sanitizeSheetName(baseName);
-      this.headerRows = headerRows || null;
-      this.sheetIndex = 1;
-      this.currentRows = [];
-      this.currentDataCount = 0;
+  class StreamingFileWriter{
+    constructor(baseName, headerRows, finalFilename, rowsPerFile, log){
+      this.baseName = sanitizeSheetName(baseName || "Data");
+      this.headerRows = headerRows ? headerRows.map(r => sanitizeRow(r)) : null;
+      this.finalFilename = finalFilename;
+      this.rowsPerFile = Math.min(900000, Math.max(10000, rowsPerFile || 300000));
+      this.log = log;
+      this.fileIndex = 0;
+      this.currentRows = this._freshRows();
+      this.currentCount = 0;
       this.totalRows = 0;
-      this.finishedSheets = [];
-      this._newSheet();
+      this.pendingChunk = null;
+      this.filesWritten = [];
     }
-    _sheetTitle(){
-      if(this.sheetIndex === 1) return this.baseName;
-      const suffix = `_${this.sheetIndex}`;
-      return (this.baseName.length + suffix.length > 31)
-        ? this.baseName.slice(0, 31 - suffix.length) + suffix
-        : this.baseName + suffix;
+    _freshRows(){
+      return this.headerRows ? this.headerRows.map(r => r.slice()) : [];
     }
-    _newSheet(){
-      this.currentRows = [];
-      if(this.headerRows){
-        for(const hr of this.headerRows) this.currentRows.push(sanitizeRow(hr));
-      }
-      this.currentDataCount = 0;
-    }
-    _flush(){
-      this.finishedSheets.push({ name: this._sheetTitle(), rows: this.currentRows });
-    }
-    writeRow(row){
-      if(this.currentDataCount >= MAX_ROWS_PER_SHEET){
-        this._flush();
-        this.sheetIndex++;
-        this._newSheet();
-      }
+    async writeRow(row){
       this.currentRows.push(sanitizeRow(row));
-      this.currentDataCount++;
+      this.currentCount++;
       this.totalRows++;
+      if(this.currentCount >= this.rowsPerFile){
+        await this._completeChunk();
+      }
     }
-    finish(){
-      this._flush();
-      return this.finishedSheets;
+    async _completeChunk(){
+      if(this.currentCount === 0) return;
+      if(this.pendingChunk){
+        await this._writeChunk(this.pendingChunk, true);
+        this.pendingChunk = null;
+      }
+      this.pendingChunk = { rows: this.currentRows };
+      this.currentRows = this._freshRows();
+      this.currentCount = 0;
+      await nextFrame();
+    }
+    async _writeChunk(chunk, numbered){
+      this.fileIndex++;
+      const filename = numbered ? this.finalFilename.replace(/\.xlsx$/i, `_${this.fileIndex}.xlsx`) : this.finalFilename;
+      this.log(`    💾 Đủ ${chunk.rows.length.toLocaleString("vi-VN")} dòng — đang ghi "${filename}"...`);
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(chunk.rows.length ? chunk.rows : [[]], { dense: true });
+      XLSX.utils.book_append_sheet(wb, ws, this.baseName);
+      XLSX.writeFile(wb, filename, { bookSST: true });
+      this.filesWritten.push(filename);
+      this.log(`    ✅ Đã tải "${filename}"`, "ok");
+    }
+    async finish(){
+      if(this.pendingChunk && this.currentCount > 0){
+        await this._writeChunk(this.pendingChunk, true);
+        await this._writeChunk({ rows: this.currentRows }, true);
+      }else if(this.pendingChunk && this.currentCount === 0){
+        // Nếu đã có file nào được ghi trước đó rồi thì đây chắc chắn là 1 trong
+        // nhiều file (dù currentCount hiện = 0 do vừa khít bội số rowsPerFile)
+        await this._writeChunk(this.pendingChunk, this.filesWritten.length > 0);
+      }else if(!this.pendingChunk && this.currentCount > 0){
+        await this._writeChunk({ rows: this.currentRows }, false);
+      }
+      this.pendingChunk = null;
+      this.currentRows = [];
+      this.currentCount = 0;
+      return this.filesWritten;
+    }
+  }
+
+  // Tương tự StreamingFileWriter nhưng gộp theo NHÓM SHEET nguyên vẹn
+  // (dùng cho chế độ 4 - Gộp Sheet, không tách nhỏ 1 sheet ra nhiều file)
+  class StreamingSheetGroupWriter{
+    constructor(finalFilename, rowsPerFile, log){
+      this.finalFilename = finalFilename;
+      this.rowsPerFile = Math.min(900000, Math.max(10000, rowsPerFile || 300000));
+      this.log = log;
+      this.fileIndex = 0;
+      this.currentGroup = [];
+      this.currentGroupRows = 0;
+      this.pendingGroup = null;
+      this.filesWritten = [];
+    }
+    async addSheet(name, rows){
+      if(this.currentGroup.length > 0 && this.currentGroupRows + rows.length > this.rowsPerFile){
+        await this._completeGroup();
+      }
+      this.currentGroup.push({ name, rows });
+      this.currentGroupRows += rows.length;
+      if(this.currentGroupRows > this.rowsPerFile){
+        await this._completeGroup();
+      }
+    }
+    async _completeGroup(){
+      if(this.currentGroup.length === 0) return;
+      if(this.pendingGroup){
+        await this._writeGroup(this.pendingGroup, true);
+        this.pendingGroup = null;
+      }
+      this.pendingGroup = this.currentGroup;
+      this.currentGroup = [];
+      this.currentGroupRows = 0;
+      await nextFrame();
+    }
+    async _writeGroup(sheets, numbered){
+      this.fileIndex++;
+      const filename = numbered ? this.finalFilename.replace(/\.xlsx$/i, `_${this.fileIndex}.xlsx`) : this.finalFilename;
+      this.log(`    💾 Đang ghi "${filename}" (${sheets.length} sheet)...`);
+      const wb = buildWorkbookFromSheets(sheets);
+      XLSX.writeFile(wb, filename, { bookSST: true });
+      this.filesWritten.push(filename);
+      this.log(`    ✅ Đã tải "${filename}"`, "ok");
+    }
+    async finish(){
+      if(this.pendingGroup && this.currentGroup.length > 0){
+        await this._writeGroup(this.pendingGroup, true);
+        await this._writeGroup(this.currentGroup, true);
+      }else if(this.pendingGroup && this.currentGroup.length === 0){
+        await this._writeGroup(this.pendingGroup, this.filesWritten.length > 0);
+      }else if(!this.pendingGroup && this.currentGroup.length > 0){
+        await this._writeGroup(this.currentGroup, false);
+      }
+      this.pendingGroup = null;
+      this.currentGroup = [];
+      this.currentGroupRows = 0;
+      return this.filesWritten;
     }
   }
 
@@ -617,7 +706,7 @@
   // ============================================================
   // 4 chế độ gộp — bám sát logic bản Python (Excel Merger Pro)
   // ============================================================
-  async function mergeWithHeaderRow1(files, log, progress, isCancelled){
+  async function mergeWithHeaderRow1(files, log, progress, isCancelled, outName, rowsPerFile){
     let writer = null;
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -635,14 +724,16 @@
           if(rows.length === 0) continue;
           const headerRow = rows[0];
           if(!writer){
-            writer = new SheetWriter("Data", [headerRow]);
+            writer = new StreamingFileWriter("Data", [headerRow], outName, rowsPerFile, log);
             log(`    → Lấy tiêu đề từ sheet '${sheetName}'`);
           }
           for(let r = 1; r < rows.length; r++){
+            if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(rows[r])) continue;
-            writer.writeRow(rows[r]);
+            await writer.writeRow(rows[r]);
           }
         }catch(err){
+          if(err instanceof MergeCancelled) throw err;
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
@@ -650,11 +741,11 @@
       await nextFrame();
     }
     if(!writer || writer.totalRows === 0) throw new Error("Không tìm thấy dữ liệu nào để gộp.");
-    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")} | Số sheet kết quả: ${writer.sheetIndex}`, "ok");
+    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")}`, "ok");
     return writer.finish();
   }
 
-  async function mergeWithCustomHeader(files, headerRowCount, log, progress, isCancelled){
+  async function mergeWithCustomHeader(files, headerRowCount, log, progress, isCancelled, outName, rowsPerFile){
     let writer = null;
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -672,14 +763,16 @@
           const headerChunk = rows.slice(0, headerRowCount);
           if(headerChunk.length === 0) continue;
           if(!writer){
-            writer = new SheetWriter("Data", headerChunk.map(r => r || []));
+            writer = new StreamingFileWriter("Data", headerChunk.map(r => r || []), outName, rowsPerFile, log);
             log(`    → Lấy ${headerChunk.length} dòng tiêu đề từ sheet '${sheetName}'`);
           }
           for(let r = headerRowCount; r < rows.length; r++){
+            if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(rows[r])) continue;
-            writer.writeRow(rows[r]);
+            await writer.writeRow(rows[r]);
           }
         }catch(err){
+          if(err instanceof MergeCancelled) throw err;
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
@@ -687,12 +780,12 @@
       await nextFrame();
     }
     if(!writer || writer.totalRows === 0) throw new Error("Không tìm thấy dữ liệu nào để gộp.");
-    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")} | Số sheet kết quả: ${writer.sheetIndex}`, "ok");
+    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")}`, "ok");
     return writer.finish();
   }
 
-  async function mergeNoHeader(files, log, progress, isCancelled){
-    const writer = new SheetWriter("Data", null);
+  async function mergeNoHeader(files, log, progress, isCancelled, outName, rowsPerFile){
+    const writer = new StreamingFileWriter("Data", null, outName, rowsPerFile, log);
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
       if(isCancelled()) throw new MergeCancelled();
@@ -706,10 +799,12 @@
         if(isCancelled()) throw new MergeCancelled();
         try{
           for(const row of iterRows(wb, sheetName)){
+            if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(row)) continue;
-            writer.writeRow(row);
+            await writer.writeRow(row);
           }
         }catch(err){
+          if(err instanceof MergeCancelled) throw err;
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
@@ -717,13 +812,13 @@
       await nextFrame();
     }
     if(writer.totalRows === 0) throw new Error("Không tìm thấy dữ liệu nào để gộp.");
-    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")} | Số sheet kết quả: ${writer.sheetIndex}`, "ok");
+    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")}`, "ok");
     return writer.finish();
   }
 
-  async function mergeSheetsMode(files, log, progress, isCancelled){
+  async function mergeSheetsMode(files, log, progress, isCancelled, outName, rowsPerFile){
     const usedNames = new Set();
-    const outSheets = [];
+    const groupWriter = new StreamingSheetGroupWriter(outName, rowsPerFile, log);
     let totalSheets = 0;
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -739,10 +834,11 @@
         const newName = uniqueSheetName(sheetName, usedNames);
         try{
           const rows = iterRows(wb, sheetName).map(sanitizeRow);
-          outSheets.push({ name: newName, rows });
+          await groupWriter.addSheet(newName, rows);
           totalSheets++;
           if(newName !== sheetName) log(`    → Sheet '${sheetName}' → đổi tên thành '${newName}' (trùng tên)`);
         }catch(err){
+          if(err instanceof MergeCancelled) throw err;
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - sheet có thể bị thiếu dữ liệu`, "warn");
         }
       }
@@ -751,7 +847,7 @@
     }
     if(totalSheets === 0) throw new Error("Không tìm thấy sheet nào để gộp.");
     log(`Tổng số sheet đã gộp: ${totalSheets}`, "ok");
-    return outSheets;
+    return groupWriter.finish();
   }
 
   // ============================================================
@@ -761,8 +857,6 @@
     mode: 1,
     files: [],       // [File, File, ...]
     cancelRequested: false,
-    lastWorkbook: null,
-    lastFilename: null,
   };
 
   const MODE_DESC = {
@@ -799,9 +893,9 @@
   const fileCountEl = $("fileCount");
   const btnStart = $("btnStart");
   const btnCancel = $("btnCancel");
-  const btnRedownload = $("btnRedownload");
   const btnClearFiles = $("btnClearFiles");
   const outputNameInput = $("outputName");
+  const rowsPerFileInput = $("rowsPerFile");
   const progressFill = $("progressFill");
   const progressText = $("progressText");
   const logBox = $("logBox");
@@ -897,12 +991,6 @@
     progressText.textContent = "Đang hủy...";
   });
 
-  btnRedownload.addEventListener("click", () => {
-    if(state.lastWorkbook && state.lastFilename){
-      XLSX.writeFile(state.lastWorkbook, state.lastFilename, { bookSST: true });
-    }
-  });
-
   btnStart.addEventListener("click", startMerge);
 
   async function startMerge(){
@@ -912,42 +1000,38 @@
     }
     const outName = ensureXlsxExt((outputNameInput.value || "ket_qua_gop.xlsx").trim());
     outputNameInput.value = outName;
+    const rowsPerFile = Math.min(900000, Math.max(50000, parseInt(rowsPerFileInput.value, 10) || 300000));
+    rowsPerFileInput.value = rowsPerFile;
 
     logBox.innerHTML = "";
     logBox.classList.remove("show");
     updateProgress(0);
     state.cancelRequested = false;
     setRunning(true);
-    btnRedownload.disabled = true;
 
-    logMsg(`Tìm thấy ${state.files.length} file. Bắt đầu gộp...`);
+    logMsg(`Tìm thấy ${state.files.length} file. Bắt đầu gộp (tối đa ${rowsPerFile.toLocaleString("vi-VN")} dòng/file)...`);
 
     try{
-      let sheetsArr;
+      let filesWritten;
       const isCancelled = () => state.cancelRequested;
 
       if(state.mode === 1){
-        sheetsArr = await mergeWithHeaderRow1(state.files, logMsg, updateProgress, isCancelled);
+        filesWritten = await mergeWithHeaderRow1(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }else if(state.mode === 2){
         const n = Math.max(1, parseInt(headerRowCountInput.value, 10) || 1);
-        sheetsArr = await mergeWithCustomHeader(state.files, n, logMsg, updateProgress, isCancelled);
+        filesWritten = await mergeWithCustomHeader(state.files, n, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }else if(state.mode === 3){
-        sheetsArr = await mergeNoHeader(state.files, logMsg, updateProgress, isCancelled);
+        filesWritten = await mergeNoHeader(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }else{
-        sheetsArr = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled);
+        filesWritten = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }
 
-      logMsg("Đang tạo file kết quả...");
-      const wb = buildWorkbookFromSheets(sheetsArr);
-      state.lastWorkbook = wb;
-      state.lastFilename = outName;
-      // bookSST:true — dữ liệu văn bản trùng lặp (tỉnh/thành, trạng thái...) chỉ lưu 1 lần
-      // trong bộ nhớ thay vì lặp lại theo từng ô, giúp giảm đáng kể RAM với file lớn.
-      await nextFrame(); // nhường 1 nhịp cho trình duyệt dọn rác trước bước nặng nhất
-      XLSX.writeFile(wb, outName, { bookSST: true });
       updateProgress(100);
-      logMsg(`✅ XONG — đã tải file "${outName}"`, "ok");
-      btnRedownload.disabled = false;
+      if(filesWritten.length <= 1){
+        logMsg(`✅ XONG — đã tải file "${filesWritten[0]}"`, "ok");
+      }else{
+        logMsg(`✅ XONG — dữ liệu lớn nên đã tự chia thành ${filesWritten.length} file: ${filesWritten.join(", ")}`, "ok");
+      }
     }catch(err){
       if(err instanceof MergeCancelled){
         logMsg("Đã hủy tiến trình theo yêu cầu người dùng.", "warn");
