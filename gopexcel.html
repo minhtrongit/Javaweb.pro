@@ -71,28 +71,139 @@
   .skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:#fff;padding:8px 14px;z-index:100;}
   .skip-link:focus{left:8px;top:8px;}
 
-  header.site{
-    background:var(--ink);
-    color:#fff;
-    padding:18px 24px;
+  .topbar{
     display:flex;
+    justify-content:space-between;
     align-items:center;
-    gap:14px;
+    background:#0f172a;
+    padding:12px 20px;
+    color:#fff;
     position:sticky;
     top:0;
     z-index:20;
-    border-bottom:3px solid var(--accent);
   }
-  .mark{
-    width:34px;height:34px;flex:none;
-    display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:2px;
-    background:transparent;
+  .logo-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:relative;
   }
-  .mark span{background:var(--amber);}
-  .mark span:nth-child(1),.mark span:nth-child(3),.mark span:nth-child(7){background:#fff;}
-  .mark span:nth-child(5){background:var(--accent);}
-  header.site h1{font-size:16px;margin:0;letter-spacing:.02em;font-weight:700;}
-  header.site p{margin:0;font-size:12px;color:#C9D2E0;}
+  .logo-box img{
+    height:45px;
+    border-radius:10px;
+    position:relative;
+    z-index:1;
+    box-shadow:
+      0 0 10px #00eaff,
+      0 0 20px #00eaff;
+  }
+  .logo-box::before{
+    content:'';
+    position:absolute;
+    left:0; top:0;
+    width:45px; height:45px;
+    border-radius:10px;
+    box-shadow:
+      0 0 20px #00eaff,
+      0 0 40px #00eaff,
+      0 0 60px #00eaff;
+    opacity:0;
+    animation: glowPulse 2s infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes glowPulse{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  .logo-text{
+    font-size:20px;
+    font-weight:bold;
+  }
+  .menu{
+    display:flex;
+    align-items:center;
+  }
+  .menu a{
+    color:#fff;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .menu a:hover{
+    color:#22c55e;
+  }
+
+  /* ===== NÚT HAMBURGER (MENU MOBILE) ===== */
+  .menu-toggle{
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    width:36px;
+    height:36px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    z-index:30;
+  }
+  .menu-toggle span{
+    display:block;
+    width:100%;
+    height:3px;
+    background:#fff;
+    border-radius:3px;
+    transition:transform 0.3s ease, opacity 0.3s ease;
+  }
+  .menu-toggle.active span:nth-child(1){
+    transform:translateY(8px) rotate(45deg);
+  }
+  .menu-toggle.active span:nth-child(2){
+    opacity:0;
+  }
+  .menu-toggle.active span:nth-child(3){
+    transform:translateY(-8px) rotate(-45deg);
+  }
+
+  @media(max-width:768px){
+    .topbar{
+      flex-wrap:wrap;
+    }
+    .menu-toggle{
+      display:flex;
+    }
+    .menu{
+      position:absolute;
+      top:100%;
+      left:0;
+      right:0;
+      flex-direction:column;
+      align-items:stretch;
+      background:#0f172a;
+      max-height:0;
+      overflow:hidden;
+      opacity:0;
+      padding:0 20px;
+      box-shadow:0 12px 20px rgba(0,0,0,0.35);
+      transition:max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+      z-index:100;
+    }
+    .menu.open{
+      max-height:400px;
+      opacity:1;
+      padding:10px 20px 18px;
+    }
+    .menu a{
+      margin-left:0;
+      padding:12px 0;
+      width:100%;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .menu a:last-child{
+      border-bottom:none;
+    }
+  }
 
   main{max-width:980px;margin:0 auto;padding:0 20px 80px;}
 
@@ -312,19 +423,24 @@
 <body>
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
 
-<header class="site">
-  <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-  <div style="flex:1;">
-    <h1>Gộp Excel</h1>
- 
+<div class="topbar">
+  <div class="logo-box">
+    <img src="logo.webp" width="45" height="45">
+    <div class="logo-text">Software Pro Store</div>
   </div>
-  <nav style="display:flex;gap:16px;font-size:13.5px;flex:none;flex-wrap:wrap;">
-    <a href="index.html" style="color:#C9D2E0;text-decoration:none;">Trang chủ</a>
-    <a href="mahoa.html" style="color:#C9D2E0;text-decoration:none;">Mã hóa</a>
-    <a href="scanqr.html" style="color:#C9D2E0;text-decoration:none;">Scan QR</a>
-    <a href="gopexcel.html" style="color:#fff;text-decoration:none;font-weight:700;">Gộp Excel</a>
-  </nav>
-</header>
+
+  <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Mở menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="menu" id="mainMenu">
+    <a href="index.html">Trang chủ</a>
+    <a href="mahoa.html">Mã hóa</a>
+    <a href="scanqr.html">Scan QR</a>
+    <a href="gopexcel.html">Gộp Excel</a>
+    <a href="#">Liên hệ</a>
+  </div>
+</div>
 
 <main id="main">
   <section class="hero">
@@ -511,38 +627,66 @@
     return t;
   }
 
+  // Dùng 1 <textarea> ẩn để giải mã HTML entity (&amp;, &nbsp;...) cho từng ô nhỏ —
+  // không dựng cây DOM cho cả bảng, chỉ decode chuỗi ngắn nên rất nhẹ RAM.
+  const _entityDecoder = document.createElement("textarea");
+  function decodeHtmlEntities(str){
+    if(!str) return "";
+    _entityDecoder.innerHTML = str;
+    return _entityDecoder.value;
+  }
+
   function tryParseHtmlTable(buf){
     let text;
-    try{ text = new TextDecoder("utf-8", {fatal:false}).decode(buf); }
+    try{ text = new TextDecoder("utf-8", { fatal: false }).decode(buf); }
     catch(e){ text = new TextDecoder("windows-1252").decode(buf); }
     if(!/<table/i.test(text)) return null;
-    let doc;
-    try{ doc = new DOMParser().parseFromString(text, "text/html"); }
-    catch(e){ return null; }
-    const tables = Array.from(doc.querySelectorAll("table"));
-    if(tables.length === 0) return null;
+
+    // Quét bằng regex trực tiếp trên chuỗi thay vì DOMParser — tránh dựng cả
+    // cây DOM (rất tốn RAM) khi bảng có cả triệu dòng. Phù hợp với cấu trúc
+    // bảng phẳng thường gặp ở các phần mềm kế toán/BHXH xuất file kiểu này.
+    const tableRe = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+    const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    const cellRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
 
     const sheets = {};
     const names = [];
-    tables.forEach((tbl, i) => {
+    let tableMatch, tableIdx = 0;
+
+    while((tableMatch = tableRe.exec(text)) !== null){
+      tableIdx++;
+      const tableContent = tableMatch[1];
       const rows = [];
-      tbl.querySelectorAll("tr").forEach(tr => {
-        const cells = Array.from(tr.querySelectorAll("td,th")).map(td => convertHtmlCell(td.textContent));
+      rowRe.lastIndex = 0;
+      let rowMatch;
+      while((rowMatch = rowRe.exec(tableContent)) !== null){
+        const rowContent = rowMatch[1];
+        const cells = [];
+        cellRe.lastIndex = 0;
+        let cellMatch;
+        while((cellMatch = cellRe.exec(rowContent)) !== null){
+          const rawCell = cellMatch[1].replace(/<[^>]+>/g, " ").trim();
+          const decoded = rawCell ? decodeHtmlEntities(rawCell) : "";
+          cells.push(convertHtmlCell(decoded));
+        }
         rows.push(cells);
-      });
+      }
+      if(rows.length === 0) continue;
       const maxCols = rows.reduce((m, r) => Math.max(m, r.length), 0);
       for(const r of rows){ while(r.length < maxCols) r.push(null); }
-      const name = `Sheet${i + 1}`;
+      const name = `Sheet${tableIdx}`;
       names.push(name);
       sheets[name] = { __aoa: rows };
-    });
+    }
+    if(names.length === 0) return null;
     return { SheetNames: names, Sheets: sheets, __isHtmlFallback: true };
   }
 
   async function readWorkbook(file){
     const buf = await file.arrayBuffer();
     try{
-      const wb = XLSX.read(buf, { type: "array", cellDates: false, raw: true });
+      // dense:true — giảm đáng kể RAM khi đọc file nguồn có hàng trăm nghìn/triệu dòng
+      const wb = XLSX.read(buf, { type: "array", cellDates: false, raw: true, dense: true });
       if(!wb.SheetNames || wb.SheetNames.length === 0) throw new Error("File không có sheet nào");
       return wb;
     }catch(err){
@@ -737,6 +881,7 @@
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
+      wb = null; // giải phóng bộ nhớ file nguồn đã xử lý xong trước khi sang file tiếp theo
       progress((fi + 1) / total * 100);
       await nextFrame();
     }
@@ -776,6 +921,7 @@
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
+      wb = null; // giải phóng bộ nhớ file nguồn đã xử lý xong trước khi sang file tiếp theo
       progress((fi + 1) / total * 100);
       await nextFrame();
     }
@@ -808,6 +954,7 @@
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
         }
       }
+      wb = null; // giải phóng bộ nhớ file nguồn đã xử lý xong trước khi sang file tiếp theo
       progress((fi + 1) / total * 100);
       await nextFrame();
     }
@@ -842,6 +989,7 @@
           log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - sheet có thể bị thiếu dữ liệu`, "warn");
         }
       }
+      wb = null; // giải phóng bộ nhớ file nguồn đã xử lý xong trước khi sang file tiếp theo
       progress((fi + 1) / total * 100);
       await nextFrame();
     }
@@ -1045,6 +1193,28 @@
     }
   }
 })();
+</script>
+
+<script>
+/* ===== MENU MOBILE (ẨN/HIỆN KHI NHẤN) ===== */
+const menuToggle = document.getElementById('menuToggle');
+const mainMenu = document.getElementById('mainMenu');
+
+function toggleMenu(){
+  const isOpen = mainMenu.classList.toggle('open');
+  menuToggle.classList.toggle('active', isOpen);
+  menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeMenu(){
+  mainMenu.classList.remove('open');
+  menuToggle.classList.remove('active');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+mainMenu.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', closeMenu);
+});
 </script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>

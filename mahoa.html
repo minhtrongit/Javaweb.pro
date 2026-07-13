@@ -85,33 +85,138 @@
   a{color:inherit;}
   button{font-family:inherit; cursor:pointer;}
 
-  /* ---------- Header ---------- */
+  /* ---------- Header (giống trang chủ index.html) ---------- */
   .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:22px clamp(20px,4vw,48px);
-    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#0f172a;
+    padding:12px 20px;
+    color:#fff;
     position:sticky; top:0; z-index:50;
-    background:rgba(10,13,19,0.85);
-    backdrop-filter:blur(14px);
   }
-  .brand{ display:flex; align-items:center; gap:12px; }
-  .brand-mark{
-    width:38px; height:38px; border-radius:10px;
-    background:linear-gradient(135deg, var(--encode) 0%, var(--decode) 100%);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono); font-weight:600; font-size:15px; color:#0A0D13;
-    flex-shrink:0;
+  .logo-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:relative;
   }
-  .brand-text h1{
-    font-family:var(--display); font-size:17px; font-weight:700; letter-spacing:0.2px;
+  .logo-box img{
+    height:45px;
+    border-radius:10px;
+    position:relative;
+    z-index:1;
+    box-shadow:
+      0 0 10px #00eaff,
+      0 0 20px #00eaff;
   }
-  .brand-text p{ font-size:12px; color:var(--text-muted); font-family:var(--mono); margin-top:1px;}
-  .topbar-tag{
-    font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
-    border:1px solid var(--border); padding:6px 12px; border-radius:100px;
-    display:flex; align-items:center; gap:7px;
+  .logo-box::before{
+    content:'';
+    position:absolute;
+    left:0; top:0;
+    width:45px; height:45px;
+    border-radius:10px;
+    box-shadow:
+      0 0 20px #00eaff,
+      0 0 40px #00eaff,
+      0 0 60px #00eaff;
+    opacity:0;
+    animation: glowPulse 2s infinite alternate;
+    pointer-events:none;
   }
-  .topbar-tag .dot{ width:6px; height:6px; border-radius:50%; background:var(--decode); box-shadow:0 0 8px var(--decode); }
+  @keyframes glowPulse{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  .logo-text{
+    font-size:20px;
+    font-weight:bold;
+  }
+  .menu{
+    display:flex;
+    align-items:center;
+  }
+  .menu a{
+    color:#fff;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .menu a:hover{
+    color:#22c55e;
+  }
+
+  /* ===== NÚT HAMBURGER (MENU MOBILE) ===== */
+  .menu-toggle{
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    width:36px;
+    height:36px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    z-index:30;
+  }
+  .menu-toggle span{
+    display:block;
+    width:100%;
+    height:3px;
+    background:#fff;
+    border-radius:3px;
+    transition:transform 0.3s ease, opacity 0.3s ease;
+  }
+  .menu-toggle.active span:nth-child(1){
+    transform:translateY(8px) rotate(45deg);
+  }
+  .menu-toggle.active span:nth-child(2){
+    opacity:0;
+  }
+  .menu-toggle.active span:nth-child(3){
+    transform:translateY(-8px) rotate(-45deg);
+  }
+
+  @media(max-width:768px){
+    .topbar{
+      flex-wrap:wrap;
+    }
+    .menu-toggle{
+      display:flex;
+    }
+    .menu{
+      position:absolute;
+      top:100%;
+      left:0;
+      right:0;
+      flex-direction:column;
+      align-items:stretch;
+      background:#0f172a;
+      max-height:0;
+      overflow:hidden;
+      opacity:0;
+      padding:0 20px;
+      box-shadow:0 12px 20px rgba(0,0,0,0.35);
+      transition:max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+      z-index:100;
+    }
+    .menu.open{
+      max-height:400px;
+      opacity:1;
+      padding:10px 20px 18px;
+    }
+    .menu a{
+      margin-left:0;
+      padding:12px 0;
+      width:100%;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .menu a:last-child{
+      border-bottom:none;
+    }
+  }
 
   /* ---------- Layout ---------- */
   .shell{
@@ -361,7 +466,6 @@
       background-repeat:no-repeat; background-position:right 12px center; background-size:18px;
     }
     .topbar{ padding:16px 18px; }
-    .topbar-tag{ display:none; }
     .switch-col{ padding:14px 20px; flex-direction:row; }
     .convert-grid{ grid-template-columns:1fr; }
   }
@@ -370,21 +474,21 @@
 <body>
 
 <div class="topbar">
-  <div class="brand">
-    <div class="brand-mark">IT</div>
-    <div class="brand-text">
-      <h1>Cipher Studio</h1>
-  <!--    <p>javaweb.pro — mã hoá &amp; giải mã đa năng</p> -->
-    </div>
+  <div class="logo-box">
+    <img src="logo.webp" width="45" height="45">
+    <div class="logo-text">Software Pro Store</div>
   </div>
-  <div style="display:flex;align-items:center;gap:22px;">
-    <nav style="display:flex;gap:18px;font-family:var(--body);font-size:14px;">
-      <a href="index.html" style="color:var(--text-muted);text-decoration:none;">Trang chủ</a>
-      <a href="mahoa.html" style="color:var(--text);text-decoration:none;font-weight:600;">Mã hóa</a>
-      <a href="scanqr.html" style="color:var(--text-muted);text-decoration:none;">Scan QR</a>
-      <a href="gopexcel.html" style="color:var(--text-muted);text-decoration:none;">Gộp Excel</a>
-    </nav>
-    <div class="topbar-tag"><span class="dot"></span> Chạy hoàn toàn trên trình duyệt — không gửi dữ liệu đi đâu cả</div>
+
+  <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Mở menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="menu" id="mainMenu">
+    <a href="index.html">Trang chủ</a>
+    <a href="mahoa.html">Mã hóa</a>
+    <a href="scanqr.html">Scan QR</a>
+    <a href="gopexcel.html">Gộp Excel</a>
+    <a href="#">Liên hệ</a>
   </div>
 </div>
 
@@ -919,6 +1023,26 @@ $('downloadXlsxBtn').addEventListener('click', () => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Kết quả');
   XLSX.writeFile(wb, `ketqua_${state.cipherKey}_${state.mode}.xlsx`);
+});
+
+/* ===== MENU MOBILE (ẨN/HIỆN KHI NHẤN) ===== */
+const menuToggle = document.getElementById('menuToggle');
+const mainMenu = document.getElementById('mainMenu');
+
+function toggleMenu(){
+  const isOpen = mainMenu.classList.toggle('open');
+  menuToggle.classList.toggle('active', isOpen);
+  menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeMenu(){
+  mainMenu.classList.remove('open');
+  menuToggle.classList.remove('active');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+mainMenu.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', closeMenu);
 });
 
 /* ---------- Init ---------- */
