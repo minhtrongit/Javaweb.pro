@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tính Tuổi Hưu — Tra cứu thời điểm hưởng lương hưu, miễn phí | javaweb.pro</title>
+    <meta name="description" content="Công cụ miễn phí tra cứu thời điểm hưởng lương hưu theo lộ trình tăng tuổi nghỉ hưu mới nhất. Tra cứu cho từng cá nhân hoặc xử lý hàng loạt từ file Excel, chạy hoàn toàn trên trình duyệt.">
+    <meta name="keywords" content="tính tuổi hưu, thời điểm nghỉ hưu, tuổi nghỉ hưu 2026, tra cứu tuổi hưu, lộ trình tăng tuổi nghỉ hưu">
+    <meta property="og:title" content="Tính Tuổi Hưu — Tra cứu thời điểm hưởng lương hưu">
+    <meta property="og:description" content="Tra cứu thời điểm hưởng lương hưu theo lộ trình mới nhất, hỗ trợ tra cứu hàng loạt từ file Excel.">
+    <meta property="og:type" content="website">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="javaweb.pro">
+    <link rel="canonical" href="https://javaweb.pro/tinhtuoihuu.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tính Tuổi Hưu — Tra cứu thời điểm hưởng lương hưu">
+    <meta name="twitter:description" content="Tra cứu thời điểm hưởng lương hưu theo lộ trình mới nhất, hỗ trợ tra cứu hàng loạt từ file Excel.">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-06C3LFSGJC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-06C3LFSGJC');
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Tính Tuổi Hưu",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "url": "https://javaweb.pro/tinhtuoihuu.html",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "VND"}
+    }
+    </script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%224%22 fill=%22%2314213D%22/><rect x=%224%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%2214%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%224%22 y=%2214%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/></svg>">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0284c7;
+            --primary-hover: #0369a1;
+            --success-color: #16a34a;
+            --success-hover: #15803d;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .btn-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            background-color: #fff;
+            white-space: nowrap;
+        }
+
+        .btn-link.download-template {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-link.download-template:hover {
+            background-color: rgba(2, 132, 199, 0.05);
+        }
+
+        .btn-link.download-doc {
+            color: #e11d48;
+            border-color: #e11d48;
+        }
+        .btn-link.download-doc:hover {
+            background-color: rgba(225, 29, 72, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            background-color: #fff;
+            transition: all 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        .gender-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .gender-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .gender-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .gender-label {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            background-color: #fff;
+        }
+
+        .gender-option input[type="radio"]:checked + .gender-label {
+            background-color: rgba(2, 132, 199, 0.08);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .result-box.success {
+            background-color: #f0fdf4;
+            border-left: 4px solid var(--success-color);
+            color: #14532d;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .result-box.success strong {
+            font-size: 18px;
+            color: #000;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .note {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 25px;
+            line-height: 1.4;
+        }
+
+        .file-zone {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        #sheetSelectContainer {
+            margin-top: 18px;
+            display: none;
+            text-align: left;
+        }
+
+        #processFileBtn {
+            margin-top: 18px;
+            display: none;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* ---------- Header (giống các trang khác) ---------- */
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:#0f172a;
+            padding:12px 20px;
+            color:#fff;
+            position:sticky;
+            top:0;
+            z-index:50;
+        }
+        .logo-box{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            position:relative;
+        }
+        .logo-box img{
+            height:45px;
+            border-radius:10px;
+            position:relative;
+            z-index:1;
+            box-shadow:
+                0 0 10px #00eaff,
+                0 0 20px #00eaff;
+        }
+        .logo-box::before{
+            content:'';
+            position:absolute;
+            left:0; top:0;
+            width:45px; height:45px;
+            border-radius:10px;
+            box-shadow:
+                0 0 20px #00eaff,
+                0 0 40px #00eaff,
+                0 0 60px #00eaff;
+            opacity:0;
+            animation: glowPulse 2s infinite alternate;
+            pointer-events:none;
+        }
+        @keyframes glowPulse{
+            from{ opacity:0; }
+            to{ opacity:1; }
+        }
+        .logo-text{
+            font-size:20px;
+            font-weight:bold;
+        }
+        .menu{
+            display:flex;
+            align-items:center;
+        }
+        .menu a{
+            color:#fff;
+            text-decoration:none;
+            margin-left:20px;
+            font-weight:500;
+            white-space:nowrap;
+        }
+        .menu a:hover{
+            color:#22c55e;
+        }
+
+        /* ===== NÚT HAMBURGER (MENU MOBILE) ===== */
+        .menu-toggle{
+            display:none;
+            flex-direction:column;
+            justify-content:center;
+            gap:5px;
+            width:36px;
+            height:36px;
+            background:none;
+            border:none;
+            cursor:pointer;
+            padding:0;
+            z-index:30;
+        }
+        .menu-toggle span{
+            display:block;
+            width:100%;
+            height:3px;
+            background:#fff;
+            border-radius:3px;
+            transition:transform 0.3s ease, opacity 0.3s ease;
+        }
+        .menu-toggle.active span:nth-child(1){
+            transform:translateY(8px) rotate(45deg);
+        }
+        .menu-toggle.active span:nth-child(2){
+            opacity:0;
+        }
+        .menu-toggle.active span:nth-child(3){
+            transform:translateY(-8px) rotate(-45deg);
+        }
+
+        @media(max-width:768px){
+            .topbar{
+                flex-wrap:wrap;
+            }
+            .menu-toggle{
+                display:flex;
+            }
+            .menu{
+                position:absolute;
+                top:100%;
+                left:0;
+                right:0;
+                flex-direction:column;
+                align-items:stretch;
+                background:#0f172a;
+                max-height:0;
+                overflow:hidden;
+                opacity:0;
+                padding:0 20px;
+                box-shadow:0 12px 20px rgba(0,0,0,0.35);
+                transition:max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+                z-index:100;
+            }
+            .menu.open{
+                max-height:400px;
+                opacity:1;
+                padding:10px 20px 18px;
+            }
+            .menu a{
+                margin-left:0;
+                padding:12px 0;
+                width:100%;
+                border-bottom:1px solid rgba(255,255,255,0.08);
+            }
+            .menu a:last-child{
+                border-bottom:none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-box">
+    <img src="logo.webp" width="45" height="45">
+    <div class="logo-text">Software Pro Store</div>
+  </div>
+
+  <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Mở menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="menu" id="mainMenu">
+    <a href="index.html">Trang chủ</a>
+    <a href="mahoa.html">Mã hóa</a>
+    <a href="scanqr.html">Scan QR</a>
+    <a href="gopexcel.html">Gộp Excel</a>
+    <a href="tinhtuoihuu.html">Tính tuổi hưu</a>
+    <a href="#">Liên hệ</a>
+  </div>
+</div>
+
+<div class="wrapper">
+    <div class="container">
+        <h2>Tính Thời Điểm Hưởng Lương Hưu</h2>
+
+        <div class="section-header">
+            <span class="section-title">Tra Cứu Cho Cá Nhân</span>
+        </div>
+
+        <div class="form-group">
+            <label>Giới tính người lao động</label>
+            <div class="gender-group">
+                <div class="gender-option">
+                    <input type="radio" id="male" name="gender" value="nam" checked>
+                    <label for="male" class="gender-label">Nam</label>
+                </div>
+                <div class="gender-option">
+                    <input type="radio" id="female" name="gender" value="nu">
+                    <label for="female" class="gender-label">Nữ</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Thời điểm sinh (Tháng / Năm)</label>
+            <div class="grid-2">
+                <select id="dob-month"></select>
+                <select id="dob-year"></select>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="calculateRetirement()">Tính thời điểm hưởng lương hưu</button>
+
+        <div class="result-box" id="resultBox">
+            <div class="result-title" id="resultTitle">Kết quả tra cứu:</div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+        
+        <div class="note">
+            Dữ liệu được đối chiếu chính xác theo lộ trình tăng tuổi nghỉ hưu.<br>
+            Thời điểm hưởng lương hưu tính từ tháng liền kề sau tháng sinh.
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section-header">
+            <span class="section-title">Xử Lý Hàng Loạt Từ File Excel (.xlsx)</span>
+            <button onclick="forceDownload('https://docs.google.com/spreadsheets/d/1LTMiTwcG2LsGFJZvUq_PcvAn63x2_f4M/export?format=xlsx', 'Mau_Import_TuoiHuu.xlsx')" class="btn-link download-template">
+                📊 Tải File Excel Mẫu
+            </button>
+        </div>
+        
+        <div class="file-zone">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="excelFile" style="cursor: pointer; color: var(--primary-color); font-weight: 700;">📁 Nhấp để chọn file Excel dữ liệu</label>
+                <input type="file" id="excelFile" accept=".xlsx, .xls" style="margin-top: 12px;" onchange="handleFileSelect(event)">
+            </div>
+
+            <div id="sheetSelectContainer" class="form-group">
+                <label style="font-weight: 600;">Chọn sheet cần tính toán:</label>
+                <select id="sheetSelect"></select>
+            </div>
+
+            <button id="processFileBtn" class="btn-success" onclick="processAndDownloadExcel()">⚙️ Tiến hành tính & Tải file kết quả</button>
+        </div>
+        
+        <div class="result-box" id="fileResultBox"></div>
+    </div>
+
+    <div class="footer-links">
+        <button onclick="forceDownload('https://drive.google.com/uc?export=download&id=14VYQMdyqhIc9GqA254nDHW6RAGLC7kIc', 'Van_Ban_Huong_Dan_Tuoi_Huu.pdf')" class="btn-link download-doc">
+            📄 Tải Văn Bản Hướng Dẫn Tuổi Hưu
+        </button>
+    </div>
+</div>
+
+<script>
+    // Bảng dữ liệu gốc tra cứu đối với Nam
+    const dbNam = {
+        '1_1961': {m: 5, y: 2021}, '2_1961': {m: 6, y: 2021}, '3_1961': {m: 7, y: 2021}, '4_1961': {m: 8, y: 2021},
+        '5_1961': {m: 9, y: 2021}, '6_1961': {m: 10, y: 2021}, '7_1961': {m: 11, y: 2021}, '8_1961': {m: 12, y: 2021},
+        '9_1961': {m: 1, y: 2022}, '10_1961': {m: 5, y: 2022}, '11_1961': {m: 6, y: 2022}, '12_1961': {m: 7, y: 2022},
+        '1_1962': {m: 8, y: 2022}, '2_1962': {m: 9, y: 2022}, '3_1962': {m: 10, y: 2022}, '4_1962': {m: 11, y: 2022},
+        '5_1962': {m: 12, y: 2022}, '6_1962': {m: 1, y: 2023}, '7_1962': {m: 5, y: 2023}, '8_1962': {m: 6, y: 2023},
+        '9_1962': {m: 7, y: 2023}, '10_1962': {m: 8, y: 2023}, '11_1962': {m: 9, y: 2023}, '12_1962': {m: 10, y: 2023},
+        '1_1963': {m: 11, y: 2023}, '2_1963': {m: 12, y: 2023}, '3_1963': {m: 1, y: 2024}, '4_1963': {m: 5, y: 2024},
+        '5_1963': {m: 6, y: 2024}, '6_1963': {m: 7, y: 2024}, '7_1963': {m: 8, y: 2024}, '8_1963': {m: 9, y: 2024},
+        '9_1963': {m: 10, y: 2024}, '10_1963': {m: 11, y: 2024}, '11_1963': {m: 12, y: 2024}, '12_1963': {m: 1, y: 2025},
+        '1_1964': {m: 5, y: 2025}, '2_1964': {m: 6, y: 2025}, '3_1964': {m: 7, y: 2025}, '4_1964': {m: 8, y: 2025},
+        '5_1964': {m: 9, y: 2025}, '6_1964': {m: 10, y: 2025}, '7_1964': {m: 11, y: 2025}, '8_1964': {m: 12, y: 2025},
+        '9_1964': {m: 1, y: 2026}, '10_1964': {m: 5, y: 2026}, '11_1964': {m: 6, y: 2026}, '12_1964': {m: 7, y: 2026},
+        '1_1965': {m: 8, y: 2026}, '2_1965': {m: 9, y: 2026}, '3_1965': {m: 10, y: 2026}, '4_1965': {m: 11, y: 2026},
+        '5_1965': {m: 12, y: 2026}, '6_1965': {m: 1, y: 2027}, '7_1965': {m: 5, y: 2027}, '8_1965': {m: 6, y: 2027},
+        '9_1965': {m: 7, y: 2027}, '10_1965': {m: 8, y: 2027}, '11_1965': {m: 9, y: 2027}, '12_1965': {m: 10, y: 2027},
+        '1_1966': {m: 11, y: 2027}, '2_1966': {m: 12, y: 2027}, '3_1966': {m: 1, y: 2028}
+    };
+
+    // Bảng dữ liệu gốc tra cứu đối với Nữ (Cập nhật chuẩn 100% từ file tuoihuunu.xlsx của bạn)
+    const dbNu = {
+        '1_1966': {m: 6, y: 2021}, '2_1966': {m: 7, y: 2021}, '3_1966': {m: 8, y: 2021}, '4_1966': {m: 9, y: 2021},
+        '5_1966': {m: 10, y: 2021}, '6_1966': {m: 11, y: 2021}, '7_1966': {m: 12, y: 2021}, '8_1966': {m: 1, y: 2022},
+        '9_1966': {m: 6, y: 2022}, '10_1966': {m: 7, y: 2022}, '11_1966': {m: 8, y: 2022}, '12_1966': {m: 9, y: 2022},
+        '1_1967': {m: 10, y: 2022}, '2_1967': {m: 11, y: 2022}, '3_1967': {m: 12, y: 2022}, '4_1967': {m: 1, y: 2023},
+        '5_1967': {m: 6, y: 2023}, '6_1967': {m: 7, y: 2023}, '7_1967': {m: 8, y: 2023}, '8_1967': {m: 9, y: 2023},
+        '9_1967': {m: 10, y: 2023}, '10_1967': {m: 11, y: 2023}, '11_1967': {m: 12, y: 2023}, '12_1967': {m: 1, y: 2024},
+        '1_1968': {m: 6, y: 2024}, '2_1968': {m: 7, y: 2024}, '3_1968': {m: 8, y: 2024}, '4_1968': {m: 9, y: 2024},
+        '5_1968': {m: 10, y: 2024}, '6_1968': {m: 11, y: 2024}, '7_1968': {m: 12, y: 2024}, '8_1968': {m: 1, y: 2025},
+        '9_1968': {m: 6, y: 2025}, '10_1968': {m: 7, y: 2025}, '11_1968': {m: 8, y: 2025}, '12_1968': {m: 9, y: 2025},
+        '1_1969': {m: 10, y: 2025}, '2_1969': {m: 11, y: 2025}, '3_1969': {m: 12, y: 2025}, '4_1969': {m: 1, y: 2026},
+        '5_1969': {m: 6, y: 2026}, '6_1969': {m: 7, y: 2026}, '7_1969': {m: 8, y: 2026}, '8_1969': {m: 9, y: 2026},
+        '9_1969': {m: 10, y: 2026}, '10_1969': {m: 11, y: 2026}, '11_1969': {m: 12, y: 2026}, '12_1969': {m: 1, y: 2027},
+        '1_1970': {m: 6, y: 2027}, '2_1970': {m: 7, y: 2027}, '3_1970': {m: 8, y: 2027}, '4_1970': {m: 9, y: 2027},
+        '5_1970': {m: 10, y: 2027}, '6_1970': {m: 11, y: 2027}, '7_1970': {m: 12, y: 2027}, '8_1970': {m: 1, y: 2028},
+        '9_1970': {m: 6, y: 2028}, '10_1970': {m: 7, y: 2028}, '11_1970': {m: 8, y: 2028}, '12_1970': {m: 9, y: 2028},
+        '1_1971': {m: 10, y: 2028}, '2_1971': {m: 11, y: 2028}, '3_1971': {m: 12, y: 2028}, '4_1971': {m: 1, y: 2029},
+        '5_1971': {m: 6, y: 2029}, '6_1971': {m: 7, y: 2029}, '7_1971': {m: 8, y: 2029}, '8_1971': {m: 9, y: 2029},
+        '9_1971': {m: 10, y: 2029}, '10_1971': {m: 11, y: 2029}, '11_1971': {m: 12, y: 2029}, '12_1971': {m: 1, y: 2030},
+        '1_1972': {m: 6, y: 2030}, '2_1972': {m: 7, y: 2030}, '3_1972': {m: 8, y: 2030}, '4_1972': {m: 9, y: 2030},
+        '5_1972': {m: 10, y: 2030}, '6_1972': {m: 11, y: 2030}, '7_1972': {m: 12, y: 2030}, '8_1972': {m: 1, y: 2031},
+        '9_1972': {m: 6, y: 2031}, '10_1972': {m: 7, y: 2031}, '11_1972': {m: 8, y: 2031}, '12_1972': {m: 9, y: 2031},
+        '1_1973': {m: 10, y: 2031}, '2_1973': {m: 11, y: 2031}, '3_1973': {m: 12, y: 2031}, '4_1973': {m: 1, y: 2032},
+        '5_1973': {m: 6, y: 2032}, '6_1973': {m: 7, y: 2032}, '7_1973': {m: 8, y: 2032}, '8_1973': {m: 9, y: 2032},
+        '9_1973': {m: 10, y: 2032}, '10_1973': {m: 11, y: 2032}, '11_1973': {m: 12, y: 2032}, '12_1973': {m: 1, y: 2033},
+        '1_1974': {m: 6, y: 2033}, '2_1974': {m: 7, y: 2033}, '3_1974': {m: 8, y: 2033}, '4_1974': {m: 9, y: 2033},
+        '5_1974': {m: 10, y: 2033}, '6_1974': {m: 11, y: 2033}, '7_1974': {m: 12, y: 2033}, '8_1974': {m: 1, y: 2034},
+        '9_1974': {m: 6, y: 2034}, '10_1974': {m: 7, y: 2034}, '11_1974': {m: 8, y: 2034}, '12_1974': {m: 9, y: 2034},
+        '1_1975': {m: 10, y: 2034}, '2_1975': {m: 11, y: 2034}, '3_1975': {m: 12, y: 2034}, '4_1975': {m: 1, y: 2035},
+        '5_1975': {m: 6, y: 2035}
+    };
+
+    // Khởi tạo các Dropdown cá nhân
+    const monthSelect = document.getElementById('dob-month');
+    const yearSelect = document.getElementById('dob-year');
+    for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(`Tháng ${i}`, i);
+    for (let i = 1950; i <= 2025; i++) yearSelect.options[yearSelect.options.length] = new Option(`Năm ${i}`, i);
+    yearSelect.value = 1975;
+
+    // HÀM LÕI TÍNH TOÁN
+    function calculateCore(genderCode, month, year) {
+        let rMonth, rYear;
+
+        if (genderCode === 'nam') {
+            if (year < 1961) {
+                rMonth = month + 1; rYear = year + 60;
+            } else if (year > 1966 || (year === 1966 && month >= 4)) {
+                rMonth = month + 1; rYear = year + 62;
+            } else {
+                const data = dbNam[`${month}_${year}`];
+                rMonth = data ? data.m : month + 1;
+                rYear = data ? data.y : year + 61;
+            }
+        } else { // nu
+            if (year < 1966) {
+                rMonth = month + 1; rYear = year + 55;
+            } else if (year > 1975 || (year === 1975 && month >= 6)) { // Đạt trần tối đa sau 5/1975
+                rMonth = month + 1; rYear = year + 60;
+            } else {
+                const data = dbNu[`${month}_${year}`];
+                rMonth = data ? data.m : month + 1;
+                rYear = data ? data.y : year + 59;
+            }
+        }
+        if (rMonth > 12) { rMonth = 1; rYear += 1; }
+        
+        // Chuẩn hóa dạng mm/yyyy (Thêm số 0 ở đầu nếu tháng < 10)
+        let formattedMonth = rMonth < 10 ? '0' + rMonth : rMonth;
+        return `${formattedMonth}/${rYear}`;
+    }
+
+    // TRA CỨU ĐƠN LẺ
+    function calculateRetirement() {
+        const gender = document.querySelector('input[name="gender"]:checked').value;
+        const month = parseInt(monthSelect.value);
+        const year = parseInt(yearSelect.value);
+        
+        const finalResult = calculateCore(gender, month, year);
+        const resultBox = document.getElementById('resultBox');
+        const resultContent = document.getElementById('resultContent');
+
+        resultBox.className = "result-box success";
+        resultContent.innerHTML = `Người lao động sinh vào: <strong>Tháng ${month < 10 ? '0' + month : month}/${year}</strong><br>` +
+                                  `Thời điểm hưởng lương hưu (Tháng liền kề sau khi đủ tuổi): <br>` +
+                                  `👉 <strong>Tháng ${finalResult}</strong>`;
+        resultBox.style.display = 'block';
+    }
+
+    // TẢI FILE TRỰC TIẾP
+    function forceDownload(url, filename) {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(() => {
+                window.open(url, '_blank');
+            });
+    }
+
+    // CHUẨN HÓA GIỚI TÍNH LINH HOẠT
+    function parseGender(val) {
+        if (val === undefined || val === null) return null;
+        let s = val.toString().trim().toLowerCase();
+        if (['nam', '1', 'true', 'male'].includes(s)) return 'nam';
+        if (['nữ', 'nu', '0', 'false', 'female'].includes(s)) return 'nu';
+        return null;
+    }
+
+    // XỬ LÝ ĐỌC VÀ CHUẨN HÓA NGÀY SINH RA THÀNH CHUỖI VĂN BẢN (TEXT)
+    function parseBirthDate(val) {
+        if (val === undefined || val === null) return null;
+        let str = val.toString().trim();
+        if (str === "") return null;
+
+        let month = 0, year = 0;
+        let originalTextStr = str; 
+
+        // Trường hợp 1: Nhập chuỗi có dấu gạch chéo '/' (dd/mm/yyyy hoặc mm/yyyy)
+        if (str.includes('/')) {
+            let parts = str.split('/');
+            if (parts.length === 3) {
+                month = parseInt(parts[1]);
+                year = parseInt(parts[2]);
+                let d = parseInt(parts[0]);
+                let dd = d < 10 ? '0' + d : d;
+                let mm = month < 10 ? '0' + month : month;
+                originalTextStr = `${dd}/${mm}/${year}`;
+            } else if (parts.length === 2) {
+                month = parseInt(parts[0]);
+                year = parseInt(parts[1]);
+                let mm = month < 10 ? '0' + month : month;
+                originalTextStr = `${mm}/${year}`;
+            }
+        } 
+        // Trường hợp 2: Người dùng chọn định dạng kiểu Date của Excel
+        else if (!isNaN(str)) {
+            let excelDateObj = XLSX.SSF.parse_date_code(parseInt(str));
+            if (excelDateObj) {
+                month = excelDateObj.m;
+                year = excelDateObj.y;
+                let d = excelDateObj.d;
+                let dd = d < 10 ? '0' + d : d;
+                let mm = month < 10 ? '0' + month : month;
+                originalTextStr = `${dd}/${mm}/${year}`;
+            }
+        }
+
+        if (month > 0 && year > 0) {
+            return { month: month, year: year, text: originalTextStr };
+        }
+        return null;
+    }
+
+    // XỬ LÝ NHẬP VÀ XUẤT FILE EXCEL
+    let globalWorkbook = null;
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const data = new Uint8Array(evt.target.result);
+            globalWorkbook = XLSX.read(data, { type: 'array' });
+            
+            const sheetSelect = document.getElementById('sheetSelect');
+            sheetSelect.innerHTML = "";
+            globalWorkbook.SheetNames.forEach(name => {
+                sheetSelect.options[sheetSelect.options.length] = new Option(name, name);
+            });
+
+            document.getElementById('sheetSelectContainer').style.display = 'block';
+            document.getElementById('processFileBtn').style.display = 'block';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function processAndDownloadExcel() {
+        if (!globalWorkbook) return;
+
+        const selectedSheetName = document.getElementById('sheetSelect').value;
+        const worksheet = globalWorkbook.Sheets[selectedSheetName];
+        
+        const matrixData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+        
+        if (matrixData.length <= 1) {
+            alert("Vui lòng chọn Sheet có chứa dữ liệu thực tế!");
+            return;
+        }
+
+        const headers = matrixData[0].map(h => h.toString().trim().toLowerCase());
+        
+        const idxBirth = headers.indexOf('ngaysinh(dd/mm/yyyy)');
+        const idxGender = headers.indexOf('gioitinh');
+        let idxRetire = headers.indexOf('thoidiemhuonghuu(thang/nam)');
+
+        if (idxBirth === -1 || idxGender === -1) {
+            alert("Cấu trúc file không đúng! Cần có chính xác cột 'ngaysinh(dd/mm/yyyy)' và 'gioitinh'.");
+            return;
+        }
+
+        if (idxRetire === -1) {
+            matrixData[0].push('thoidiemhuonghuu(thang/nam)');
+            idxRetire = matrixData[0].length - 1;
+        }
+
+        let totalProcessed = 0;
+
+        for (let i = 1; i < matrixData.length; i++) {
+            let currentRow = matrixData[i];
+            if (currentRow[idxBirth] === undefined || currentRow[idxBirth] === "") continue;
+
+            let parsedDate = parseBirthDate(currentRow[idxBirth]);
+            let parsedGender = parseGender(currentRow[idxGender]);
+
+            if (parsedDate) {
+                currentRow[idxBirth] = parsedDate.text;
+                
+                if (parsedGender && parsedDate.month > 0 && parsedDate.year > 0) {
+                    let retireTimeStr = calculateCore(parsedGender, parsedDate.month, parsedDate.year);
+                    currentRow[idxRetire] = retireTimeStr;
+                    totalProcessed++;
+                }
+            }
+        }
+
+        const outWorksheet = XLSX.utils.aoa_to_sheet(matrixData);
+        
+        // Quét toàn bộ ô dữ liệu và ép cứng kiểu định dạng TEXT (STRING)
+        for (let cell in outWorksheet) {
+            if (cell[0] === '!') continue; 
+            outWorksheet[cell].t = 's';   
+            outWorksheet[cell].z = '@';   
+        }
+
+        const outWorkbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(outWorkbook, outWorksheet, selectedSheetName);
+
+        XLSX.writeFile(outWorkbook, `KetQua_HuuTri_${selectedSheetName}.xlsx`);
+
+        const fileResultBox = document.getElementById('fileResultBox');
+        fileResultBox.innerHTML = `🎉 Đã xử lý hoàn tất cho <strong>${totalProcessed}</strong> dòng dữ liệu. Khung tuổi hưu của Nữ đã được đồng bộ chính xác!`;
+        fileResultBox.style.display = 'block';
+    }
+</script>
+
+<script>
+/* ===== MENU MOBILE (ẨN/HIỆN KHI NHẤN) ===== */
+const menuToggle = document.getElementById('menuToggle');
+const mainMenu = document.getElementById('mainMenu');
+
+function toggleMenu(){
+  const isOpen = mainMenu.classList.toggle('open');
+  menuToggle.classList.toggle('active', isOpen);
+  menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeMenu(){
+  mainMenu.classList.remove('open');
+  menuToggle.classList.remove('active');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+mainMenu.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', closeMenu);
+});
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// Đếm lượt truy cập trang này chung vào tổng số của toàn site (xem hướng dẫn cấu hình trong index.html)
+const firebaseConfig = {
+  apiKey: "AIzaSyCF9ZM-AXpOX7Hz14S-zKsaMYP6NlnM4jk",
+  authDomain: "javawebpro-e0a9a.firebaseapp.com",
+  databaseURL: "https://javawebpro-e0a9a-default-rtdb.firebaseio.com",
+  projectId: "javawebpro-e0a9a",
+};
+(function initVisitStats(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    if(!sessionStorage.getItem("gonn_visited_session")){
+      sessionStorage.setItem("gonn_visited_session", "1");
+      db.ref("stats/totalVisits").transaction((cur) => (cur || 0) + 1);
+    }
+    const presenceRef = db.ref("stats/onlineUsers").push();
+    presenceRef.set(true);
+    presenceRef.onDisconnect().remove();
+    window.addEventListener("beforeunload", () => presenceRef.remove());
+  }catch(err){
+    console.warn("Không khởi tạo được thống kê truy cập:", err);
+  }
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register("sw.js")
+    .then((reg) => reg.update())
+    .catch(err => console.log("SW lỗi:", err));
+}
+</script>
+
+</body>
+</html>

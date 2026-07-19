@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Đổi Định Dạng Ảnh Hàng Loạt - Đa Định Dạng</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+            color: #0f172a;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        /* Vùng kéo thả file */
+        .drop-zone {
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 45px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #eff6ff;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            background: #dbeafe;
+            border-color: var(--primary-hover);
+        }
+
+        .drop-zone p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Thanh cấu hình */
+        .config-panel {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .config-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select, input[type="range"] {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            background: white;
+            font-size: 14px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Danh sách ảnh hiển thị */
+        .preview-list {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background: #eee;
+        }
+
+        .file-name {
+            font-weight: 500;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .status {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status.ready { color: #64748b; }
+        .status.success { color: #10b981; }
+        .status.error { color: #ef4444; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Chuyển Đổi Định Dạng Ảnh Hàng Loạt</h1>
+    <div class="subtitle">Hỗ trợ đầy đủ định dạng: JPG, PNG, WebP, AVIF, GIF, BMP, ICO...</div>
+
+    <div class="drop-zone" id="dropZone">
+        <p>Kéo & thả nhiều ảnh vào đây hoặc <strong>Nhấp để chọn</strong></p>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+    </div>
+
+    <div class="config-panel">
+        <div class="config-group">
+            <label for="formatSelect">Định dạng muốn chuyển sang:</label>
+            <select id="formatSelect">
+                <optgroup label="Phổ biến & Tối ưu web">
+                    <option value="image/jpeg">JPEG (.jpg)</option>
+                    <option value="image/png" selected>PNG (.png)</option>
+                    <option value="image/webp">WebP (.webp)</option>
+                    <option value="image/avif">AVIF (.avif) — *Mới, nhẹ nhất*</option>
+                </optgroup>
+                <optgroup label="Định dạng khác">
+                    <option value="image/bmp">BMP (.bmp)</option>
+                    <option value="image/gif">GIF Tĩnh (.gif)</option>
+                    <option value="image/x-icon">ICO (.ico) — *Làm Favicon*</option>
+                    <option value="image/tiff">TIFF (.tiff)</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="config-group" id="qualityGroup" style="display: none;">
+            <label for="qualityInput">Chất lượng:</label>
+            <input type="range" id="qualityInput" min="0.1" max="1.0" step="0.05" value="0.85">
+            <span id="qualityVal">85%</span>
+        </div>
+
+        <button class="btn" id="convertBtn" disabled>Chuyển đổi & Tải ZIP</button>
+    </div>
+
+    <div class="preview-list" id="previewList" style="display: none;"></div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const convertBtn = document.getElementById('convertBtn');
+    const formatSelect = document.getElementById('formatSelect');
+    const qualityInput = document.getElementById('qualityInput');
+    const qualityVal = document.getElementById('qualityVal');
+    const qualityGroup = document.getElementById('qualityGroup');
+    const previewList = document.getElementById('previewList');
+
+    let selectedFiles = [];
+
+    // Bản đồ ánh xạ MIME type sang đuôi file thực tế
+    const mimeToExt = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'image/avif': 'avif',
+        'image/bmp': 'bmp',
+        'image/gif': 'gif',
+        'image/x-icon': 'ico',
+        'image/tiff': 'tiff'
+    };
+
+    // Kiểm tra xem trình duyệt hiện tại có hỗ trợ nén định dạng đầu ra đó không
+    function isFormatSupported(mimeType) {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 1;
+            const dataUrl = canvas.toDataURL(mimeType);
+            return dataUrl.startsWith(`data:${mimeType}`);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Hiển thị/Ẩn thanh trượt chất lượng (chỉ hiển thị với các định dạng hỗ trợ nén mất dữ liệu)
+    function toggleQualitySlider() {
+        const fmt = formatSelect.value;
+        if (fmt === 'image/jpeg' || fmt === 'image/webp' || fmt === 'image/avif') {
+            qualityGroup.style.display = 'flex';
+        } else {
+            qualityGroup.style.display = 'none';
+        }
+    }
+
+    qualityInput.addEventListener('input', (e) => {
+        qualityVal.textContent = Math.round(e.target.value * 100) + '%';
+    });
+
+    formatSelect.addEventListener('change', toggleQualitySlider);
+    toggleQualitySlider(); // Chạy kiểm tra ban đầu
+
+    // Sự kiện Kéo & Thả
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        // Lọc tất cả các định dạng ảnh phổ biến ở đầu vào bao gồm cả HEIC/HEIF, SVG, v.v.
+        const imageFiles = Array.from(files).filter(file => 
+            file.type.startsWith('image/') || 
+            /\.(heic|heif|avif|webp|jpg|jpeg|png|gif|bmp|ico|tiff|svg)$/i.test(file.name)
+        );
+        
+        if (imageFiles.length === 0) return;
+
+        selectedFiles = [...selectedFiles, ...imageFiles];
+        renderPreviews();
+        convertBtn.disabled = false;
+        previewList.style.display = 'flex';
+    }
+
+    function renderPreviews() {
+        previewList.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            // Tạo ảnh đại diện tạm thời (Nếu gặp file lạ như HEIC, objectURL có thể lỗi hiển thị nhưng Canvas vẫn sẽ cố đọc khi render)
+            let thumbSrc = "";
+            try { thumbSrc = URL.createObjectURL(file); } catch(e) { thumbSrc = ""; }
+            
+            item.innerHTML = `
+                <div class="file-info">
+                    <img class="thumb" src="${thumbSrc}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%23ddd\'/><text x=\'50%\' y=\'55%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'10\' fill=\'%23666\'>Ảnh</text></svg>'" alt="thumb">
+                    <div>
+                        <div class="file-name" title="${file.name}">${file.name}</div>
+                        <div class="file-size">${sizeInMB} MB</div>
+                    </div>
+                </div>
+                <div class="status ready" id="status-${index}">Sẵn sàng</div>
+            `;
+            previewList.appendChild(item);
+        });
+    }
+
+    convertBtn.addEventListener('click', async () => {
+        const targetFormat = formatSelect.value;
+
+        // Cảnh báo nếu trình duyệt của người dùng quá cũ không hỗ trợ xuất định dạng đã chọn (như AVIF trên một số bản Chrome cũ)
+        if (!isFormatSupported(targetFormat)) {
+            alert(`Trình duyệt của bạn hiện chưa hỗ trợ xuất trực tiếp ra định dạng ${mimeToExt[targetFormat].toUpperCase()}. Hệ thống sẽ tự động hạ cấp về PNG/JPEG để thay thế.`);
+        }
+
+        convertBtn.disabled = true;
+        convertBtn.textContent = 'Đang xử lý...';
+
+        const quality = parseFloat(qualityInput.value);
+        const extension = mimeToExt[targetFormat] || 'png';
+
+        const zip = new JSZip();
+        let successCount = 0;
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            const statusEl = document.getElementById(`status-${i}`);
+            statusEl.textContent = 'Đang render...';
+            statusEl.className = 'status';
+
+            try {
+                const blob = await convertImage(file, targetFormat, quality);
+                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                const newFileName = `${baseName}.${extension}`;
+                
+                zip.file(newFileName, blob);
+                
+                statusEl.textContent = 'Thành công';
+                statusEl.className = 'status success';
+                successCount++;
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = 'Không hỗ trợ/Lỗi';
+                statusEl.className = 'status error';
+            }
+        }
+
+        if (successCount > 0) {
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const downloadUrl = URL.createObjectURL(zipBlob);
+            
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `converted_images_${Date.now()}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+        }
+
+        convertBtn.disabled = false;
+        convertBtn.textContent = 'Chuyển đổi & Tải ZIP';
+    });
+
+    function convertImage(file, format, quality) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Xử lý nền: Tránh nền đen cho ảnh trong suốt khi chuyển sang định dạng không hỗ trợ Alpha (như JPEG, BMP)
+                if (format === 'image/jpeg' || format === 'image/bmp') {
+                    ctx.fillStyle = '#ffffff'; // Tô nền trắng
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                ctx.drawImage(img, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(img.src);
+                    if (blob) resolve(blob);
+                    else reject(new Error('Khởi tạo Blob lỗi'));
+                }, format, quality);
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                reject(new Error('Không thể đọc file ảnh'));
+            };
+        });
+    }
+</script>
+
+</body>
+</html>
