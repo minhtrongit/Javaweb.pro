@@ -1,437 +1,835 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chuyển Đổi Định Dạng Ảnh Hàng Loạt - Đa Định Dạng</title>
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #cbd5e1;
-        }
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đổi Định Dạng Ảnh Hàng Loạt — JPG, PNG, WebP, AVIF..., miễn phí | javaweb.pro</title>
+<meta name="description" content="Công cụ miễn phí chuyển đổi hàng loạt định dạng ảnh: JPG, PNG, WebP, AVIF, GIF, BMP, ICO, TIFF. Kéo thả nhiều ảnh, chọn định dạng và chất lượng, tải về 1 file ZIP — chạy hoàn toàn trên trình duyệt, không tải ảnh lên máy chủ.">
+<meta name="keywords" content="đổi định dạng ảnh, chuyển ảnh sang webp, convert jpg to png, chuyển đổi ảnh hàng loạt, ảnh sang avif, công cụ ảnh online">
+<meta property="og:title" content="Đổi Định Dạng Ảnh Hàng Loạt — miễn phí">
+<meta property="og:description" content="Kéo thả nhiều ảnh, chọn định dạng đích, tải về ngay 1 file ZIP — chạy hoàn toàn trong trình duyệt.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+<meta name="author" content="javaweb.pro">
+<link rel="canonical" href="https://javaweb.pro/imageconversion.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Đổi Định Dạng Ảnh Hàng Loạt — miễn phí">
+<meta name="twitter:description" content="Kéo thả nhiều ảnh, chọn định dạng đích, tải về ngay 1 file ZIP — chạy hoàn toàn trong trình duyệt.">
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 5px;
-            color: #0f172a;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #64748b;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        /* Vùng kéo thả file */
-        .drop-zone {
-            border: 2px dashed var(--primary-color);
-            border-radius: 8px;
-            padding: 45px 20px;
-            text-align: center;
-            cursor: pointer;
-            background: #eff6ff;
-            transition: all 0.3s ease;
-        }
-
-        .drop-zone:hover, .drop-zone.drag-over {
-            background: #dbeafe;
-            border-color: var(--primary-hover);
-        }
-
-        .drop-zone p {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        /* Thanh cấu hình */
-        .config-panel {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            padding: 15px;
-            background: #f1f5f9;
-            border-radius: 8px;
-        }
-
-        .config-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        select, input[type="range"] {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            outline: none;
-            background: white;
-            font-size: 14px;
-        }
-
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn:disabled {
-            background-color: #94a3b8;
-            cursor: not-allowed;
-        }
-
-        /* Danh sách ảnh hiển thị */
-        .preview-list {
-            margin-top: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px;
-            background: #fafafa;
-        }
-
-        .preview-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .thumb {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-            background: #eee;
-        }
-
-        .file-name {
-            font-weight: 500;
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .file-size {
-            font-size: 13px;
-            color: #64748b;
-        }
-
-        .status {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .status.ready { color: #64748b; }
-        .status.success { color: #10b981; }
-        .status.error { color: #ef4444; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-</head>
-<body>
-
-<div class="container">
-    <h1>Chuyển Đổi Định Dạng Ảnh Hàng Loạt</h1>
-    <div class="subtitle">Hỗ trợ đầy đủ định dạng: JPG, PNG, WebP, AVIF, GIF, BMP, ICO...</div>
-
-    <div class="drop-zone" id="dropZone">
-        <p>Kéo & thả nhiều ảnh vào đây hoặc <strong>Nhấp để chọn</strong></p>
-        <input type="file" id="fileInput" accept="image/*" multiple>
-    </div>
-
-    <div class="config-panel">
-        <div class="config-group">
-            <label for="formatSelect">Định dạng muốn chuyển sang:</label>
-            <select id="formatSelect">
-                <optgroup label="Phổ biến & Tối ưu web">
-                    <option value="image/jpeg">JPEG (.jpg)</option>
-                    <option value="image/png" selected>PNG (.png)</option>
-                    <option value="image/webp">WebP (.webp)</option>
-                    <option value="image/avif">AVIF (.avif) — *Mới, nhẹ nhất*</option>
-                </optgroup>
-                <optgroup label="Định dạng khác">
-                    <option value="image/bmp">BMP (.bmp)</option>
-                    <option value="image/gif">GIF Tĩnh (.gif)</option>
-                    <option value="image/x-icon">ICO (.ico) — *Làm Favicon*</option>
-                    <option value="image/tiff">TIFF (.tiff)</option>
-                </optgroup>
-            </select>
-        </div>
-
-        <div class="config-group" id="qualityGroup" style="display: none;">
-            <label for="qualityInput">Chất lượng:</label>
-            <input type="range" id="qualityInput" min="0.1" max="1.0" step="0.05" value="0.85">
-            <span id="qualityVal">85%</span>
-        </div>
-
-        <button class="btn" id="convertBtn" disabled>Chuyển đổi & Tải ZIP</button>
-    </div>
-
-    <div class="preview-list" id="previewList" style="display: none;"></div>
-</div>
-
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-06C3LFSGJC"></script>
 <script>
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const convertBtn = document.getElementById('convertBtn');
-    const formatSelect = document.getElementById('formatSelect');
-    const qualityInput = document.getElementById('qualityInput');
-    const qualityVal = document.getElementById('qualityVal');
-    const qualityGroup = document.getElementById('qualityGroup');
-    const previewList = document.getElementById('previewList');
-
-    let selectedFiles = [];
-
-    // Bản đồ ánh xạ MIME type sang đuôi file thực tế
-    const mimeToExt = {
-        'image/jpeg': 'jpg',
-        'image/png': 'png',
-        'image/webp': 'webp',
-        'image/avif': 'avif',
-        'image/bmp': 'bmp',
-        'image/gif': 'gif',
-        'image/x-icon': 'ico',
-        'image/tiff': 'tiff'
-    };
-
-    // Kiểm tra xem trình duyệt hiện tại có hỗ trợ nén định dạng đầu ra đó không
-    function isFormatSupported(mimeType) {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1;
-            canvas.height = 1;
-            const dataUrl = canvas.toDataURL(mimeType);
-            return dataUrl.startsWith(`data:${mimeType}`);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // Hiển thị/Ẩn thanh trượt chất lượng (chỉ hiển thị với các định dạng hỗ trợ nén mất dữ liệu)
-    function toggleQualitySlider() {
-        const fmt = formatSelect.value;
-        if (fmt === 'image/jpeg' || fmt === 'image/webp' || fmt === 'image/avif') {
-            qualityGroup.style.display = 'flex';
-        } else {
-            qualityGroup.style.display = 'none';
-        }
-    }
-
-    qualityInput.addEventListener('input', (e) => {
-        qualityVal.textContent = Math.round(e.target.value * 100) + '%';
-    });
-
-    formatSelect.addEventListener('change', toggleQualitySlider);
-    toggleQualitySlider(); // Chạy kiểm tra ban đầu
-
-    // Sự kiện Kéo & Thả
-    dropZone.addEventListener('click', () => fileInput.click());
-    
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        handleFiles(e.dataTransfer.files);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-    });
-
-    function handleFiles(files) {
-        // Lọc tất cả các định dạng ảnh phổ biến ở đầu vào bao gồm cả HEIC/HEIF, SVG, v.v.
-        const imageFiles = Array.from(files).filter(file => 
-            file.type.startsWith('image/') || 
-            /\.(heic|heif|avif|webp|jpg|jpeg|png|gif|bmp|ico|tiff|svg)$/i.test(file.name)
-        );
-        
-        if (imageFiles.length === 0) return;
-
-        selectedFiles = [...selectedFiles, ...imageFiles];
-        renderPreviews();
-        convertBtn.disabled = false;
-        previewList.style.display = 'flex';
-    }
-
-    function renderPreviews() {
-        previewList.innerHTML = '';
-        selectedFiles.forEach((file, index) => {
-            const item = document.createElement('div');
-            item.className = 'preview-item';
-            
-            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-            // Tạo ảnh đại diện tạm thời (Nếu gặp file lạ như HEIC, objectURL có thể lỗi hiển thị nhưng Canvas vẫn sẽ cố đọc khi render)
-            let thumbSrc = "";
-            try { thumbSrc = URL.createObjectURL(file); } catch(e) { thumbSrc = ""; }
-            
-            item.innerHTML = `
-                <div class="file-info">
-                    <img class="thumb" src="${thumbSrc}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect width=\'50\' height=\'50\' fill=\'%23ddd\'/><text x=\'50%\' y=\'55%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'10\' fill=\'%23666\'>Ảnh</text></svg>'" alt="thumb">
-                    <div>
-                        <div class="file-name" title="${file.name}">${file.name}</div>
-                        <div class="file-size">${sizeInMB} MB</div>
-                    </div>
-                </div>
-                <div class="status ready" id="status-${index}">Sẵn sàng</div>
-            `;
-            previewList.appendChild(item);
-        });
-    }
-
-    convertBtn.addEventListener('click', async () => {
-        const targetFormat = formatSelect.value;
-
-        // Cảnh báo nếu trình duyệt của người dùng quá cũ không hỗ trợ xuất định dạng đã chọn (như AVIF trên một số bản Chrome cũ)
-        if (!isFormatSupported(targetFormat)) {
-            alert(`Trình duyệt của bạn hiện chưa hỗ trợ xuất trực tiếp ra định dạng ${mimeToExt[targetFormat].toUpperCase()}. Hệ thống sẽ tự động hạ cấp về PNG/JPEG để thay thế.`);
-        }
-
-        convertBtn.disabled = true;
-        convertBtn.textContent = 'Đang xử lý...';
-
-        const quality = parseFloat(qualityInput.value);
-        const extension = mimeToExt[targetFormat] || 'png';
-
-        const zip = new JSZip();
-        let successCount = 0;
-
-        for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
-            const statusEl = document.getElementById(`status-${i}`);
-            statusEl.textContent = 'Đang render...';
-            statusEl.className = 'status';
-
-            try {
-                const blob = await convertImage(file, targetFormat, quality);
-                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-                const newFileName = `${baseName}.${extension}`;
-                
-                zip.file(newFileName, blob);
-                
-                statusEl.textContent = 'Thành công';
-                statusEl.className = 'status success';
-                successCount++;
-            } catch (err) {
-                console.error(err);
-                statusEl.textContent = 'Không hỗ trợ/Lỗi';
-                statusEl.className = 'status error';
-            }
-        }
-
-        if (successCount > 0) {
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            const downloadUrl = URL.createObjectURL(zipBlob);
-            
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = `converted_images_${Date.now()}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(downloadUrl);
-        }
-
-        convertBtn.disabled = false;
-        convertBtn.textContent = 'Chuyển đổi & Tải ZIP';
-    });
-
-    function convertImage(file, format, quality) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                const ctx = canvas.getContext('2d');
-                
-                // Xử lý nền: Tránh nền đen cho ảnh trong suốt khi chuyển sang định dạng không hỗ trợ Alpha (như JPEG, BMP)
-                if (format === 'image/jpeg' || format === 'image/bmp') {
-                    ctx.fillStyle = '#ffffff'; // Tô nền trắng
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                
-                ctx.drawImage(img, 0, 0);
-                
-                canvas.toBlob((blob) => {
-                    URL.revokeObjectURL(img.src);
-                    if (blob) resolve(blob);
-                    else reject(new Error('Khởi tạo Blob lỗi'));
-                }, format, quality);
-            };
-
-            img.onerror = () => {
-                URL.revokeObjectURL(img.src);
-                reject(new Error('Không thể đọc file ảnh'));
-            };
-        });
-    }
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-06C3LFSGJC');
 </script>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Đổi Định Dạng Ảnh Hàng Loạt",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web",
+  "url": "https://javaweb.pro/imageconversion.html",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "VND"}
+}
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%224%22 fill=%22%2314213D%22/><rect x=%224%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%2214%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%224%22 y=%2214%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/></svg>">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  :root{
+    --ink:#14213D;
+    --ink-soft:#4B5A78;
+    --paper:#F3F5F4;
+    --surface:#FFFFFF;
+    --line:#DCE2DF;
+    --accent:#0E7C7B;
+    --accent-deep:#095957;
+    --amber:#E2A33D;
+    --success:#2F9E58;
+    --error:#C44536;
+    --radius:10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+  }
+  a{color:var(--accent-deep);}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:#fff;padding:8px 14px;z-index:100;}
+  .skip-link:focus{left:8px;top:8px;}
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#0f172a;
+    padding:12px 20px;
+    color:#fff;
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .logo-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:relative;
+  }
+  .logo-box img{
+    height:45px;
+    border-radius:10px;
+    position:relative;
+    z-index:1;
+    box-shadow:
+      0 0 10px #00eaff,
+      0 0 20px #00eaff;
+  }
+  .logo-box::before{
+    content:'';
+    position:absolute;
+    left:0; top:0;
+    width:45px; height:45px;
+    border-radius:10px;
+    box-shadow:
+      0 0 20px #00eaff,
+      0 0 40px #00eaff,
+      0 0 60px #00eaff;
+    opacity:0;
+    animation: glowPulse 2s infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes glowPulse{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  .logo-text{
+    font-size:20px;
+    font-weight:bold;
+  }
+  .menu{
+    display:flex;
+    align-items:center;
+  }
+  .menu a{
+    color:#fff;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .menu a:hover{
+    color:#22c55e;
+  }
+
+  /* ===== NÚT HAMBURGER (MENU MOBILE) ===== */
+  .menu-toggle{
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    width:36px;
+    height:36px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    z-index:30;
+  }
+  .menu-toggle span{
+    display:block;
+    width:100%;
+    height:3px;
+    background:#fff;
+    border-radius:3px;
+    transition:transform 0.3s ease, opacity 0.3s ease;
+  }
+  .menu-toggle.active span:nth-child(1){
+    transform:translateY(8px) rotate(45deg);
+  }
+  .menu-toggle.active span:nth-child(2){
+    opacity:0;
+  }
+  .menu-toggle.active span:nth-child(3){
+    transform:translateY(-8px) rotate(-45deg);
+  }
+
+  @media(max-width:768px){
+    .topbar{
+      flex-wrap:wrap;
+    }
+    .menu-toggle{
+      display:flex;
+    }
+    .menu{
+      position:absolute;
+      top:100%;
+      left:0;
+      right:0;
+      flex-direction:column;
+      align-items:stretch;
+      background:#0f172a;
+      max-height:0;
+      overflow:hidden;
+      opacity:0;
+      padding:0 20px;
+      box-shadow:0 12px 20px rgba(0,0,0,0.35);
+      transition:max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+      z-index:100;
+    }
+    .menu.open{
+      max-height:400px;
+      opacity:1;
+      padding:10px 20px 18px;
+    }
+    .menu a{
+      margin-left:0;
+      padding:12px 0;
+      width:100%;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .menu a:last-child{
+      border-bottom:none;
+    }
+  }
+
+  main{max-width:980px;margin:0 auto;padding:0 20px 80px;}
+
+  .hero{
+    padding:56px 0 36px;
+    text-align:left;
+  }
+  .hero .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent-deep);
+    margin:0 0 10px;
+  }
+  .hero h2{
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.1;
+    margin:0 0 14px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  .hero p.lead{
+    max-width:none;
+    color:var(--ink-soft);
+    font-size:16px;
+    margin:0 0 8px;
+  }
+  .privacy-note{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:14px;
+    font-size:13px;
+    color:var(--accent-deep);
+    background:#E7F2F1;
+    border:1px solid #CFE5E3;
+    padding:6px 12px;
+    border-radius:999px;
+  }
+  .privacy-note::before{content:"●";color:var(--success);}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+    margin-bottom:22px;
+  }
+  .step-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+  }
+  .step-num{
+    font-family:var(--mono);
+    font-size:13px;
+    color:#fff;
+    background:var(--ink);
+    border-radius:6px;
+    padding:3px 9px;
+    font-weight:700;
+    flex:none;
+  }
+  .step-head h3{margin:0;font-size:19px;font-weight:700;}
+  .step-head .hint{margin:2px 0 0;color:var(--ink-soft);font-size:13.5px;}
+
+  .dropzone{
+    border:2px dashed #B9C2C9;
+    border-radius:var(--radius);
+    padding:36px 20px;
+    text-align:center;
+    transition:border-color .15s, background .15s;
+    background:#FAFBFB;
+    cursor:pointer;
+  }
+  .dropzone.drag, .dropzone:hover{border-color:var(--accent);background:#EEF7F6;}
+  .dropzone p{margin:0 0 6px;color:var(--ink-soft);font-size:14px;}
+  .dropzone strong{color:var(--accent-deep);}
+  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  button{
+    font:inherit;
+    cursor:pointer;
+    border-radius:7px;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+    padding:10px 18px;
+    font-weight:600;
+    font-size:14px;
+    border:1px solid var(--accent-deep);
+  }
+  .btn-primary:hover{background:var(--accent-deep);}
+  .btn-primary:disabled{background:#A9B4B3;border-color:#A9B4B3;cursor:not-allowed;}
+  .btn-secondary{
+    background:#fff;
+    color:var(--ink);
+    border:1px solid var(--line);
+    padding:10px 18px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent-deep);}
+  .btn-secondary:disabled{color:#A9B4B3;border-color:var(--line);cursor:not-allowed;}
+  .btn-danger{
+    background:#fff;color:var(--error);border:1px solid #E7BBB2;padding:10px 18px;font-size:14px;font-weight:600;
+  }
+  .btn-danger:hover{background:#FCEEEB;}
+  .btn-danger:disabled{color:#C9AFAA;border-color:var(--line);cursor:not-allowed;background:#fff;}
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible{
+    outline:3px solid var(--amber);
+    outline-offset:2px;
+  }
+
+  .settings-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;
+    margin-bottom:4px;
+  }
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;letter-spacing:.01em;}
+  .field input, .field select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;
+    font:inherit;font-size:14px;background:#fff;color:var(--ink);
+  }
+  .field input:focus, .field select:focus{border-color:var(--accent);}
+  .field .field-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  .field-quality{display:flex;align-items:center;gap:10px;}
+  .field-quality input[type="range"]{flex:1;padding:0;accent-color:var(--accent);}
+  .field-quality .val{font-family:var(--mono);font-size:13px;color:var(--ink-soft);min-width:40px;text-align:right;}
+
+  .file-chip-list{
+    list-style:none;margin:16px 0 0;padding:0;
+    display:flex;flex-direction:column;gap:8px;
+    max-height:400px;overflow:auto;
+  }
+  .file-chip{
+    display:flex;align-items:center;gap:12px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:8px 12px;
+    font-size:13.5px;
+  }
+  .file-chip .thumb{
+    width:44px;height:44px;object-fit:cover;border-radius:6px;
+    border:1px solid var(--line);background:#e9edf0;flex:none;
+  }
+  .file-chip .meta{flex:1;min-width:0;}
+  .file-chip .name{font-family:var(--mono);word-break:break-all;display:block;}
+  .file-chip .size{color:var(--ink-soft);font-size:12px;}
+  .file-chip .status{font-size:12.5px;font-weight:700;flex:none;white-space:nowrap;}
+  .file-chip .status.ready{color:var(--ink-soft);}
+  .file-chip .status.working{color:var(--amber);}
+  .file-chip .status.success{color:var(--success);}
+  .file-chip .status.error{color:var(--error);}
+  .file-chip button{
+    background:none;border:none;color:var(--error);font-size:13px;font-weight:700;padding:2px 6px;flex:none;
+  }
+  .empty-state{color:var(--ink-soft);font-size:13.5px;margin-top:14px;font-style:italic;}
+  .file-count{font-size:12.5px;color:var(--ink-soft);margin-top:10px;}
+
+  .progress-wrap{margin-top:18px;}
+  .progress-bar{
+    height:10px;background:var(--line);border-radius:999px;overflow:hidden;
+  }
+  .progress-bar > div{
+    height:100%;background:linear-gradient(90deg,var(--accent),var(--amber));
+    width:0%;transition:width .2s;
+  }
+  .progress-text{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+  .log{
+    margin-top:12px;font-family:var(--mono);font-size:12px;
+    background:var(--ink);color:#E3E8F0;
+    border-radius:7px;padding:12px;max-height:220px;overflow:auto;
+    display:none;
+  }
+  .log.show{display:block;}
+  .log div{margin-bottom:3px;word-break:break-word;}
+  .log .warn{color:var(--amber);}
+  .log .err{color:#FF9B8A;}
+  .log .ok{color:#7BD9A6;}
+
+  footer{
+    max-width:980px;margin:0 auto;padding:30px 20px 60px;
+    color:var(--ink-soft);font-size:12.5px;border-top:1px solid var(--line);
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .progress-bar > div{transition:none;}
+  }
+  .visually-hidden{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
+
+<div class="topbar">
+  <div class="logo-box">
+    <img src="logo.webp" width="45" height="45">
+    <div class="logo-text">Software Pro Store</div>
+  </div>
+
+  <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Mở menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="menu" id="mainMenu">
+    <a href="index.html">Trang chủ</a>
+    <a href="mahoa.html">Mã hóa</a>
+    <a href="scanqr.html">Scan QR</a>
+    <a href="gopexcel.html">Gộp Excel</a>
+    <a href="tinhtuoihuu.html">Tính tuổi hưu</a>
+    <a href="imageconversion.html">Đổi Ảnh</a>
+    <a href="#">Liên hệ</a>
+  </div>
+</div>
+
+<main id="main">
+  <section class="hero">
+    <p class="eyebrow">Image → Image · chạy trong trình duyệt</p>
+    <h2>Đổi định dạng ảnh hàng loạt</h2>
+    <p class="lead">Kéo thả nhiều ảnh hoặc cả thư mục, chọn định dạng đích (JPG, PNG, WebP, AVIF, GIF, BMP, ICO, TIFF...), công cụ sẽ chuyển đổi và đóng gói tất cả thành 1 file ZIP để tải về.</p>
+    <span class="privacy-note">Ảnh xử lý hoàn toàn trên máy bạn — không upload lên máy chủ nào</span>
+  </section>
+
+  <!-- STEP 1: thêm ảnh -->
+  <section class="card" aria-labelledby="step1-h">
+    <div class="step-head">
+      <span class="step-num">01</span>
+      <div>
+        <h3 id="step1-h">Thêm ảnh nguồn</h3>
+        <p class="hint">Hỗ trợ JPG, PNG, WebP, AVIF, GIF, BMP, ICO, TIFF, HEIC/HEIF, SVG...</p>
+      </div>
+    </div>
+
+    <div class="dropzone" id="dropZone">
+      <p>Kéo thả nhiều ảnh vào đây, hoặc <strong>bấm để chọn ảnh</strong></p>
+      <p style="font-size:12.5px;">Có thể chọn nhiều ảnh cùng lúc</p>
+      <input type="file" id="fileInput" accept="image/*" multiple class="visually-hidden" aria-label="Chọn ảnh nguồn">
+    </div>
+
+    <ul class="file-chip-list" id="previewList" aria-live="polite"></ul>
+    <p class="empty-state" id="emptyState">Chưa có ảnh nào được thêm.</p>
+    <p class="file-count" id="fileCount"></p>
+  </section>
+
+  <!-- STEP 2: chọn định dạng & bắt đầu -->
+  <section class="card" aria-labelledby="step2-h">
+    <div class="step-head">
+      <span class="step-num">02</span>
+      <div>
+        <h3 id="step2-h">Chọn định dạng đích &amp; bắt đầu</h3>
+        <p class="hint">Kết quả sẽ được nén chung vào 1 file .zip để tải về.</p>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <div class="field">
+        <label for="formatSelect">Định dạng muốn chuyển sang</label>
+        <select id="formatSelect">
+          <optgroup label="Phổ biến &amp; tối ưu cho web">
+            <option value="image/jpeg">JPEG (.jpg)</option>
+            <option value="image/png" selected>PNG (.png)</option>
+            <option value="image/webp">WebP (.webp)</option>
+            <option value="image/avif">AVIF (.avif) — mới, nhẹ nhất</option>
+          </optgroup>
+          <optgroup label="Định dạng khác">
+            <option value="image/bmp">BMP (.bmp)</option>
+            <option value="image/gif">GIF tĩnh (.gif)</option>
+            <option value="image/x-icon">ICO (.ico) — làm favicon</option>
+            <option value="image/tiff">TIFF (.tiff)</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field" id="qualityGroup" style="display:none;">
+        <label for="qualityInput">Chất lượng nén</label>
+        <div class="field-quality">
+          <input type="range" id="qualityInput" min="0.1" max="1.0" step="0.05" value="0.85">
+          <span class="val" id="qualityVal">85%</span>
+        </div>
+        <p class="field-hint">Chỉ áp dụng cho JPEG / WebP / AVIF (định dạng nén mất dữ liệu).</p>
+      </div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start;">
+      <button type="button" class="btn-primary" id="convertBtn" disabled>▶ Chuyển đổi &amp; tải ZIP</button>
+      <button type="button" class="btn-danger" id="clearBtn">Xoá hết ảnh</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar"><div id="progressFill"></div></div>
+      <p class="progress-text" id="progressText">Sẵn sàng</p>
+    </div>
+
+    <div class="log" id="logBox" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Toàn bộ quá trình đổi định dạng ảnh diễn ra ngay trên trình duyệt của bạn (không upload lên server). Nhiều ảnh dung lượng lớn có thể mất một chút thời gian xử lý tuỳ cấu hình máy.</p>
+  <p>© javaweb.pro</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+
+  const dropZone = $('dropZone');
+  const fileInput = $('fileInput');
+  const convertBtn = $('convertBtn');
+  const clearBtn = $('clearBtn');
+  const formatSelect = $('formatSelect');
+  const qualityInput = $('qualityInput');
+  const qualityVal = $('qualityVal');
+  const qualityGroup = $('qualityGroup');
+  const previewList = $('previewList');
+  const emptyState = $('emptyState');
+  const fileCountEl = $('fileCount');
+  const progressFill = $('progressFill');
+  const progressText = $('progressText');
+  const logBox = $('logBox');
+
+  let selectedFiles = [];
+
+  // Bản đồ ánh xạ MIME type sang đuôi file thực tế
+  const mimeToExt = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/avif': 'avif',
+    'image/bmp': 'bmp',
+    'image/gif': 'gif',
+    'image/x-icon': 'ico',
+    'image/tiff': 'tiff'
+  };
+
+  function fmtSize(bytes){
+    if(bytes < 1024) return bytes + " B";
+    if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + " KB";
+    return (bytes/1024/1024).toFixed(2) + " MB";
+  }
+
+  function logMsg(msg, cls){
+    logBox.classList.add("show");
+    const line = document.createElement("div");
+    if(cls) line.className = cls;
+    line.textContent = msg;
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  function updateProgress(pct){
+    const clamped = Math.max(0, Math.min(100, pct));
+    progressFill.style.width = clamped.toFixed(0) + "%";
+    progressText.textContent = clamped.toFixed(0) + "%";
+  }
+
+  // Kiểm tra xem trình duyệt hiện tại có hỗ trợ nén định dạng đầu ra đó không
+  function isFormatSupported(mimeType){
+    try{
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const dataUrl = canvas.toDataURL(mimeType);
+      return dataUrl.startsWith(`data:${mimeType}`);
+    }catch(e){
+      return false;
+    }
+  }
+
+  // Hiển thị/Ẩn thanh trượt chất lượng (chỉ với định dạng nén mất dữ liệu)
+  function toggleQualitySlider(){
+    const fmt = formatSelect.value;
+    qualityGroup.style.display = (fmt === 'image/jpeg' || fmt === 'image/webp' || fmt === 'image/avif') ? 'block' : 'none';
+  }
+  qualityInput.addEventListener('input', (e) => {
+    qualityVal.textContent = Math.round(e.target.value * 100) + '%';
+  });
+  formatSelect.addEventListener('change', toggleQualitySlider);
+  toggleQualitySlider();
+
+  // ---------- Chọn / kéo-thả ảnh ----------
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+  });
+  dropZone.setAttribute('tabindex', '0');
+  dropZone.setAttribute('role', 'button');
+
+  ["dragenter", "dragover"].forEach(ev => dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); dropZone.classList.add('drag');
+  }));
+  ["dragleave", "drop"].forEach(ev => dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); dropZone.classList.remove('drag');
+  }));
+  dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+  fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); fileInput.value = ""; });
+
+  clearBtn.addEventListener('click', () => {
+    selectedFiles = [];
+    renderPreviews();
+    logBox.innerHTML = "";
+    logBox.classList.remove("show");
+    updateProgress(0);
+    progressText.textContent = "Sẵn sàng";
+  });
+
+  function handleFiles(files){
+    // Lọc tất cả các định dạng ảnh phổ biến, bao gồm cả HEIC/HEIF, SVG...
+    const imageFiles = Array.from(files).filter(file =>
+      file.type.startsWith('image/') ||
+      /\.(heic|heif|avif|webp|jpg|jpeg|png|gif|bmp|ico|tiff|svg)$/i.test(file.name)
+    );
+    if(imageFiles.length === 0) return;
+
+    selectedFiles = [...selectedFiles, ...imageFiles];
+    renderPreviews();
+  }
+
+  function renderPreviews(){
+    previewList.innerHTML = '';
+    emptyState.style.display = selectedFiles.length ? 'none' : 'block';
+    convertBtn.disabled = selectedFiles.length === 0;
+    fileCountEl.textContent = selectedFiles.length ? `Đã chọn ${selectedFiles.length} ảnh` : "";
+
+    selectedFiles.forEach((file, index) => {
+      const li = document.createElement('li');
+      li.className = 'file-chip';
+
+      let thumbSrc = "";
+      try{ thumbSrc = URL.createObjectURL(file); }catch(e){ thumbSrc = ""; }
+      const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44'><rect width='44' height='44' fill='%23ddd'/></svg>";
+
+      li.innerHTML = `
+        <img class="thumb" src="${thumbSrc || fallbackSvg}" alt="" onerror="this.src='${fallbackSvg}'">
+        <div class="meta">
+          <span class="name" title="${file.name}">${file.name}</span>
+          <span class="size">${fmtSize(file.size)}</span>
+        </div>
+        <span class="status ready" id="status-${index}">Sẵn sàng</span>
+      `;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Xoá';
+      btn.setAttribute('aria-label', 'Xoá ảnh ' + file.name);
+      btn.addEventListener('click', () => {
+        selectedFiles.splice(index, 1);
+        renderPreviews();
+      });
+      li.appendChild(btn);
+      previewList.appendChild(li);
+    });
+  }
+  renderPreviews();
+
+  // ---------- Chuyển đổi ----------
+  convertBtn.addEventListener('click', async () => {
+    const targetFormat = formatSelect.value;
+
+    if(!isFormatSupported(targetFormat)){
+      logMsg(`⚠ Trình duyệt của bạn chưa hỗ trợ xuất trực tiếp định dạng ${(mimeToExt[targetFormat] || '').toUpperCase()}. Có thể sẽ tự hạ cấp về định dạng khác.`, "warn");
+    }
+
+    convertBtn.disabled = true;
+    clearBtn.disabled = true;
+    convertBtn.textContent = 'Đang xử lý...';
+    logBox.innerHTML = "";
+    logBox.classList.remove("show");
+    updateProgress(0);
+    logMsg(`Bắt đầu chuyển đổi ${selectedFiles.length} ảnh sang ${(mimeToExt[targetFormat] || 'png').toUpperCase()}...`);
+
+    const quality = parseFloat(qualityInput.value);
+    const extension = mimeToExt[targetFormat] || 'png';
+
+    const zip = new JSZip();
+    let successCount = 0;
+
+    for(let i = 0; i < selectedFiles.length; i++){
+      const file = selectedFiles[i];
+      const statusEl = $(`status-${i}`);
+      statusEl.textContent = 'Đang render...';
+      statusEl.className = 'status working';
+
+      try{
+        const blob = await convertImage(file, targetFormat, quality);
+        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        const newFileName = `${baseName}.${extension}`;
+        zip.file(newFileName, blob);
+
+        statusEl.textContent = 'Thành công';
+        statusEl.className = 'status success';
+        successCount++;
+      }catch(err){
+        statusEl.textContent = 'Lỗi';
+        statusEl.className = 'status error';
+        logMsg(`⚠ Lỗi khi xử lý "${file.name}": ${err.message}`, "warn");
+      }
+
+      updateProgress((i + 1) / selectedFiles.length * 100);
+      await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+    }
+
+    if(successCount > 0){
+      logMsg("Đang nén thành file .zip...");
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const downloadUrl = URL.createObjectURL(zipBlob);
+      const filename = `converted_images_${Date.now()}.zip`;
+
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      logMsg(`✅ XONG — đã tải "${filename}" (${successCount}/${selectedFiles.length} ảnh thành công)`, "ok");
+    }else{
+      logMsg("Không có ảnh nào chuyển đổi thành công.", "err");
+    }
+
+    convertBtn.disabled = false;
+    clearBtn.disabled = false;
+    convertBtn.textContent = '▶ Chuyển đổi & tải ZIP';
+  });
+
+  function convertImage(file, format, quality){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+
+        // Tô nền trắng cho định dạng không hỗ trợ alpha (JPEG, BMP) để tránh ảnh trong suốt bị đen
+        if(format === 'image/jpeg' || format === 'image/bmp'){
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(img.src);
+          if(blob) resolve(blob);
+          else reject(new Error('Khởi tạo dữ liệu ảnh thất bại'));
+        }, format, quality);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error('Không đọc được file ảnh'));
+      };
+    });
+  }
+})();
+</script>
+
+<script>
+/* ===== MENU MOBILE (ẨN/HIỆN KHI NHẤN) ===== */
+const menuToggle = document.getElementById('menuToggle');
+const mainMenu = document.getElementById('mainMenu');
+
+function toggleMenu(){
+  const isOpen = mainMenu.classList.toggle('open');
+  menuToggle.classList.toggle('active', isOpen);
+  menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeMenu(){
+  mainMenu.classList.remove('open');
+  menuToggle.classList.remove('active');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+mainMenu.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', closeMenu);
+});
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// Đếm lượt truy cập trang này chung vào tổng số của toàn site (xem hướng dẫn cấu hình trong index.html)
+const firebaseConfig = {
+  apiKey: "AIzaSyCF9ZM-AXpOX7Hz14S-zKsaMYP6NlnM4jk",
+  authDomain: "javawebpro-e0a9a.firebaseapp.com",
+  databaseURL: "https://javawebpro-e0a9a-default-rtdb.firebaseio.com",
+  projectId: "javawebpro-e0a9a",
+};
+(function initVisitStats(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    if(!sessionStorage.getItem("gonn_visited_session")){
+      sessionStorage.setItem("gonn_visited_session", "1");
+      db.ref("stats/totalVisits").transaction((cur) => (cur || 0) + 1);
+    }
+    const presenceRef = db.ref("stats/onlineUsers").push();
+    presenceRef.set(true);
+    presenceRef.onDisconnect().remove();
+    window.addEventListener("beforeunload", () => presenceRef.remove());
+  }catch(err){
+    console.warn("Không khởi tạo được thống kê truy cập:", err);
+  }
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register("sw.js")
+    .then((reg) => reg.update())
+    .catch(err => console.log("SW lỗi:", err));
+}
+</script>
 </body>
 </html>
