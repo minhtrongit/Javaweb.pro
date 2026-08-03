@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software Pro Store — Bộ công cụ tự động hoá cho dân văn phòng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e13;
+    --bg-alt:#0e141b;
+    --surface:#121a22;
+    --surface-2:#17212b;
+    --line:#223040;
+    --text:#e9eef3;
+    --muted:#8697a6;
+    --teal:#4fd8c4;
+    --teal-dim:#2d7d70;
+    --amber:#f2a93b;
+    --pink:#e8607a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em;}
+
+  /* Background texture */
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(79,216,196,0.12), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 20%, rgba(232,96,122,0.08), transparent 60%),
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:100% 100%, 100% 100%, 42px 42px, 42px 42px;
+    background-position:0 0, 0 0, -1px -1px, -1px -1px;
+    opacity:0.5;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 6vw;
+    background:rgba(10,14,19,0.75);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk'; font-weight:700; font-size:1.15rem;}
+  .logo .dot{width:9px; height:9px; border-radius:2px; background:var(--teal); box-shadow:0 0 12px var(--teal);}
+  .logo span.sub{color:var(--muted); font-weight:500; font-size:0.85rem; font-family:'JetBrains Mono';}
+  .nav-links{display:flex; gap:34px; font-size:0.92rem; color:var(--muted);}
+  .nav-links a{color:var(--muted); text-decoration:none; transition:color .2s;}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{
+    background:var(--teal); color:#06231d; font-weight:600; font-size:0.88rem;
+    padding:10px 20px; border-radius:8px; text-decoration:none;
+    box-shadow:0 0 0 1px rgba(79,216,196,0.4);
+  }
+  @media (max-width:860px){ .nav-links{display:none;} }
+
+  /* HERO */
+  .hero{
+    position:relative; z-index:1;
+    padding:70px 6vw 40px;
+    text-align:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono'; font-size:0.78rem; color:var(--teal);
+    border:1px solid var(--teal-dim); padding:6px 14px; border-radius:20px;
+    background:rgba(79,216,196,0.06);
+  }
+  .hero h1{
+    font-size:clamp(2rem, 5vw, 3.4rem);
+    font-weight:700; line-height:1.12; margin:22px auto 0; max-width:820px;
+  }
+  .hero h1 .accent{color:var(--teal);}
+  .hero p.lead{
+    max-width:560px; margin:20px auto 0; color:var(--muted); font-size:1.05rem; line-height:1.6;
+  }
+  .hero-ctas{display:flex; gap:14px; justify-content:center; margin-top:32px; flex-wrap:wrap;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--teal), #37a897);
+    color:#06231d; font-weight:700; padding:13px 26px; border-radius:9px;
+    text-decoration:none; font-size:0.95rem; box-shadow:0 8px 24px rgba(79,216,196,0.25);
+  }
+  .btn-ghost{
+    color:var(--text); border:1px solid var(--line); padding:13px 26px; border-radius:9px;
+    text-decoration:none; font-size:0.95rem; background:var(--surface);
+  }
+
+  /* 3D CAROUSEL */
+  .stage-wrap{
+    position:relative; z-index:1;
+    margin-top:60px;
+    padding:40px 0 20px;
+  }
+  .stage{
+    position:relative;
+    height:360px;
+    perspective:1500px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stage-track{
+    position:relative; width:230px; height:280px;
+    transform-style:preserve-3d;
+  }
+  .card3d{
+    position:absolute; top:0; left:0;
+    width:230px; height:280px;
+    border-radius:18px;
+    padding:20px;
+    background:linear-gradient(160deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line);
+    transition:transform .6s cubic-bezier(.22,.9,.3,1);
+    cursor:pointer;
+    overflow:hidden;
+  }
+  .card-inner{
+    width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    transition:opacity .5s ease, filter .5s ease;
+  }
+  .card3d .icon{
+    width:64px; height:64px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; overflow:hidden; font-family:'Space Grotesk'; font-weight:700;
+  }
+  .card3d .icon img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card3d h3{font-size:1.02rem; text-align:center; font-weight:600;}
+  .card3d p{font-size:0.78rem; color:var(--muted); text-align:center; font-family:'JetBrains Mono';}
+  .card3d.active{
+    box-shadow:0 30px 60px rgba(0,0,0,0.55), 0 0 0 1px var(--teal-dim);
+  }
+  .card3d.active .icon{box-shadow:0 0 30px currentColor;}
+
+  .stage-controls{
+    display:flex; align-items:center; justify-content:center; gap:22px;
+    margin-top:8px;
+  }
+  .stage-btn{
+    width:42px; height:42px; border-radius:50%;
+    border:1px solid var(--line); background:var(--surface); color:var(--text);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.1rem; transition:.2s;
+  }
+  .stage-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .stage-dots{display:flex; gap:8px;}
+  .stage-dots span{width:6px; height:6px; border-radius:50%; background:var(--line); transition:.3s;}
+  .stage-dots span.on{background:var(--teal); width:20px; border-radius:4px;}
+
+  /* SECTION SHARED */
+  section{position:relative; z-index:1; padding:80px 6vw;}
+  .section-head{max-width:600px; margin:0 auto 50px; text-align:center;}
+  .section-head .kicker{font-family:'JetBrains Mono'; color:var(--amber); font-size:0.8rem; letter-spacing:0.06em; text-transform:uppercase;}
+  .section-head h2{font-size:clamp(1.6rem,3vw,2.3rem); margin-top:10px;}
+  .section-head p{color:var(--muted); margin-top:12px; line-height:1.6;}
+
+  /* STATS */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    max-width:920px; margin:0 auto;
+  }
+  .stat{background:var(--surface); padding:26px 10px; text-align:center;}
+  .stat .num{font-family:'Space Grotesk'; font-size:1.8rem; font-weight:700; color:var(--teal);}
+  .stat .label{font-size:0.78rem; color:var(--muted); margin-top:4px;}
+  @media (max-width:700px){ .stats{grid-template-columns:repeat(2,1fr);} }
+
+  /* PRODUCT GRID */
+  .grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:22px;
+    max-width:980px; margin:0 auto;
+  }
+  @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
+  .p-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:28px; transition:transform .25s, border-color .25s;
+  }
+  .p-card:hover{transform:translateY(-4px); border-color:var(--teal-dim);}
+  .p-card .top{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .p-card .icon{
+    width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0; overflow:hidden; font-family:'Space Grotesk'; font-weight:700;
+  }
+  .p-card .icon img{width:100%; height:100%; object-fit:cover; display:block;}
+  .row.two-btn{gap:10px; justify-content:stretch;}
+  .row.two-btn .buy{flex:1; text-align:center; font-weight:600;}
+  .row.two-btn .buy.download{background:var(--teal); color:#06231d; border-color:var(--teal);}
+  .row.two-btn .buy.download:hover{background:#3fc4b1; color:#06231d;}
+  .p-card h3{font-size:1.1rem;}
+  .p-card .tag{font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--muted);}
+  .p-card p.desc{color:var(--muted); font-size:0.9rem; line-height:1.6; margin-bottom:16px;}
+  .p-card ul{list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:18px;}
+  .p-card li{font-size:0.85rem; color:var(--text); display:flex; gap:8px; align-items:flex-start;}
+  .p-card li::before{content:'—'; color:var(--teal); flex-shrink:0;}
+  .p-card .row{display:flex; align-items:center; justify-content:space-between;}
+  .price{font-family:'Space Grotesk'; font-weight:700; color:var(--amber);}
+  .buy{
+    background:transparent; border:1px solid var(--line); color:var(--text);
+    padding:9px 16px; border-radius:8px; font-size:0.85rem; text-decoration:none;
+    transition:.2s;
+  }
+  .buy:hover{border-color:var(--teal); color:var(--teal);}
+
+  /* WHY */
+  .why-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:980px; margin:0 auto;
+  }
+  @media (max-width:760px){ .why-grid{grid-template-columns:1fr;} }
+  .why-card{padding:24px; border-radius:14px; background:var(--bg-alt); border:1px solid var(--line);}
+  .why-card .n{font-family:'JetBrains Mono'; color:var(--teal); font-size:0.8rem;}
+  .why-card h3{font-size:1.02rem; margin:10px 0 8px;}
+  .why-card p{color:var(--muted); font-size:0.87rem; line-height:1.6;}
+
+  /* CTA */
+  .cta-band{
+    max-width:980px; margin:0 auto; border-radius:20px;
+    background:linear-gradient(135deg, rgba(79,216,196,0.1), rgba(232,96,122,0.06));
+    border:1px solid var(--teal-dim);
+    padding:50px 6vw; text-align:center;
+  }
+  .cta-band h2{font-size:clamp(1.4rem,3vw,2rem);}
+  .cta-band p{color:var(--muted); margin:12px 0 26px;}
+
+  footer{
+    position:relative; z-index:1; border-top:1px solid var(--line);
+    padding:40px 6vw; display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;
+    color:var(--muted); font-size:0.85rem;
+  }
+  footer .logo{font-size:1rem;}
+  footer .cols{display:flex; gap:60px; flex-wrap:wrap;}
+  footer .cols div{display:flex; flex-direction:column; gap:8px;}
+  footer .cols span.h{color:var(--text); font-weight:600; margin-bottom:4px; font-family:'Space Grotesk';}
+  footer a{color:var(--muted); text-decoration:none;}
+  footer a:hover{color:var(--teal);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span>Software Pro Store <span class="sub">/ javaweb.pro</span></div>
+  <div class="nav-links">
+    <a href="#carousel">Sản phẩm</a>
+    <a href="#stats">Số liệu</a>
+    <a href="#why">Vì sao chọn</a>
+    <a href="#contact">Liên hệ</a>
+  </div>
+  <a class="nav-cta" href="#carousel">Xem công cụ</a>
+</nav>
+
+<header class="hero">
+  <span class="eyebrow">● Đang hoạt động — 4 công cụ, cập nhật hàng tuần</span>
+  <h1>Tự động hoá việc <span class="accent">lặp đi lặp lại</span><br>trên máy tính của bạn</h1>
+  <p class="lead">Bộ công cụ desktop nhỏ gọn giúp dân văn phòng, kế toán và IT xử lý Excel, email và file hàng loạt — không cần biết lập trình.</p>
+  <div class="hero-ctas">
+    <a class="btn-primary" href="#carousel">Khám phá công cụ →</a>
+    <a class="btn-ghost" href="#contact">Dùng thử miễn phí</a>
+  </div>
+</header>
+
+<div class="stage-wrap" id="carousel">
+  <div class="stage">
+    <div class="stage-track" id="track"></div>
+  </div>
+  <div class="stage-controls">
+    <div class="stage-btn" id="prevBtn">‹</div>
+    <div class="stage-dots" id="dots"></div>
+    <div class="stage-btn" id="nextBtn">›</div>
+  </div>
+</div>
+
+<section id="stats">
+  <div class="stats">
+    <div class="stat"><div class="num">7</div><div class="label">Công cụ đang bán</div></div>
+    <div class="stat"><div class="num">2.000+</div><div class="label">Lượt tải</div></div>
+    <div class="stat"><div class="num">99%</div><div class="label">Hài lòng</div></div>
+    <div class="stat"><div class="num">24/7</div><div class="label">Hỗ trợ Zalo</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <div class="kicker">Bộ công cụ</div>
+    <h2>Mỗi công cụ giải quyết một việc, làm thật tốt</h2>
+    <p>Không phần mềm nào ôm đồm. Tải về, mở lên, chọn file — xong việc trong vài phút.</p>
+  </div>
+  <div class="grid" id="productGrid"></div>
+</section>
+
+<section id="why">
+  <div class="section-head">
+    <div class="kicker">Vì sao chọn</div>
+    <h2>Xây cho người dùng thật, không phải demo</h2>
+  </div>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="n">01</div>
+      <h3>Chạy offline, không cần server</h3>
+      <p>Toàn bộ xử lý diễn ra ngay trên máy bạn. File dữ liệu không rời khỏi máy tính, an toàn cho dữ liệu nội bộ.</p>
+    </div>
+    <div class="why-card">
+      <div class="n">02</div>
+      <h3>Giao diện tiếng Việt, dễ dùng</h3>
+      <p>Không thuật ngữ kỹ thuật rối rắm. Mở lên là hiểu ngay phải bấm nút nào.</p>
+    </div>
+    <div class="why-card">
+      <div class="n">03</div>
+      <h3>Cập nhật theo phản hồi thật</h3>
+      <p>Mỗi bản cập nhật đến từ yêu cầu của người dùng đang dùng công cụ mỗi ngày.</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="cta-band">
+    <h2>Cần một công cụ mà chưa ai làm?</h2>
+    <p>Nhắn Zalo mô tả công việc bạn đang làm thủ công — có thể nó sẽ thành công cụ tiếp theo.</p>
+    <a class="btn-primary" href="#">Nhắn tin Zalo tư vấn</a>
+  </div>
+</section>
+
+<footer>
+  <div class="logo"><span class="dot"></span>Software Pro Store</div>
+  <div class="cols">
+    <div>
+      <span class="h">Sản phẩm</span>
+      <a href="#">Excel Splitter</a>
+      <a href="#">Send Mail Auto</a>
+      <a href="#">File Rename Pro</a>
+      <a href="#">Excel To PDF</a>
+    </div>
+    <div>
+      <span class="h">Liên hệ</span>
+      <a href="#">javaweb.pro</a>
+      <a href="#">Zalo hỗ trợ</a>
+      <a href="#">Facebook</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const products = [
+  {
+    name:"Excel Splitter Pro - Tách Excel",
+    img:"images/3.2.tachexcel_splitter_1QR_active1.webp",
+    desc:"Tách một file Excel lớn thành nhiều file nhỏ theo cột, theo nhóm hoặc theo số dòng chỉ định — tự động, nhanh gọn.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1JaakktXNklYsX2PYX9p0tH3nS1D5kjYI?usp=sharing",
+    color:"#4fd8c4", bg:"rgba(79,216,196,0.12)", tag:"excel-splitter-pro.exe"
+  },
+  {
+    name:"Excel Merger Pro - Gộp Excel",
+    img:"images/29.Gopexcel_V2_active10.webp",
+    desc:"Gộp nhiều file Excel rời rạc thành một file duy nhất, giữ nguyên định dạng và cấu trúc dữ liệu gốc.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1LXbuRjjzax_LxQn884XUQ4MDUjP4wH1N?usp=sharing",
+    color:"#f2a93b", bg:"rgba(242,169,59,0.12)", tag:"excel-merger-pro.exe"
+  },
+  {
+    name:"Send Mail Auto Pro - Gửi mail tự động",
+    img:"images/10.SendMail_active3.webp",
+    desc:"Gửi email hàng loạt từ danh sách Excel, đính kèm file tự động theo từng người nhận.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1bFtNInfz3GmUqoqa1fVlA1DhUTOLnDEq?usp=sharing",
+    color:"#e8607a", bg:"rgba(232,96,122,0.12)", tag:"send-mail-auto-pro.exe"
+  },
+  {
+    name:"File Rename Pro - Đổi tên file tự động",
+    img:"images/47.DoiTenFile_active4.webp",
+    desc:"Đổi tên hàng loạt file/thư mục theo mẫu, số thứ tự hoặc dữ liệu lấy từ Excel.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1UoJAbusslMFNUViLef-1jqWAXuro8g-w?usp=sharing",
+    color:"#7aa2f7", bg:"rgba(122,162,247,0.12)", tag:"file-rename-pro.exe"
+  },
+  {
+    name:"PDF Splitter Pro - Tách file PDF theo chuỗi ký tự",
+    img:"images/4.TachPdfpro.webp",
+    desc:"Tách một file PDF lớn thành nhiều file nhỏ dựa theo chuỗi ký tự nhận diện trong nội dung.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1JduHAFjaUCDUlAyJgR7gfrVx6BVNo7cH?usp=sharing",
+    color:"#b48cf2", bg:"rgba(180,140,242,0.12)", tag:"pdf-splitter-pro.exe"
+  },
+  {
+    name:"PDF Replace Change Text Pro - Xóa, sửa chuỗi file pdf",
+    img:"images/42.ThayThe_DoiChuoi_Pdf.webp",
+    desc:"Tìm, xoá và thay thế chuỗi ký tự hàng loạt trong nhiều file PDF cùng lúc.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1F1uvriT3OdIq0gpbELt9_7mIYF94gS37?usp=sharing",
+    color:"#5ec9f2", bg:"rgba(94,201,242,0.12)", tag:"pdf-replace-pro.exe"
+  },
+  {
+    name:"Excel To PDF Pro - Chuyển excel sang PDF",
+    img:"images/59.ChuyenExcelSangPDF_active.webp",
+    desc:"Chuyển đổi hàng loạt file Excel sang PDF, giữ nguyên định dạng và bảng biểu.",
+    video:"https://vt.tiktok.com/ZSHVphFbp/",
+    download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing",
+    color:"#f2d35e", bg:"rgba(242,211,94,0.12)", tag:"excel-to-pdf-pro.exe"
+  }
+];
+
+// Product grid
+const grid = document.getElementById('productGrid');
+grid.innerHTML = products.map(p => `
+  <div class="p-card">
+    <div class="top">
+      <div class="icon" style="background:${p.bg}; color:${p.color}">
+        <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.name.charAt(0)}';">
+      </div>
+      <div>
+        <h3>${p.name}</h3>
+        <div class="tag">${p.tag}</div>
+      </div>
+    </div>
+    <p class="desc">${p.desc}</p>
+    <div class="row two-btn">
+      <a class="buy" href="${p.video}" target="_blank" rel="noopener">▶ Chi tiết</a>
+      <a class="buy download" href="${p.download}" target="_blank" rel="noopener">⭳ Download</a>
+    </div>
+  </div>
+`).join('');
+
+// 3D Carousel
+const track = document.getElementById('track');
+const dotsWrap = document.getElementById('dots');
+let current = 0;
+const total = products.length;
+const angleStep = 360 / total;
+const radius = 400;
+
+track.innerHTML = products.map((p,i) => `
+  <div class="card3d" data-i="${i}">
+    <div class="card-inner">
+      <div class="icon" style="background:${p.bg}; color:${p.color}">
+        <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.name.charAt(0)}';">
+      </div>
+      <h3>${p.name}</h3>
+      <p>${p.tag}</p>
+    </div>
+  </div>
+`).join('');
+
+dotsWrap.innerHTML = products.map((_,i)=>`<span data-i="${i}"></span>`).join('');
+
+const cards = [...track.children];
+const dots = [...dotsWrap.children];
+
+function layout(){
+  cards.forEach((card,i)=>{
+    const angle = angleStep * (i - current);
+    card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+    const isActive = i === current;
+    const inner = card.querySelector('.card-inner');
+    inner.style.opacity = isActive ? '1' : '0.22';
+    inner.style.filter = isActive ? 'blur(0)' : 'blur(1.5px)';
+    card.classList.toggle('active', isActive);
+  });
+  dots.forEach((d,i)=> d.classList.toggle('on', i===current));
+}
+
+function go(i){
+  current = (i + total) % total;
+  layout();
+}
+
+document.getElementById('nextBtn').onclick = ()=> go(current+1);
+document.getElementById('prevBtn').onclick = ()=> go(current-1);
+cards.forEach(c => c.addEventListener('click', ()=> go(parseInt(c.dataset.i))));
+dots.forEach(d => d.addEventListener('click', ()=> go(parseInt(d.dataset.i))));
+
+layout();
+
+let autoplay = setInterval(()=> go(current+1), 3200);
+document.getElementById('carousel').addEventListener('mouseenter', ()=> clearInterval(autoplay));
+document.getElementById('carousel').addEventListener('mouseleave', ()=> autoplay = setInterval(()=> go(current+1), 3200));
+</script>
+
+</body>
+</html>
