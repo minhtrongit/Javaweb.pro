@@ -374,21 +374,6 @@
   .empty-state{color:var(--ink-soft);font-size:13.5px;margin-top:14px;font-style:italic;}
   .file-count{font-size:12.5px;color:var(--ink-soft);margin-top:10px;}
 
-  .file-chip-wrap{display:flex;flex-direction:column;gap:0;}
-  .file-chip .btn-expand-sheet{
-    background:#fff;border:1px solid var(--line);color:var(--accent-deep);
-    font-weight:700;font-size:15px;width:26px;height:26px;line-height:1;border-radius:6px;
-    flex:none;padding:0;
-  }
-  .file-chip .btn-expand-sheet:hover{border-color:var(--accent);background:#EEF7F6;}
-  .sheet-select-panel{
-    margin:2px 0 6px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-top:none;
-    border-radius:0 0 7px 7px;display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--ink);
-  }
-  .sheet-select-panel .sheet-check{display:flex;align-items:center;gap:6px;cursor:pointer;}
-  .sheet-select-panel .panel-msg{color:var(--ink-soft);font-style:italic;}
-  .sheet-select-panel .panel-msg.err-text{color:var(--error);font-style:normal;}
-
   .settings-grid{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;
     margin-bottom:18px;
@@ -453,6 +438,7 @@
     <a href="mahoa.html">Mã hóa</a>
     <a href="scanqr.html">Scan QR</a>
     <a href="gopexcel.html">Gộp Excel</a>
+    <a href="tach-file-excel.html">Tách Excel</a>
     <a href="tinhtuoihuu.html">Tính tuổi hưu</a>
     <a href="imageconversion.html">Đổi Ảnh</a>
     <a href="#">Liên hệ</a>
@@ -473,7 +459,7 @@
       <span class="step-num">01</span>
       <div>
         <h3 id="step1-h">Chọn chế độ gộp</h3>
-        <p class="hint">Chọn 1 trong 5 chế độ tuỳ theo cấu trúc file nguồn của bạn.</p>
+        <p class="hint">Chọn 1 trong 4 chế độ tuỳ theo cấu trúc file nguồn của bạn.</p>
       </div>
     </div>
 
@@ -494,10 +480,6 @@
         <b>4️⃣ Gộp Sheet</b>
         <span>Mỗi sheet nguồn → 1 sheet kết quả</span>
       </button>
-      <button type="button" class="mode-card" data-mode="5" role="radio" aria-checked="false">
-        <b>5️⃣ Chọn Sheet</b>
-        <span>Chỉ gộp sheet bạn chọn, vào chung 1 sheet</span>
-      </button>
     </div>
 
     <p class="mode-desc" id="modeDesc"></p>
@@ -507,12 +489,6 @@
       <input type="number" id="headerRowCount" value="1" min="1" max="50" step="1">
       <p class="field-hint">Ví dụ tiêu đề nằm ở dòng 1–3 thì nhập 3.</p>
     </div>
-
-    <div class="field" id="sheetFilterField" style="display:none;margin-top:4px;">
-      <label for="sheetNameFilter">Tên sheet cần gộp (không bắt buộc)</label>
-      <input type="text" id="sheetNameFilter" placeholder="VD: Thang1, Thang2, Data">
-      <p class="field-hint">Cách nhau bởi dấu phẩy — hệ thống tự tìm và gộp các sheet trùng tên này ở <b>tất cả</b> file (không phân biệt hoa/thường). Dùng cách này nếu không muốn tự tick chọn từng sheet. Ở bước 2 bên dưới, mỗi file sẽ có nút "+" để bạn tự tick chọn sheet riêng cho file đó — nếu đã tick chọn riêng cho 1 file thì lựa chọn riêng sẽ được ưu tiên áp dụng cho file đó thay vì danh sách tên ở đây.</p>
-    </div>
   </section>
 
   <!-- STEP 2: thêm file -->
@@ -521,7 +497,7 @@
       <span class="step-num">02</span>
       <div>
         <h3 id="step2-h">Thêm file Excel nguồn</h3>
-        <p class="hint">Chấp nhận .xlsx / .xlsm / .xltx / .xltm / .xls. File đang mở dở (tên bắt đầu bằng "~$") sẽ tự động bị bỏ qua. Ở chế độ 5️⃣ Chọn Sheet, mỗi file sẽ có nút "+" để mở danh sách sheet và tick chọn sheet cần gộp.</p>
+        <p class="hint">Chấp nhận .xlsx / .xlsm / .xltx / .xltm / .xls. File đang mở dở (tên bắt đầu bằng "~$") sẽ tự động bị bỏ qua.</p>
       </div>
     </div>
 
@@ -707,21 +683,6 @@
     }
     if(names.length === 0) return null;
     return { SheetNames: names, Sheets: sheets, __isHtmlFallback: true };
-  }
-
-  // Đọc nhanh CHỈ danh sách tên sheet (không đọc dữ liệu ô) — dùng cho nút "+"
-  // ở chế độ 5 để người dùng xem và tick chọn sheet, không cần đọc cả file nặng.
-  async function listSheetNames(file){
-    const buf = await file.arrayBuffer();
-    try{
-      const wb = XLSX.read(buf, { type: "array", bookSheets: true });
-      if(wb.SheetNames && wb.SheetNames.length) return wb.SheetNames;
-      throw new Error("File không có sheet nào");
-    }catch(err){
-      const fallback = tryParseHtmlTable(buf);
-      if(fallback) return fallback.SheetNames;
-      throw err;
-    }
   }
 
   async function readWorkbook(file){
@@ -1116,99 +1077,12 @@
     return groupWriter.finish();
   }
 
-  // Chế độ 5 - Chọn Sheet: chỉ lấy những sheet được người dùng chỉ định, theo
-  // thứ tự ưu tiên:
-  //   1) Nếu file đó đã được tick chọn sheet riêng (qua nút "+") -> dùng đúng
-  //      các sheet đã tick cho file đó.
-  //   2) Ngược lại, nếu có nhập danh sách tên sheet (cách nhau dấu phẩy) ->
-  //      so khớp không phân biệt hoa/thường với tên sheet của file đó.
-  //   3) Nếu không có cả hai -> bỏ qua file (không rõ người dùng muốn sheet nào).
-  // Tất cả các sheet được chọn (từ mọi file) được GỘP CHUNG VÀO 1 SHEET kết quả
-  // duy nhất (giống cách gộp của chế độ 2): lấy đúng số dòng tiêu đề từ sheet
-  // đầu tiên gặp được, các sheet sau tự bỏ đúng số dòng đó và chỉ gộp phần dữ liệu.
-  async function mergeSelectedSheetsMode(files, fileMeta, filterText, headerRowCount, log, progress, isCancelled, outName, rowsPerFile){
-    let writer = null;
-    const filterNames = (filterText || "").split(",").map(s => s.trim()).filter(Boolean);
-    const filterSet = new Set(filterNames.map(s => s.toLowerCase()));
-    let skippedFiles = 0;
-    const total = files.length;
-    for(let fi = 0; fi < total; fi++){
-      if(isCancelled()) throw new MergeCancelled();
-      const file = files[fi];
-      const meta = fileMeta[fi] || {};
-      log(`[${fi + 1}/${total}] Đang đọc: ${file.name}`);
-      let wb;
-      try{ wb = await readWorkbook(file); }
-      catch(err){ log(`    ⚠ Không mở được file (${err.message}) - bỏ qua`, "warn"); progress((fi + 1) / total * 100); await nextFrame(); continue; }
-
-      let targetSheets;
-      if(meta.selected && meta.selected.size > 0){
-        targetSheets = wb.SheetNames.filter(n => meta.selected.has(n));
-        log(`    → Dùng ${targetSheets.length} sheet đã tick chọn riêng cho file này`);
-      }else if(filterSet.size > 0){
-        targetSheets = wb.SheetNames.filter(n => filterSet.has(String(n).trim().toLowerCase()));
-        if(targetSheets.length){
-          log(`    → Khớp ${targetSheets.length} sheet theo tên đã nhập: ${targetSheets.join(", ")}`);
-        }
-      }else{
-        targetSheets = [];
-      }
-
-      if(targetSheets.length === 0){
-        log(`    ⚠ Không có sheet nào được chọn/khớp tên trong file này - bỏ qua`, "warn");
-        skippedFiles++;
-        wb = null;
-        progress((fi + 1) / total * 100);
-        await nextFrame();
-        continue;
-      }
-
-      for(const sheetName of targetSheets){
-        if(isCancelled()) throw new MergeCancelled();
-        try{
-          const gen = iterRowsLazy(wb, sheetName);
-          const headerChunk = [];
-          for(let i = 0; i < headerRowCount; i++){
-            const next = gen.next();
-            if(next.done) break;
-            headerChunk.push(next.value || []);
-          }
-          if(headerChunk.length === 0) continue;
-          if(!writer){
-            writer = new StreamingFileWriter("Data", headerChunk, outName, rowsPerFile, log);
-            log(`    → Lấy ${headerChunk.length} dòng tiêu đề từ sheet '${sheetName}'`);
-          }
-          for(const row of gen){
-            if(isCancelled()) throw new MergeCancelled();
-            if(isBlankRow(row)) continue;
-            await writer.writeRow(row);
-          }
-        }catch(err){
-          if(err instanceof MergeCancelled) throw err;
-          log(`    ⚠ Lỗi khi đọc sheet '${sheetName}': ${err.message} - bỏ qua sheet này`, "warn");
-        }
-      }
-      wb = null; // giải phóng bộ nhớ file nguồn đã xử lý xong trước khi sang file tiếp theo
-      progress((fi + 1) / total * 100);
-      await nextFrame();
-    }
-    if(!writer || writer.totalRows === 0){
-      throw new Error("Không tìm thấy dữ liệu nào để gộp. Hãy tick chọn sheet ở từng file (nút \"+\") hoặc nhập tên sheet cần gộp.");
-    }
-    if(skippedFiles > 0){
-      log(`⚠ Đã bỏ qua ${skippedFiles} file vì không có sheet nào được chọn/khớp tên`, "warn");
-    }
-    log(`Tổng số dòng dữ liệu: ${writer.totalRows.toLocaleString("vi-VN")}`, "ok");
-    return writer.finish();
-  }
-
   // ============================================================
   // STATE & UI
   // ============================================================
   const state = {
     mode: 1,
     files: [],       // [File, File, ...]
-    fileMeta: [],    // song song với files: {sheetNames, selected:Set, expanded, loading, error}
     cancelRequested: false,
   };
 
@@ -1217,15 +1091,12 @@
     2: "Chọn nhiều file hoặc thư mục và nhập số dòng tiêu đề (ví dụ tiêu đề nằm ở dòng 1-3). Tiêu đề sẽ được lấy từ sheet đầu tiên, các sheet còn lại tự động bỏ đúng số dòng đó và chỉ gộp phần dữ liệu. Tự tách sheet mới khi vượt quá 900.000 dòng.",
     3: "Chọn nhiều file hoặc thư mục. Toàn bộ dữ liệu của tất cả sheet trong tất cả file sẽ được gộp liền mạch vào 1 sheet, không có dòng tiêu đề nào bị loại bỏ hay giữ lại riêng biệt. Tự tách sheet mới khi vượt quá 900.000 dòng.",
     4: "Chọn nhiều file hoặc thư mục. Mỗi sheet trong từng file nguồn sẽ được sao chép nguyên vẹn thành 1 sheet tương ứng trong file kết quả. Nếu trùng tên sheet, hệ thống tự động thêm số thứ tự (_2, _3, ...) để tránh trùng lặp.",
-    5: "Chọn nhiều file. Ở bước 2, bấm nút \"+\" trên từng file để mở danh sách sheet và tick chọn đúng những sheet muốn gộp cho file đó — hoặc nhập sẵn tên sheet (cách nhau dấu phẩy) ở khung bên dưới để hệ thống tự khớp tên trên mọi file, không cần tick từng cái. Tất cả các sheet được chọn sẽ được GỘP CHUNG VÀO 1 SHEET kết quả duy nhất, dùng số dòng tiêu đề bạn nhập (lấy từ sheet đầu tiên gặp được, các sheet sau tự bỏ đúng số dòng đó). Tự tách sheet mới khi vượt quá 900.000 dòng.",
   };
 
   const modeCards = Array.from(document.querySelectorAll(".mode-card"));
   const modeDescEl = $("modeDesc");
   const headerCountField = $("headerCountField");
   const headerRowCountInput = $("headerRowCount");
-  const sheetFilterField = $("sheetFilterField");
-  const sheetNameFilterInput = $("sheetNameFilter");
 
   function setMode(mode){
     state.mode = mode;
@@ -1235,13 +1106,9 @@
       card.setAttribute("aria-checked", active ? "true" : "false");
     });
     modeDescEl.textContent = MODE_DESC[mode];
-    headerCountField.style.display = (mode === 2 || mode === 5) ? "block" : "none";
-    sheetFilterField.style.display = mode === 5 ? "block" : "none";
+    headerCountField.style.display = mode === 2 ? "block" : "none";
   }
-  modeCards.forEach(card => card.addEventListener("click", () => {
-    setMode(Number(card.dataset.mode));
-    renderFileList(); // cập nhật hiện/ẩn nút "+" chọn sheet theo chế độ vừa chọn
-  }));
+  modeCards.forEach(card => card.addEventListener("click", () => setMode(Number(card.dataset.mode))));
   setMode(1);
 
   // ---------- File management ----------
@@ -1287,7 +1154,6 @@
 
   btnClearFiles.addEventListener("click", () => {
     state.files = [];
-    state.fileMeta = [];
     renderFileList();
   });
 
@@ -1296,69 +1162,13 @@
       if(!FILE_EXT_RE.test(f.name) || f.name.startsWith("~$")) continue;
       if(state.files.some(x => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified)) continue;
       state.files.push(f);
-      state.fileMeta.push({ sheetNames: null, selected: new Set(), expanded: false, loading: false, error: null });
     }
     renderFileList();
   }
 
   function removeFile(idx){
     state.files.splice(idx, 1);
-    state.fileMeta.splice(idx, 1);
     renderFileList();
-  }
-
-  // Mở/đóng bảng chọn sheet cho 1 file (nút "+"), chỉ dùng ở chế độ 5.
-  // Tải danh sách tên sheet (nhẹ, không đọc dữ liệu ô) khi mở lần đầu.
-  async function toggleSheetPanel(idx){
-    const meta = state.fileMeta[idx];
-    if(!meta) return;
-    meta.expanded = !meta.expanded;
-    if(meta.expanded && !meta.sheetNames && !meta.loading && !meta.error){
-      meta.loading = true;
-      renderFileList();
-      try{
-        meta.sheetNames = await listSheetNames(state.files[idx]);
-      }catch(err){
-        meta.error = err.message || "Không đọc được danh sách sheet";
-      }finally{
-        meta.loading = false;
-      }
-    }
-    renderFileList();
-  }
-
-  function buildSheetPanel(idx){
-    const meta = state.fileMeta[idx];
-    const panel = document.createElement("div");
-    panel.className = "sheet-select-panel";
-    if(meta.loading){
-      panel.innerHTML = `<span class="panel-msg">Đang tải danh sách sheet...</span>`;
-      return panel;
-    }
-    if(meta.error){
-      panel.innerHTML = `<span class="panel-msg err-text">Lỗi: ${meta.error}</span>`;
-      return panel;
-    }
-    if(!meta.sheetNames || meta.sheetNames.length === 0){
-      panel.innerHTML = `<span class="panel-msg">File không có sheet nào.</span>`;
-      return panel;
-    }
-    meta.sheetNames.forEach(name => {
-      const label = document.createElement("label");
-      label.className = "sheet-check";
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = meta.selected.has(name);
-      cb.addEventListener("change", () => {
-        if(cb.checked) meta.selected.add(name); else meta.selected.delete(name);
-      });
-      label.appendChild(cb);
-      const span = document.createElement("span");
-      span.textContent = name;
-      label.appendChild(span);
-      panel.appendChild(label);
-    });
-    return panel;
   }
 
   function renderFileList(){
@@ -1366,36 +1176,14 @@
     emptyState.style.display = state.files.length ? "none" : "block";
     state.files.forEach((file, idx) => {
       const li = document.createElement("li");
-      li.className = "file-chip-wrap";
-
-      const row = document.createElement("div");
-      row.className = "file-chip";
-      row.innerHTML = `<span class="name">${file.webkitRelativePath || file.name}</span><span class="size">${fmtSize(file.size)}</span>`;
-
-      if(state.mode === 5){
-        const meta = state.fileMeta[idx];
-        const expandBtn = document.createElement("button");
-        expandBtn.type = "button";
-        expandBtn.className = "btn-expand-sheet";
-        expandBtn.textContent = meta && meta.expanded ? "−" : "+";
-        expandBtn.setAttribute("aria-label", "Chọn sheet cần gộp cho file " + file.name);
-        expandBtn.addEventListener("click", () => toggleSheetPanel(idx));
-        row.appendChild(expandBtn);
-      }
-
+      li.className = "file-chip";
+      li.innerHTML = `<span class="name">${file.webkitRelativePath || file.name}</span><span class="size">${fmtSize(file.size)}</span>`;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = "Xoá";
       btn.setAttribute("aria-label", "Xoá file " + file.name);
       btn.addEventListener("click", () => removeFile(idx));
-      row.appendChild(btn);
-
-      li.appendChild(row);
-
-      if(state.mode === 5 && state.fileMeta[idx] && state.fileMeta[idx].expanded){
-        li.appendChild(buildSheetPanel(idx));
-      }
-
+      li.appendChild(btn);
       fileListEl.appendChild(li);
     });
     fileCountEl.textContent = state.files.length ? `Đã chọn ${state.files.length} file` : "";
@@ -1461,11 +1249,8 @@
         filesWritten = await mergeWithCustomHeader(state.files, n, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }else if(state.mode === 3){
         filesWritten = await mergeNoHeader(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
-      }else if(state.mode === 4){
-        filesWritten = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }else{
-        const n5 = Math.max(1, parseInt(headerRowCountInput.value, 10) || 1);
-        filesWritten = await mergeSelectedSheetsMode(state.files, state.fileMeta, sheetNameFilterInput.value, n5, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
       }
 
       updateProgress(100);
