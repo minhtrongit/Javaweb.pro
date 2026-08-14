@@ -2,44 +2,20 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<link rel="preconnect" href="https://www.googletagmanager.com">
-<link rel="preconnect" href="https://www.gstatic.com">
-<link rel="preconnect" href="https://www.google-analytics.com">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
-
-<title>Software Pro Store — Phần mềm tiện ích: Tách Excel, Gửi Mail Tự Động, Đổi Tên File Hàng Loạt | javaweb.pro</title>
-<meta name="description" content="Kho phần mềm tiện ích văn phòng của javaweb.pro: Excel Splitter Pro (tách file Excel), gửi mail tự động hàng loạt, đổi tên file tự động, chuyển Excel sang PDF, tạo mã QR, mã hoá dữ liệu... Dùng thử miễn phí.">
-<meta name="keywords" content="phần mềm tách excel, gửi mail tự động, đổi tên file hàng loạt, chuyển excel sang pdf, tạo mã qr, phần mềm văn phòng, javaweb.pro">
-<meta name="robots" content="index, follow">
-<meta name="author" content="javaweb.pro">
+<title>Software Pro Store — Bộ công cụ CNTT cho dân văn phòng | javaweb.pro</title>
+<meta name="description" content="Bộ phần mềm desktop chuyên sâu (tách/gộp Excel, gửi mail hàng loạt, đổi tên file...) và 6 công cụ web miễn phí chạy ngay trên trình duyệt, không cần cài đặt.">
 <link rel="canonical" href="https://javaweb.pro/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%224%22 fill=%22%2314213D%22/><rect x=%224%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%2214%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%224%22 y=%2214%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/></svg>">
 
-<!-- Open Graph -->
-<meta property="og:type" content="website">
-<meta property="og:locale" content="vi_VN">
-<meta property="og:site_name" content="Software Pro Store">
-<meta property="og:title" content="Software Pro Store — Phần mềm tiện ích văn phòng | javaweb.pro">
-<meta property="og:description" content="Tách Excel, gửi mail tự động, đổi tên file hàng loạt, chuyển Excel sang PDF, tạo mã QR, mã hoá dữ liệu — tất cả trong 1 nơi.">
-<meta property="og:url" content="https://javaweb.pro/">
-<meta property="og:image" content="https://javaweb.pro/logo.webp">
+<!-- ⚠️ Bản DRAFT thiết kế khác cho trang chủ (v3 — mỗi card 1 màu 3D nhẹ riêng) —
+     đang để noindex để tránh trùng nội dung với index.html thật trên Google.
+     Khi nào quyết định dùng bản này thật sự, đổi tên file thành index.html VÀ
+     xoá dòng <meta name="robots" content="noindex..."> ở trên. -->
 
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Software Pro Store — Phần mềm tiện ích văn phòng">
-<meta name="twitter:description" content="Tách Excel, gửi mail tự động, đổi tên file hàng loạt, tạo mã QR, mã hoá dữ liệu.">
-<meta name="twitter:image" content="https://javaweb.pro/logo.webp">
-
-<!-- Google Search Console: thay YOUR_VERIFICATION_CODE bằng mã thật lấy tại
-     https://search.google.com/search-console (Chọn "Thẻ HTML" khi xác minh quyền sở hữu) -->
-<meta name="google-site-verification" content="YOUR_VERIFICATION_CODE">
-
-<!-- Google Analytics 4: thay G-06C3LFSGJC bằng Measurement ID thật lấy tại
-     https://analytics.google.com (Admin > Data Streams > Web) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-06C3LFSGJC"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -48,42 +24,18 @@
   gtag('config', 'G-06C3LFSGJC');
 </script>
 
-<!-- Dữ liệu có cấu trúc cho Google (SEO) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "javaweb.pro",
-  "url": "https://javaweb.pro/",
-  "logo": "https://javaweb.pro/logo.webp",
-  "email": "minhtrongit@gmail.com",
-  "sameAs": []
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Software Pro Store",
-  "url": "https://javaweb.pro/"
-}
-</script>
-
 <style>
-/* body{margin:0;font-family:Inter,Arial;background:#f4f6fb} */
 body{
   margin:0;
   font-family:Inter,Arial;
-
   display:flex;
   flex-direction:column;
   min-height:100vh;
-
-  background:#0b1220;
+  background:#080b14;
+  overflow-x:hidden;
 }
 
-
-/* ===== HEADER PRO (THÊM) ===== */
+/* ===== HEADER (giống hệt index.html) ===== */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -94,439 +46,214 @@ body{
   position:relative;
   z-index:100;
 }
-
-.logo-box{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  position:relative;
-}
-
+.logo-box{display:flex;align-items:center;gap:10px;position:relative;}
 .logo-box img{
-  height:45px;
-  border-radius:10px;
-  position:relative;
-  z-index:1;
-
-  /* viền glow tĩnh, không animate để tránh repaint main-thread */
-  box-shadow:
-    0 0 10px #00eaff,
-    0 0 20px #00eaff;
+  height:45px;border-radius:10px;position:relative;z-index:1;
+  box-shadow:0 0 10px #00eaff, 0 0 20px #00eaff;
 }
-
-/* Lớp glow phụ nằm dưới ảnh, chỉ animate opacity (composited, chạy trên GPU) */
 .logo-box::before{
-  content:'';
-  position:absolute;
-  left:0; top:0;
-  width:45px; height:45px;
-  border-radius:10px;
-  box-shadow:
-    0 0 20px #00eaff,
-    0 0 40px #00eaff,
-    0 0 60px #00eaff;
-  opacity:0;
-  animation: glowPulse 2s infinite alternate;
-  pointer-events:none;
+  content:'';position:absolute;left:0;top:0;width:45px;height:45px;border-radius:10px;
+  box-shadow:0 0 20px #00eaff, 0 0 40px #00eaff, 0 0 60px #00eaff;
+  opacity:0;animation:glowPulse 2s infinite alternate;pointer-events:none;
 }
-
-@keyframes glowPulse{
-  from{ opacity:0; }
-  to{ opacity:1; }
-}
-
-.logo-text{
-  font-size:20px;
-  font-weight:bold;
-}
-
-.menu{
-  display:flex;
-  align-items:center;
-}
-
-.menu a{
-  color:#fff;
-  text-decoration:none;
-  margin-left:20px;
-  font-weight:500;
-  white-space:nowrap;
-}
-
-.menu a:hover{
-  color:#22c55e;
-}
-
-/* ===== NÚT HAMBURGER (MENU MOBILE) ===== */
-.menu-toggle{
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  gap:5px;
-  width:36px;
-  height:36px;
-  background:none;
-  border:none;
-  cursor:pointer;
-  padding:0;
-  z-index:30;
-}
-
-.menu-toggle span{
-  display:block;
-  width:100%;
-  height:3px;
-  background:#fff;
-  border-radius:3px;
-  transition:transform 0.3s ease, opacity 0.3s ease;
-}
-
-.menu-toggle.active span:nth-child(1){
-  transform:translateY(8px) rotate(45deg);
-}
-.menu-toggle.active span:nth-child(2){
-  opacity:0;
-}
-.menu-toggle.active span:nth-child(3){
-  transform:translateY(-8px) rotate(-45deg);
-}
-
+@keyframes glowPulse{ from{opacity:0;} to{opacity:1;} }
+.logo-text{font-size:20px;font-weight:bold;}
+.menu{display:flex;align-items:center;}
+.menu a{color:#fff;text-decoration:none;margin-left:20px;font-weight:500;white-space:nowrap;}
+.menu a:hover{color:#22c55e;}
+.menu-toggle{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;background:none;border:none;cursor:pointer;padding:0;z-index:30;}
+.menu-toggle span{display:block;width:100%;height:3px;background:#fff;border-radius:3px;transition:transform .3s ease, opacity .3s ease;}
+.menu-toggle.active span:nth-child(1){transform:translateY(8px) rotate(45deg);}
+.menu-toggle.active span:nth-child(2){opacity:0;}
+.menu-toggle.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg);}
 @media(max-width:768px){
-  .topbar{
-    flex-wrap:wrap;
-  }
-
-  .menu-toggle{
-    display:flex;
-  }
-
-  .menu{
-    position:absolute;
-    top:100%;
-    left:0;
-    right:0;
-    flex-direction:column;
-    align-items:stretch;
-    background:#0f172a;
-    max-height:0;
-    overflow:hidden;
-    opacity:0;
-    padding:0 20px;
-    box-shadow:0 12px 20px rgba(0,0,0,0.35);
-    transition:max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
-    z-index:100;
-  }
-
-  .menu.open{
-    max-height:400px;
-    opacity:1;
-    padding:10px 20px 18px;
-  }
-
-  .menu a{
-    margin-left:0;
-    padding:12px 0;
-    width:100%;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-  }
-
-  .menu a:last-child{
-    border-bottom:none;
-  }
+  .topbar{flex-wrap:wrap;}
+  .menu-toggle{display:flex;}
+  .menu{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;background:#0f172a;max-height:0;overflow:hidden;opacity:0;padding:0 20px;box-shadow:0 12px 20px rgba(0,0,0,0.35);transition:max-height .35s ease, opacity .25s ease, padding .35s ease;z-index:100;}
+  .menu.open{max-height:400px;opacity:1;padding:10px 20px 18px;}
+  .menu a{margin-left:0;padding:12px 0;width:100%;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .menu a:last-child{border-bottom:none;}
 }
 
-/* ===== HERO CHÍNH ===== */
-.hero-main{
+/* ===== HIỆU ỨNG NỀN "CÔNG NGHỆ" ===== */
+.hero-tech{
   position:relative;
-  padding:72px 24px 64px;
+  padding:80px 24px 70px;
   text-align:center;
   overflow:hidden;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(34,197,94,0.16), transparent 45%),
-    radial-gradient(circle at 85% 15%, rgba(0,234,255,0.14), transparent 45%),
-    #0b1220;
+  isolation:isolate;
 }
-.hero-main .eyebrow{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  font-size:12.5px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#7dd3fc;
-  background:rgba(0,234,255,0.08);
-  border:1px solid rgba(0,234,255,0.25);
-  padding:6px 16px;
-  border-radius:999px;
-  margin-bottom:22px;
+.hero-bg-fx{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.32;will-change:transform;}
+.blob1{width:440px;height:440px;background:#22d3ee;top:-160px;left:-120px;animation:floatBlob 15s ease-in-out infinite;}
+.blob2{width:400px;height:400px;background:#a78bfa;bottom:-180px;right:-100px;animation:floatBlob 18s ease-in-out infinite reverse;}
+.blob3{width:320px;height:320px;background:#22c55e;top:30%;left:48%;animation:floatBlob 20s ease-in-out infinite;}
+@keyframes floatBlob{
+  0%,100%{transform:translate(0,0);}
+  50%{transform:translate(36px,-26px);}
 }
-.hero-main h1{
+.circuit-grid{
+  position:absolute;inset:0;z-index:-1;
+  background-image:
+    linear-gradient(rgba(34,211,238,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,0.09) 1px, transparent 1px);
+  background-size:42px 42px;
+  -webkit-mask-image:radial-gradient(circle at 50% 28%, black, transparent 72%);
+  mask-image:radial-gradient(circle at 50% 28%, black, transparent 72%);
+}
+@media (prefers-reduced-motion: reduce){
+  .blob{animation:none !important;}
+}
+
+.terminal-chip{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(15,23,42,0.75);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:8px 18px;border-radius:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;color:#67e8f9;
+  margin-bottom:28px;
+  backdrop-filter:blur(6px);
+}
+.terminal-chip .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.terminal-chip .dot.red{background:#ef4444;}
+.terminal-chip .dot.amber{background:#f59e0b;}
+.terminal-chip .dot.green{background:#22c55e;}
+.terminal-chip .terminal-text{margin-left:4px;color:#94a3b8;}
+.terminal-chip .terminal-text b{color:#67e8f9;font-weight:600;}
+.cursor-blink{animation:blink 1s step-end infinite;color:#22c55e;}
+@keyframes blink{50%{opacity:0;}}
+
+.hero-tech h1{
   color:#fff;
-  font-size:clamp(28px,5vw,46px);
+  font-size:clamp(28px,5vw,48px);
   font-weight:800;
   line-height:1.15;
   margin:0 0 18px;
   letter-spacing:-0.01em;
 }
-.hero-main h1 span{
-  background:linear-gradient(90deg,#22c55e,#00eaff);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
+.grad-text{
+  background:linear-gradient(90deg,#22d3ee,#a78bfa,#22c55e,#22d3ee);
+  background-size:250% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gradShift 7s linear infinite;
 }
-.hero-main p{
-  color:#94a3b8;
-  font-size:16.5px;
-  max-width:640px;
-  margin:0 auto 30px;
-  line-height:1.65;
+@media (prefers-reduced-motion: reduce){ .grad-text{animation:none;} }
+@keyframes gradShift{ to{background-position:250% center;} }
+
+.hero-tech p{
+  color:#94a3b8;font-size:16.5px;max-width:640px;margin:0 auto 32px;line-height:1.65;
 }
-.hero-cta{
-  display:flex;
-  gap:14px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
 .hero-cta a{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:13px 26px;
-  border-radius:10px;
-  font-weight:700;
-  font-size:14.5px;
-  text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:10px;
+  font-weight:700;font-size:14.5px;text-decoration:none;
   transition:transform .2s ease, box-shadow .2s ease;
 }
 .hero-cta .btn-glow{
-  background:linear-gradient(135deg,#22c55e,#16a34a);
-  color:#fff;
-  box-shadow:0 10px 25px rgba(34,197,94,0.35);
+  background:linear-gradient(135deg,#22d3ee,#0891b2);
+  color:#04222b;
+  box-shadow:0 10px 30px rgba(34,211,238,0.35);
 }
 .hero-cta .btn-ghost{
-  background:rgba(255,255,255,0.06);
-  color:#e2e8f0;
-  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(255,255,255,0.06);color:#e2e8f0;border:1px solid rgba(255,255,255,0.16);
 }
-.hero-cta a:hover{
-  transform:translateY(-3px);
-}
+.hero-cta a:hover{transform:translateY(-3px);}
 
-.hero-stats{
-  display:flex;
-  justify-content:center;
-  gap:36px;
-  flex-wrap:wrap;
-  margin-top:44px;
-}
-.hero-stats div{
-  text-align:center;
-}
-.hero-stats strong{
-  display:block;
-  font-size:26px;
-  font-weight:800;
-  color:#fff;
-}
-.hero-stats span{
-  font-size:12.5px;
-  color:#94a3b8;
-}
+.hero-stats{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;margin-top:46px;}
+.hero-stats div{text-align:center;}
+.hero-stats strong{display:block;font-size:26px;font-weight:800;color:#fff;font-family:ui-monospace,monospace;}
+.hero-stats span{font-size:12px;color:#94a3b8;letter-spacing:.02em;}
 
-/* ===== KHU VỰC SECTION ===== */
-.section{
-  max-width:1320px;
-  margin:0 auto;
-  padding:64px 28px 8px;
-}
-.section-head{
-  text-align:center;
-  max-width:640px;
-  margin:0 auto 40px;
-}
+/* ===== SECTION ===== */
+.section{max-width:1320px;margin:0 auto;padding:60px 28px 8px;position:relative;}
+.section-head{text-align:center;max-width:640px;margin:0 auto 40px;}
 .section-head .eyebrow{
-  font-size:12.5px;
-  font-weight:700;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:#22c55e;
-  margin:0 0 10px;
+  font-family:ui-monospace,monospace;
+  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#22d3ee;margin:0 0 10px;
 }
-.section-head h2{
-  color:#fff;
-  font-size:clamp(22px,3vw,30px);
-  font-weight:800;
-  margin:0 0 12px;
-}
-.section-head p{
-  color:#94a3b8;
-  font-size:15px;
-  line-height:1.6;
-  margin:0;
-}
+.section-head h2{color:#fff;font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 12px;}
+.section-head p{color:#94a3b8;font-size:15px;line-height:1.6;margin:0;}
 
-/* ===== TOOL GRID (dùng chung cho web-tool & desktop-app) ===== */
-.tool-grid{
-  display:grid;
-  gap:22px;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+/* ===== CARD 3D ===== */
+.tool-grid-3d{
+  display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  perspective:1000px;
 }
-.tool-card{
+.tool-card-3d{
   position:relative;
-  background:rgba(255,255,255,0.035);
-  border:1px solid rgba(255,255,255,0.08);
+  background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(var(--card-rgb, 148,163,184), 0.22);
   border-radius:18px;
-  padding:26px 24px 24px;
-  display:flex;
-  flex-direction:column;
+  padding:28px 24px 24px;
+  display:flex;flex-direction:column;
   text-decoration:none;
-  transition:transform .3s ease, border-color .3s ease, background .3s ease;
-  opacity:0;
-  transform:translateY(24px);
-  animation:fadeUp .6s ease forwards;
+  transform:perspective(800px) rotateX(0) rotateY(0) scale(1);
+  transition:transform .15s ease-out, box-shadow .35s ease, border-color .35s ease;
+  will-change:transform;
+  opacity:0;transform-origin:center;
+  animation:cardIn .55s ease forwards;
+  /* mỗi card có 1 "màu 3D" riêng nhẹ nhàng: bóng đổ + viền cùng tông với icon */
+  box-shadow:
+    0 16px 32px -14px rgba(var(--card-rgb, 148,163,184), 0.35),
+    0 3px 10px rgba(0,0,0,0.28);
 }
-.tool-card:hover{
-  transform:translateY(-6px);
-  border-color:rgba(34,197,94,0.4);
-  background:rgba(255,255,255,0.06);
+@keyframes cardIn{
+  from{ opacity:0; transform:perspective(800px) translateY(22px) rotateX(0) rotateY(0); }
+  to{ opacity:1; transform:perspective(800px) translateY(0) rotateX(0) rotateY(0); }
 }
-.tool-icon{
-  width:52px;height:52px;
-  border-radius:14px;
+.tool-card-3d:hover{
+  border-color:rgba(var(--card-rgb, 148,163,184), 0.55);
+  box-shadow:0 26px 54px -12px rgba(var(--card-rgb, 148,163,184), 0.5), 0 0 32px rgba(var(--card-rgb, 148,163,184), 0.22);
+}
+.tool-card-3d .card-glow{
+  position:absolute;inset:-1px;border-radius:18px;padding:1px;
+  background:linear-gradient(135deg, rgba(var(--card-rgb, 148,163,184),0.9), transparent 45%, transparent 55%, rgba(var(--card-rgb, 148,163,184),0.9));
+  opacity:0;transition:opacity .35s ease;pointer-events:none;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
+.tool-card-3d:hover .card-glow{opacity:1;}
+
+.icon-3d{
+  width:56px;height:56px;border-radius:16px;
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:18px;
-  flex:none;
+  margin-bottom:20px;flex:none;
+  box-shadow:0 12px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
 }
-.tool-icon svg{width:26px;height:26px;}
-.tool-card h3{
-  color:#fff;
-  font-size:17px;
-  font-weight:700;
-  margin:0 0 8px;
-}
-.tool-card p{
-  color:#94a3b8;
-  font-size:13.5px;
-  line-height:1.55;
-  margin:0 0 18px;
-  flex:1;
-}
-.tool-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.03em;
-  padding:4px 10px;
-  border-radius:999px;
-  margin-bottom:14px;
-  width:fit-content;
-}
-.badge-free{
-  background:rgba(34,197,94,0.12);
-  color:#4ade80;
-  border:1px solid rgba(34,197,94,0.3);
-}
-.badge-desktop{
-  background:rgba(0,234,255,0.1);
-  color:#67e8f9;
-  border:1px solid rgba(0,234,255,0.3);
-}
-.tool-card .tool-cta{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13.5px;
-  font-weight:700;
-  color:#22c55e;
-}
-.tool-card:hover .tool-cta{
-  color:#4ade80;
-}
-.tool-card .tool-cta svg{
-  width:14px;height:14px;
-  transition:transform .25s ease;
-}
-.tool-card:hover .tool-cta svg{
-  transform:translateX(4px);
-}
-.tool-card .tool-links{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-.tool-card .tool-video{
-  font-size:12.5px;
-  color:#94a3b8;
-  text-decoration:none;
-  font-weight:600;
-}
-.tool-card .tool-video:hover{
-  color:#e2e8f0;
-}
+.icon-3d svg{width:27px;height:27px;}
 
-@keyframes fadeUp{
-  to{ opacity:1; transform:translateY(0); }
+.tag-chip{
+  font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  padding:4px 10px;border-radius:6px;margin-bottom:16px;width:fit-content;border:1px solid;
 }
+.tag-free{color:#4ade80;border-color:rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);}
+.tag-desktop{color:#38bdf8;border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.08);}
 
-.divider-line{
-  max-width:1320px;
-  margin:56px auto 0;
-  border:none;
-  border-top:1px solid rgba(255,255,255,0.08);
+.tool-card-3d h3{color:#fff;font-size:17px;font-weight:700;margin:0 0 8px;}
+.tool-card-3d p{color:#94a3b8;font-size:13.5px;line-height:1.55;margin:0 0 18px;flex:1;}
+.tool-card-3d .tool-cta{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:rgb(var(--card-rgb, 34,211,238));}
+.tool-card-3d:hover .tool-cta{filter:brightness(1.25);}
+.tool-card-3d .tool-cta svg{width:14px;height:14px;transition:transform .25s ease;}
+.tool-card-3d:hover .tool-cta svg{transform:translateX(4px);}
+.tool-card-3d .tool-links{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.tool-card-3d .tool-video{font-size:12.5px;color:#94a3b8;text-decoration:none;font-weight:600;}
+.tool-card-3d .tool-video:hover{color:#e2e8f0;}
+
+.divider-line{max-width:1320px;margin:56px auto 0;border:none;border-top:1px solid rgba(255,255,255,0.08);}
+
+/* ===== FOOTER (giống hệt index.html) ===== */
+.footer{background:#0f172a;color:#fff;padding:30px;text-align:center;margin-top:auto;line-height:1.8;}
+.footer strong{color:#22c55e;}
+.visit-stats{margin:14px 0;display:inline-flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:13.5px;color:#94a3b8;background:rgba(255,255,255,0.05);padding:8px 16px;border-radius:999px;}
+.visit-stats .online-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;box-shadow:0 0 6px #22c55e;animation:pulseDot 1.4s infinite;}
+@keyframes pulseDot{0%,100%{opacity:1} 50%{opacity:.4}}
+
+@media (max-width:720px){
+  .hero-stats{gap:26px;}
+  .section{padding:48px 20px 4px;}
 }
-
-/* ===== FOOTER PRO (THÊM) ===== */
-.footer{
-  background:#0f172a;
-  color:#fff;
-  padding:30px;
-  text-align:center;
-  margin-top:auto; /* QUAN TRỌNG */
-  line-height:1.8;
-}
-
-.footer strong{
-  color:#22c55e;
-}
-
-.visit-stats{
-  margin:14px 0;
-  display:inline-flex;
-  gap:18px;
-  flex-wrap:wrap;
-  justify-content:center;
-  font-size:13.5px;
-  color:#94a3b8;
-  background:rgba(255,255,255,0.05);
-  padding:8px 16px;
-  border-radius:999px;
-}
-
-.visit-stats .online-dot{
-  display:inline-block;
-  width:8px;height:8px;
-  border-radius:50%;
-  background:#22c55e;
-  margin-right:5px;
-  box-shadow:0 0 6px #22c55e;
-  animation:pulseDot 1.4s infinite;
-}
-
-@keyframes pulseDot{
-  0%,100%{opacity:1}
-  50%{opacity:.4}
-}
-
-/* MOBILE */
-@media (max-width: 720px){
-  .hero-stats{ gap:26px; }
-  .section{ padding:48px 20px 4px; }
-}
-
 </style>
 </head>
 
@@ -555,45 +282,56 @@ body{
   </div>
 </div>
 
-
-
 <!-- HERO -->
-<section class="hero-main">
-  <span class="eyebrow">🚀 javaweb.pro · Software Pro Store</span>
-  <h1>Công cụ <span>tăng tốc công việc văn phòng</span><br>cho dân Excel, kế toán, hành chính</h1>
-  <p>6 công cụ web dùng ngay miễn phí trên trình duyệt + 4 phần mềm desktop chuyên sâu — tất cả xử lý ngay trên máy bạn, không upload dữ liệu lên đâu cả.</p>
-  <div class="hero-cta">
-    <a href="#webtools" class="btn-glow">⚡ Dùng công cụ miễn phí</a>
-    <a href="#desktopapps" class="btn-ghost">💻 Xem phần mềm desktop</a>
+<section class="hero-tech">
+  <div class="hero-bg-fx" aria-hidden="true">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+    <div class="circuit-grid"></div>
   </div>
+
+  <div class="terminal-chip">
+    <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+    <span class="terminal-text">~/javaweb.pro <b>→</b> tải phần mềm hoặc dùng công cụ web<span class="cursor-blink">_</span></span>
+  </div>
+
+  <h1>Bộ công cụ <span class="grad-text">CNTT</span> chuyên nghiệp<br>cho dân văn phòng &amp; kế toán</h1>
+  <p>Phần mềm desktop xử lý dữ liệu khối lượng lớn + 6 công cụ web miễn phí chạy ngay trên trình duyệt — không upload dữ liệu lên đâu cả.</p>
+
+  <div class="hero-cta">
+    <a href="#desktopapps" class="btn-glow">💻 Xem phần mềm desktop</a>
+    <a href="#webtools" class="btn-ghost">⚡ Dùng công cụ miễn phí</a>
+  </div>
+
   <div class="hero-stats">
-    <div><strong id="statTotalVisitsHero">—</strong><span>Lượt truy cập</span></div>
-    <div><strong id="statOnlineNowHero">—</strong><span>Đang online</span></div>
-    <div><strong>10</strong><span>Công cụ &amp; phần mềm</span></div>
-    <div><strong>100%</strong><span>Miễn phí dùng thử</span></div>
+    <div><strong id="statTotalVisitsHero">—</strong><span>LƯỢT TRUY CẬP</span></div>
+    <div><strong id="statOnlineNowHero">—</strong><span>ĐANG ONLINE</span></div>
+    <div><strong>10</strong><span>CÔNG CỤ &amp; PHẦN MỀM</span></div>
+    <div><strong>100%</strong><span>MIỄN PHÍ DÙNG THỬ</span></div>
   </div>
 </section>
 
-<!-- CÔNG CỤ WEB MIỄN PHÍ -->
-<section class="section" id="webtools">
+<!-- PHẦN MỀM DESKTOP (đặt lên trước theo yêu cầu) -->
+<section class="section" id="desktopapps">
   <div class="section-head">
-    <p class="eyebrow">Chạy ngay trên trình duyệt</p>
-    <h2>6 công cụ web miễn phí</h2>
-    <p>Không cần cài đặt, không cần đăng ký — bấm vào là dùng được ngay. Dữ liệu xử lý hoàn toàn trên máy bạn.</p>
+    <p class="eyebrow">// cài đặt trên máy tính</p>
+    <h2>Phần mềm desktop chuyên sâu</h2>
+    <p>Dành cho xử lý dữ liệu khối lượng lớn, chạy ổn định, không giới hạn bởi trình duyệt.</p>
   </div>
-  <div class="tool-grid" id="webToolsGrid"></div>
+  <div class="tool-grid-3d" id="desktopGrid"></div>
 </section>
 
 <hr class="divider-line">
 
-<!-- PHẦN MỀM DESKTOP -->
-<section class="section" id="desktopapps">
+<!-- CÔNG CỤ WEB MIỄN PHÍ -->
+<section class="section" id="webtools">
   <div class="section-head">
-    <p class="eyebrow">Cài đặt trên máy tính</p>
-    <h2>Phần mềm desktop chuyên sâu</h2>
-    <p>Dành cho xử lý dữ liệu khối lượng lớn, chạy ổn định, không giới hạn bởi trình duyệt.</p>
+    <p class="eyebrow">// chạy ngay trên trình duyệt</p>
+    <h2>6 công cụ web miễn phí</h2>
+    <p>Không cần cài đặt, không cần đăng ký — bấm vào là dùng được ngay. Dữ liệu xử lý hoàn toàn trên máy bạn.</p>
   </div>
-  <div class="tool-grid" id="desktopGrid"></div>
+  <div class="tool-grid-3d" id="webToolsGrid"></div>
 </section>
 
 <!-- FOOTER -->
@@ -609,7 +347,7 @@ body{
   ©Copyright javaweb.pro
 </div>
 
-<!-- ===== JS GIỮ NGUYÊN ===== -->
+<!-- ===== JS ===== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
 <script>
@@ -625,18 +363,27 @@ const ICONS = {
   arrow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
 };
 const GRADIENTS = {
-  g1:"linear-gradient(135deg,#22c55e,#16a34a)",
-  g2:"linear-gradient(135deg,#22d3ee,#0891b2)",
-  g3:"linear-gradient(135deg,#a78bfa,#7c3aed)",
-  g4:"linear-gradient(135deg,#fbbf24,#d97706)",
-  g5:"linear-gradient(135deg,#f472b6,#db2777)",
-  g6:"linear-gradient(135deg,#60a5fa,#2563eb)",
+  g1:"linear-gradient(135deg,#22d3ee,#0891b2)",
+  g2:"linear-gradient(135deg,#a78bfa,#7c3aed)",
+  g3:"linear-gradient(135deg,#22c55e,#16a34a)",
+  g4:"linear-gradient(135deg,#f472b6,#db2777)",
+  g5:"linear-gradient(135deg,#60a5fa,#2563eb)",
+  g6:"linear-gradient(135deg,#fbbf24,#d97706)",
+};
+/* Mã RGB tương ứng từng màu — dùng để tô "màu 3D" (bóng đổ/viền/glow) riêng cho mỗi card */
+const CARD_RGB = {
+  g1:"34,211,238",
+  g2:"167,139,250",
+  g3:"34,197,94",
+  g4:"244,114,182",
+  g5:"96,165,250",
+  g6:"251,191,36",
 };
 
-/* Data-driven: lần sau muốn đổi/thêm bớt công cụ chỉ cần sửa 2 mảng này */
+/* Data-driven: sửa nội dung card chỉ cần sửa 2 mảng này */
 const webTools = [
-  {name:"Mã Hóa &amp; Giải Mã", desc:"16 kiểu mã hoá/giải mã dữ liệu, xử lý ngay trên trình duyệt.", url:"mahoa.html", icon:"lock", grad:"g1"},
-  {name:"Scan &amp; Tạo QR Code", desc:"Quét mã QR từ ảnh, hoặc tạo hàng loạt mã QR từ danh sách Excel.", url:"scanqr.html", icon:"qr", grad:"g2"},
+  {name:"Mã Hóa &amp; Giải Mã", desc:"16 kiểu mã hoá/giải mã dữ liệu, xử lý ngay trên trình duyệt.", url:"mahoa.html", icon:"lock", grad:"g2"},
+  {name:"Scan &amp; Tạo QR Code", desc:"Quét mã QR từ ảnh, hoặc tạo hàng loạt mã QR từ danh sách Excel.", url:"scanqr.html", icon:"qr", grad:"g1"},
   {name:"Gộp File Excel", desc:"Gộp nhiều file Excel thành 1, tự tách sheet khi vượt 900.000 dòng.", url:"gopexcel.html", icon:"merge", grad:"g3"},
   {name:"Tách File Excel", desc:"Tách 1 file Excel thành nhiều file theo số dòng hoặc theo nhóm cột.", url:"tach-file-excel.html", icon:"split", grad:"g4"},
   {name:"Tính Tuổi Hưu", desc:"Tra cứu thời điểm hưởng lương hưu theo lộ trình mới nhất.", url:"tinhtuoihuu.html", icon:"calendar", grad:"g5"},
@@ -648,15 +395,17 @@ const desktopApps = [
   {name:"Excel Merger Pro", desc:"Gộp hàng trăm file Excel cùng lúc, không giới hạn bởi bộ nhớ trình duyệt.", download:"https://drive.google.com/drive/folders/1LXbuRjjzax_LxQn884XUQ4MDUjP4wH1N?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"merge", grad:"g3"},
   {name:"Send Mail Auto", desc:"Gửi email hàng loạt tự động, cá nhân hoá nội dung theo từng người nhận.", download:"https://drive.google.com/drive/folders/1bFtNInfz3GmUqoqa1fVlA1DhUTOLnDEq?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"mail", grad:"g6"},
   {name:"File Rename Pro", desc:"Đổi tên hàng loạt file theo quy tắc tự đặt, tiết kiệm hàng giờ thao tác thủ công.", download:"https://drive.google.com/drive/folders/1UoJAbusslMFNUViLef-1jqWAXuro8g-w?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g5"},
-  {name:"Excel To PDF", desc:"Chuyển file Excel sang PDF nhanh chóng, giữ nguyên định dạng.", download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g2"},
+/*  {name:"Excel To PDF", desc:"Chuyển file Excel sang PDF nhanh chóng, giữ nguyên định dạng.", */
+/* download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g1"}, */
 ];
 
 function renderWebTools(){
   const grid = document.getElementById('webToolsGrid');
   grid.innerHTML = webTools.map((t, i) => `
-    <a class="tool-card" href="${t.url}" style="animation-delay:${(i * 0.06).toFixed(2)}s">
-      <span class="tool-badge badge-free">✓ Miễn phí</span>
-      <div class="tool-icon" style="background:${GRADIENTS[t.grad]};color:#fff;">${ICONS[t.icon]}</div>
+    <a class="tool-card-3d" href="${t.url}" style="animation-delay:${(i * 0.07).toFixed(2)}s;--card-rgb:${CARD_RGB[t.grad]};">
+      <span class="card-glow"></span>
+      <span class="tag-chip tag-free">[WEB] MIỄN PHÍ</span>
+      <div class="icon-3d" style="background:${GRADIENTS[t.grad]};color:#fff;">${ICONS[t.icon]}</div>
       <h3>${t.name}</h3>
       <p>${t.desc}</p>
       <span class="tool-cta">Dùng ngay ${ICONS.arrow}</span>
@@ -667,9 +416,10 @@ function renderWebTools(){
 function renderDesktopApps(){
   const grid = document.getElementById('desktopGrid');
   grid.innerHTML = desktopApps.map((a, i) => `
-    <div class="tool-card" style="animation-delay:${(i * 0.06).toFixed(2)}s">
-      <span class="tool-badge badge-desktop">💻 Desktop</span>
-      <div class="tool-icon" style="background:${GRADIENTS[a.grad]};color:#fff;">${ICONS[a.icon]}</div>
+    <div class="tool-card-3d" style="animation-delay:${(i * 0.07).toFixed(2)}s;--card-rgb:${CARD_RGB[a.grad]};">
+      <span class="card-glow"></span>
+      <span class="tag-chip tag-desktop">[EXE] DESKTOP</span>
+      <div class="icon-3d" style="background:${GRADIENTS[a.grad]};color:#fff;">${ICONS[a.icon]}</div>
       <h3>${a.name}</h3>
       <p>${a.desc}</p>
       <div class="tool-links">
@@ -683,6 +433,27 @@ function renderDesktopApps(){
 renderWebTools();
 renderDesktopApps();
 
+/* ===== HIỆU ỨNG NGHIÊNG 3D THEO CON TRỎ CHUỘT ===== */
+(function attachTiltEffect(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return; // tôn trọng cài đặt giảm hiệu ứng chuyển động của người dùng
+  if(window.matchMedia('(hover: none)').matches) return; // bỏ qua trên thiết bị cảm ứng (không có hover)
+
+  document.querySelectorAll('.tool-card-3d').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - py) * 8;
+      const ry = (px - 0.5) * 8;
+      card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = `perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)`;
+    });
+  });
+})();
+
 /* ===== MENU MOBILE (ẨN/HIỆN KHI NHẤN) ===== */
 const menuToggle = document.getElementById('menuToggle');
 const mainMenu = document.getElementById('mainMenu');
@@ -692,60 +463,26 @@ function toggleMenu(){
   menuToggle.classList.toggle('active', isOpen);
   menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
-
 function closeMenu(){
   mainMenu.classList.remove('open');
   menuToggle.classList.remove('active');
   menuToggle.setAttribute('aria-expanded', 'false');
 }
-
-// Tự đóng menu khi bấm vào 1 link trong menu
 mainMenu.querySelectorAll('a').forEach(a=>{
   a.addEventListener('click', closeMenu);
 });
-
-// Tự đóng menu khi bấm ra ngoài vùng menu/nút hamburger
 document.addEventListener('click', (e)=>{
   if(!mainMenu.contains(e.target) && !menuToggle.contains(e.target)){
     closeMenu();
   }
 });
-
-// Tự đóng menu khi resize về màn hình desktop
 window.addEventListener('resize', ()=>{
   if(window.innerWidth > 768) closeMenu();
 });
 
 /* ============================================================
-   THỐNG KÊ "Tổng lượt truy cập" & "Đang online"
-   Dùng Firebase Realtime Database (miễn phí) vì GitHub Pages
-   là hosting tĩnh, không tự lưu được số liệu này.
-
-   CÁCH LẤY firebaseConfig:
-   1. Vào https://console.firebase.google.com → Tạo project mới (miễn phí)
-   2. Vào "Build" > "Realtime Database" > "Create Database"
-      (chọn "Start in test mode" trước, sau đó áp rules bên dưới)
-   3. Vào Project settings (⚙️) > tab "General" > mục "Your apps" >
-      chọn Web (</>) > copy đoạn firebaseConfig dán đè vào bên dưới.
-   4. Vào tab "Rules" của Realtime Database, dán rules sau rồi Publish:
-      {
-        "rules": {
-          "stats": {
-            "totalVisits": {
-              ".read": true,
-              ".write": true,
-              ".validate": "newData.isNumber() && newData.val() == data.val() + 1"
-            },
-            "onlineUsers": {
-              ".read": true,
-              "$uid": {
-                ".write": true,
-                ".validate": "newData.val() == true"
-              }
-            }
-          }
-        }
-      }
+   THỐNG KÊ "Tổng lượt truy cập" & "Đang online" — dùng chung
+   Firebase Realtime Database với các trang khác trong site.
 ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyCF9ZM-AXpOX7Hz14S-zKsaMYP6NlnM4jk",
@@ -756,20 +493,18 @@ const firebaseConfig = {
 
 function initVisitStats(){
   if(firebaseConfig.apiKey === "YOUR_API_KEY"){
-    console.warn("⚠️ Chưa cấu hình firebaseConfig cho thống kê truy cập — xem hướng dẫn phía trên trong index.html.");
+    console.warn("⚠️ Chưa cấu hình firebaseConfig cho thống kê truy cập.");
     return;
   }
   try{
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Đếm tổng lượt truy cập: chỉ +1 mỗi phiên trình duyệt (session), tránh đếm trùng khi chuyển trang
     if(!sessionStorage.getItem("gonn_visited_session")){
       sessionStorage.setItem("gonn_visited_session", "1");
       db.ref("stats/totalVisits").transaction((cur) => (cur || 0) + 1);
     }
 
-    // Đếm số người đang online: mỗi tab mở là 1 node, tự xoá khi đóng tab/mất kết nối
     const presenceRef = db.ref("stats/onlineUsers").push();
     presenceRef.set(true);
     presenceRef.onDisconnect().remove();
@@ -797,9 +532,6 @@ function initVisitStats(){
   }
 }
 
-// Firebase SDK được tải kiểu "defer" (không chặn render trang) — phải đợi
-// DOMContentLoaded để chắc chắn firebase-app-compat.js / firebase-database-compat.js
-// đã tải và chạy xong trước khi gọi firebase.initializeApp(), tránh lỗi "firebase is not defined".
 if(document.readyState === "loading"){
   document.addEventListener("DOMContentLoaded", initVisitStats);
 }else{
@@ -807,21 +539,14 @@ if(document.readyState === "loading"){
 }
 
 if ("serviceWorker" in navigator) {
-  // Khi SW mới chiếm quyền điều khiển (sau khi cập nhật), tự tải lại trang
-  // 1 lần để người dùng thấy ngay bản mới, không cần xoá cache/lịch sử.
   let swRefreshing = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (swRefreshing) return;
     swRefreshing = true;
     window.location.reload();
   });
-
   navigator.serviceWorker.register("sw.js")
-    .then((reg) => {
-      console.log("✅ App Ready");
-      // Chủ động kiểm tra bản cập nhật mỗi khi mở lại trang
-      reg.update();
-    })
+    .then((reg) => { reg.update(); })
     .catch(err => console.log("SW lỗi:", err));
 }
 </script>
