@@ -2,19 +2,64 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://www.google-analytics.com">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
 <title>Software Pro Store — Bộ công cụ CNTT cho dân văn phòng | javaweb.pro</title>
 <meta name="description" content="Bộ phần mềm desktop chuyên sâu (tách/gộp Excel, gửi mail hàng loạt, đổi tên file...) và 6 công cụ web miễn phí chạy ngay trên trình duyệt, không cần cài đặt.">
+<meta name="keywords" content="phần mềm tách excel, gửi mail tự động, đổi tên file hàng loạt, chuyển excel sang pdf, tạo mã qr, phần mềm văn phòng, javaweb.pro">
+<meta name="robots" content="index, follow">
+<meta name="author" content="javaweb.pro">
 <link rel="canonical" href="https://javaweb.pro/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:site_name" content="Software Pro Store">
+<meta property="og:title" content="Software Pro Store — Bộ công cụ CNTT cho dân văn phòng | javaweb.pro">
+<meta property="og:description" content="Phần mềm desktop + 6 công cụ web miễn phí: tách/gộp Excel, mã hoá, quét QR, tính tuổi hưu, đổi định dạng ảnh...">
+<meta property="og:url" content="https://javaweb.pro/">
+<meta property="og:image" content="https://javaweb.pro/logo.webp">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Software Pro Store — Bộ công cụ CNTT cho dân văn phòng">
+<meta name="twitter:description" content="Phần mềm desktop + 6 công cụ web miễn phí, dùng ngay không cần cài đặt.">
+<meta name="twitter:image" content="https://javaweb.pro/logo.webp">
+
+<!-- Google Search Console: thay YOUR_VERIFICATION_CODE bằng mã thật lấy tại
+     https://search.google.com/search-console (Chọn "Thẻ HTML" khi xác minh quyền sở hữu) -->
+<meta name="google-site-verification" content="YOUR_VERIFICATION_CODE">
+
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%224%22 fill=%22%2314213D%22/><rect x=%224%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%2214%22 y=%224%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/><rect x=%224%22 y=%2214%22 width=%226%22 height=%226%22 fill=%22%23F3F5F4%22/></svg>">
 
-<!-- ⚠️ Bản DRAFT thiết kế khác cho trang chủ (v3 — mỗi card 1 màu 3D nhẹ riêng) —
-     đang để noindex để tránh trùng nội dung với index.html thật trên Google.
-     Khi nào quyết định dùng bản này thật sự, đổi tên file thành index.html VÀ
-     xoá dòng <meta name="robots" content="noindex..."> ở trên. -->
+<!-- Dữ liệu có cấu trúc cho Google (SEO) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "javaweb.pro",
+  "url": "https://javaweb.pro/",
+  "logo": "https://javaweb.pro/logo.webp",
+  "email": "minhtrongit@gmail.com",
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Software Pro Store",
+  "url": "https://javaweb.pro/"
+}
+</script>
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-06C3LFSGJC"></script>
 <script>
@@ -395,8 +440,7 @@ const desktopApps = [
   {name:"Excel Merger Pro", desc:"Gộp hàng trăm file Excel cùng lúc, không giới hạn bởi bộ nhớ trình duyệt.", download:"https://drive.google.com/drive/folders/1LXbuRjjzax_LxQn884XUQ4MDUjP4wH1N?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"merge", grad:"g3"},
   {name:"Send Mail Auto", desc:"Gửi email hàng loạt tự động, cá nhân hoá nội dung theo từng người nhận.", download:"https://drive.google.com/drive/folders/1bFtNInfz3GmUqoqa1fVlA1DhUTOLnDEq?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"mail", grad:"g6"},
   {name:"File Rename Pro", desc:"Đổi tên hàng loạt file theo quy tắc tự đặt, tiết kiệm hàng giờ thao tác thủ công.", download:"https://drive.google.com/drive/folders/1UoJAbusslMFNUViLef-1jqWAXuro8g-w?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g5"},
-/*  {name:"Excel To PDF", desc:"Chuyển file Excel sang PDF nhanh chóng, giữ nguyên định dạng.", */
-/* download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g1"}, */
+/*  {name:"Excel To PDF", desc:"Chuyển file Excel sang PDF nhanh chóng, giữ nguyên định dạng.", download:"https://drive.google.com/drive/folders/1s5_fGdxdlFKjRNMMMvnhxWHqM2fSnbRL?usp=sharing", video:"https://vt.tiktok.com/ZSHVphFbp/", icon:"tag", grad:"g1"}, */
 ];
 
 function renderWebTools(){
