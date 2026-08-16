@@ -44,24 +44,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --paper:#F3F5F4;
-    --panel:#FFFFFF;
-    --ink:#14213D;
-    --ink-soft:#4B5A78;
-    --line:#DCE2DF;
-    --primary:#0E7C7B;
-    --primary-dark:#095957;
-    --primary-soft:#E7F2F1;
-    --amber:#E2A33D;
-    --amber-soft:#FBF0D9;
-    --danger:#C44536;
+    --paper:#0b1220;
+    --panel:rgba(255,255,255,0.05);
+    --ink:#E7ECF3;
+    --ink-soft:#94A3B8;
+    --ink-dark:#05070d;
+    --line:rgba(255,255,255,0.12);
+    --primary:#22D3EE;
+    --primary-dark:#0891B2;
+    --primary-soft:rgba(34,211,238,0.09);
+    --amber:#FBBF24;
+    --amber-soft:rgba(251,191,36,0.12);
+    --danger:#F87171;
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     --disp: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --radius:10px;
+    --radius:12px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
+  body{margin:0;background:
+    radial-gradient(circle at 12% -5%, rgba(34,211,238,0.10), transparent 45%),
+    radial-gradient(circle at 92% 8%, rgba(167,139,250,0.09), transparent 45%),
+    var(--paper);color:var(--ink);font-family:var(--body);}
   @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
 
   .wrap{max-width:980px;margin:0 auto;padding:0 20px 80px;}
@@ -214,7 +218,8 @@
   .tab-btn.active{color:var(--primary-dark);border-color:var(--primary);}
   .tab-btn:hover:not(.active){color:var(--ink);}
 
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .panel{background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:20px;transition:transform .25s ease, box-shadow .3s ease, border-color .3s ease;}
+  .panel:hover{transform:translateY(-3px);border-color:rgba(34,211,238,0.35);box-shadow:0 20px 40px -18px rgba(0,0,0,0.55), 0 0 26px rgba(34,211,238,0.12);}
   .panel h3{font-family:var(--disp);font-size:17px;margin:0 0 4px;}
   .step-label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);margin-bottom:6px;display:block;}
 
@@ -270,7 +275,7 @@
   .btn-primary{font-family:var(--disp);font-weight:600;font-size:15px;background:var(--primary);color:#fff;border:none;padding:13px 26px;border-radius:9px;cursor:pointer;transition:background .15s, transform .1s;display:inline-flex;align-items:center;gap:8px;}
   .btn-primary:hover:not(:disabled){background:var(--primary-dark);}
   .btn-primary:active:not(:disabled){transform:scale(.98);}
-  .btn-primary:disabled{background:#B9C4BE;cursor:not-allowed;}
+  .btn-primary:disabled{background:#334155;color:#94a3b8;cursor:not-allowed;}
   .status-text{font-size:13px;color:var(--ink-soft);font-family:var(--mono);}
 
   .progress-wrap{margin-top:18px;display:none;}

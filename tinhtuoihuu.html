@@ -43,15 +43,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            --primary-color: #0284c7;
-            --primary-hover: #0369a1;
-            --success-color: #16a34a;
-            --success-hover: #15803d;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #cbd5e1;
+            --primary-color: #22D3EE;
+            --primary-hover: #0891B2;
+            --success-color: #22C55E;
+            --success-hover: #16A34A;
+            --bg-color: #0b1220;
+            --card-bg: rgba(255,255,255,0.05);
+            --text-main: #E7ECF3;
+            --text-muted: #94A3B8;
+            --border-color: rgba(255,255,255,0.14);
         }
 
         * {
@@ -62,7 +62,10 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background:
+                radial-gradient(circle at 15% -5%, rgba(34,211,238,0.10), transparent 45%),
+                radial-gradient(circle at 90% 10%, rgba(167,139,250,0.09), transparent 45%),
+                var(--bg-color);
             color: var(--text-main);
             min-height: 100vh;
         }
@@ -76,10 +79,18 @@
 
         .container {
             background-color: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
             padding: 35px;
             border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 40px -18px rgba(0,0,0,0.55);
             margin-bottom: 25px;
+            transition: transform .25s ease, box-shadow .3s ease, border-color .3s ease;
+        }
+        .container:hover{
+            transform: translateY(-3px);
+            border-color: rgba(34,211,238,0.35);
+            box-shadow: 0 24px 46px -18px rgba(0,0,0,0.6), 0 0 26px rgba(34,211,238,0.10);
         }
 
         h2 {
@@ -97,7 +108,7 @@
             align-items: center;
             margin-bottom: 18px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #f1f5f9;
+            border-bottom: 2px solid var(--border-color);
             gap: 10px;
             flex-wrap: wrap;
         }
@@ -119,7 +130,7 @@
             transition: all 0.2s;
             border: 1px solid var(--border-color);
             cursor: pointer;
-            background-color: #fff;
+            background-color: rgba(255,255,255,0.05);
             white-space: nowrap;
         }
 
@@ -128,7 +139,7 @@
             border-color: var(--primary-color);
         }
         .btn-link.download-template:hover {
-            background-color: rgba(2, 132, 199, 0.05);
+            background-color: rgba(34, 211, 238, 0.05);
         }
 
         .btn-link.download-doc {
@@ -163,13 +174,30 @@
             border-radius: 8px;
             font-size: 15px;
             outline: none;
-            background-color: #fff;
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text-main);
             transition: all 0.2s;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg,#22D3EE,#0891B2);
+            color: #04222b;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            margin-right: 12px;
+            transition: transform .2s ease;
+        }
+        input[type="file"]::file-selector-button:hover {
+            transform: translateY(-1px);
         }
 
         select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
         }
 
         .gender-group {
@@ -198,11 +226,11 @@
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s;
-            background-color: #fff;
+            background-color: rgba(255,255,255,0.05);
         }
 
         .gender-option input[type="radio"]:checked + .gender-label {
-            background-color: rgba(2, 132, 199, 0.08);
+            background-color: rgba(34, 211, 238, 0.08);
             border-color: var(--primary-color);
             color: var(--primary-color);
             font-weight: 600;
@@ -271,11 +299,16 @@
         }
 
         .file-zone {
-            background-color: #f8fafc;
-            border: 2px dashed #cbd5e1;
+            background-color: rgba(255,255,255,0.04);
+            border: 2px dashed var(--border-color);
             padding: 22px;
             border-radius: 12px;
             text-align: center;
+            transition: border-color .15s, background .15s;
+        }
+        .file-zone:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(34,211,238,0.07);
         }
 
         #sheetSelectContainer {
@@ -590,6 +623,13 @@
     for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(`Tháng ${i}`, i);
     for (let i = 1950; i <= 2025; i++) yearSelect.options[yearSelect.options.length] = new Option(`Năm ${i}`, i);
     yearSelect.value = 1975;
+
+    // Tự động tính lại ngay khi người dùng đổi Nam/Nữ, tháng hoặc năm sinh —
+    // không cần bấm nút "Tính thời điểm hưởng lương hưu" nữa.
+    [...document.querySelectorAll('input[name="gender"]'), monthSelect, yearSelect].forEach(el => {
+        el.addEventListener('change', calculateRetirement);
+    });
+    calculateRetirement(); // tính sẵn 1 lần với giá trị mặc định khi vừa mở trang
 
     // HÀM LÕI TÍNH TOÁN
     function calculateCore(genderCode, month, year) {
