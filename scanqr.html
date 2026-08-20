@@ -532,7 +532,7 @@
 <nav class="tab-nav" role="tablist" aria-label="Chọn chức năng">
   <button type="button" class="tab-btn" role="tab" id="tabBtnCreate" aria-selected="true" aria-controls="panelCreate">Tạo mã QR từ Excel</button>
   <button type="button" class="tab-btn" role="tab" id="tabBtnDirect" aria-selected="false" aria-controls="panelDirect">Tạo QR trực tiếp</button>
-  <button type="button" class="tab-btn" role="tab" id="tabBtnScan" aria-selected="false" aria-controls="panelScan">Quét mã QR từ ảnh/PDF</button>
+  <button type="button" class="tab-btn" role="tab" id="tabBtnScan" aria-selected="false" aria-controls="panelScan">Quét QR</button>
 </nav>
 
 <main id="main">
@@ -714,7 +714,7 @@
   <section class="hero">
     <p class="eyebrow">Ảnh/PDF → QR → Excel · chạy trong trình duyệt</p>
     <h2>Quét hàng loạt mã QR<br>từ ảnh hoặc PDF</h2>
-    <p class="lead">Chọn nhiều file ảnh (.jpg, .png, .webp, .bmp...) hoặc PDF, hoặc cả một thư mục. Công cụ sẽ tự tìm mã QR trong từng file/từng trang PDF, giải mã thành chuỗi và xuất ra 1 file Excel gồm 3 cột: STT, chuỗi QR, tên file gốc.</p>
+    <p class="lead">Chọn nhiều file ảnh (.jpg, .png, .webp, .bmp...) hoặc PDF, hoặc cả một thư mục — hoặc bật camera quét trực tiếp. Công cụ sẽ tự tìm mã QR, giải mã thành chuỗi và xuất ra 1 file Excel gồm 3 cột: STT, chuỗi QR, tên file/nguồn gốc.</p>
     <span class="privacy-note">Dữ liệu xử lý hoàn toàn trên máy bạn — không gửi lên máy chủ nào</span>
   </section>
 
@@ -740,6 +740,38 @@
 
     <ul class="file-chip-list" id="scanFileList" aria-live="polite"></ul>
     <p class="empty-state" id="scanEmptyState">Chưa có file nào được chọn.</p>
+  </section>
+
+  <!-- SCAN STEP CAMERA -->
+  <section class="card" aria-labelledby="sstepcam-h">
+    <div class="step-head">
+      <span class="step-num">📷</span>
+      <div>
+        <h3 id="sstepcam-h">Hoặc quét trực tiếp bằng Camera</h3>
+        <p class="hint">Bật camera, đưa từng mã QR vào khung hình — công cụ tự nhận diện liên tục và quét được nhiều mã khác nhau. Tick chọn những mã muốn xuất ra Excel.</p>
+      </div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start;">
+      <button type="button" class="btn-secondary" id="btnCameraStart">📷 Bật camera quét mã</button>
+      <button type="button" class="btn-danger" id="btnCameraStop" style="display:none;">■ Dừng camera</button>
+    </div>
+
+    <div id="cameraWrap" style="display:none;margin-top:16px;">
+      <div style="position:relative;max-width:420px;margin:0 auto;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);">
+        <video id="cameraVideo" playsinline muted style="width:100%;display:block;background:#000;"></video>
+        <div style="position:absolute;inset:0;border:3px solid rgba(34,211,238,0.55);pointer-events:none;border-radius:var(--radius);"></div>
+      </div>
+      <p style="text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:8px;" id="cameraStatus">Đang mở camera…</p>
+    </div>
+
+    <ul class="file-chip-list" id="cameraResultList" style="margin-top:16px;"></ul>
+    <p class="empty-state" id="cameraEmptyState">Chưa quét được mã nào.</p>
+
+    <div class="btn-row" style="justify-content:flex-start;margin-top:14px;">
+      <button type="button" class="btn-primary" id="btnCameraExport" disabled>Xuất Excel các mã đã chọn</button>
+      <button type="button" class="btn-secondary" id="btnCameraClear" disabled>Xoá danh sách</button>
+    </div>
   </section>
 
   <!-- SCAN STEP 2 -->
@@ -800,6 +832,7 @@
       btn.setAttribute("aria-selected", active ? "true" : "false");
       panel.classList.toggle("active", active);
     });
+    if(which !== "scan" && typeof stopCamera === "function") stopCamera();
   }
   tabBtnCreate.addEventListener("click", () => activateTab("create"));
   tabBtnDirect.addEventListener("click", () => activateTab("direct"));
@@ -1737,6 +1770,211 @@
     a.remove();
     URL.revokeObjectURL(url);
     scanLogMsg(`XONG — file "${a.download}" đã được tải xuống.`, "ok");
+  }
+
+  // ============================================================
+  // QUÉT QR BẰNG CAMERA
+  // ============================================================
+  const btnCameraStart = $("btnCameraStart");
+  const btnCameraStop = $("btnCameraStop");
+  const cameraWrap = $("cameraWrap");
+  const cameraVideo = $("cameraVideo");
+  const cameraStatus = $("cameraStatus");
+  const cameraResultList = $("cameraResultList");
+  const cameraEmptyState = $("cameraEmptyState");
+  const btnCameraExport = $("btnCameraExport");
+  const btnCameraClear = $("btnCameraClear");
+
+  const cameraState = {
+    stream: null,
+    running: false,
+    rafId: null,
+    canvas: document.createElement("canvas"),
+    results: [], // {content, time, checked}
+  };
+
+  function describeCameraError(err){
+    const name = err && err.name;
+    if(name === "NotAllowedError" || name === "PermissionDeniedError"){
+      return "⚠ Trình duyệt/máy đang CHẶN quyền camera cho trang này. Vào biểu tượng 🔒 (hoặc ⓘ) cạnh địa chỉ trang trên thanh URL → tìm mục Camera → chọn \"Cho phép\" (Allow), sau đó bấm lại \"Bật camera quét mã\". Nếu vẫn không được, kiểm tra thêm phần cài đặt quyền Camera của hệ điều hành (Windows/macOS) có đang chặn trình duyệt không.";
+    }
+    if(name === "NotFoundError" || name === "DevicesNotFoundError"){
+      return "⚠ Không tìm thấy camera nào trên thiết bị này.";
+    }
+    if(name === "NotReadableError" || name === "TrackStartError"){
+      return "⚠ Camera đang được ứng dụng khác sử dụng (Zoom, Google Meet...). Đóng ứng dụng đó rồi thử lại.";
+    }
+    if(name === "OverconstrainedError"){
+      return "⚠ Không tìm được camera phù hợp (thử lại, thiết bị có thể không có camera sau).";
+    }
+    if(name === "SecurityError"){
+      return "⚠ Trang cần chạy qua HTTPS mới dùng được camera. Kiểm tra lại địa chỉ trang có bắt đầu bằng https:// không.";
+    }
+    return "⚠ Không mở được camera: " + (err && err.message ? err.message : "Lỗi không xác định.");
+  }
+
+  btnCameraStart.addEventListener("click", startCamera);
+  btnCameraStop.addEventListener("click", stopCamera);
+  btnCameraExport.addEventListener("click", exportCameraSelected);
+  btnCameraClear.addEventListener("click", clearCameraResults);
+
+  async function startCamera(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      alert("Trình duyệt này không hỗ trợ truy cập camera (hoặc trang chưa chạy qua HTTPS).");
+      return;
+    }
+    try{
+      await ensureScanLibsLoaded();
+    }catch(err){
+      alert(err.message);
+      return;
+    }
+
+    cameraWrap.style.display = "block";
+    cameraStatus.textContent = "Đang mở camera…";
+    btnCameraStart.disabled = true;
+
+    try{
+      // Ưu tiên camera sau (environment) — phù hợp để quét mã trên điện thoại
+      cameraState.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }
+      });
+    }catch(err){
+      cameraStatus.textContent = describeCameraError(err);
+      btnCameraStart.disabled = false;
+      cameraWrap.style.display = "block";
+      return;
+    }
+
+    cameraVideo.srcObject = cameraState.stream;
+    await cameraVideo.play();
+
+    cameraState.running = true;
+    btnCameraStart.style.display = "none";
+    btnCameraStop.style.display = "";
+    btnCameraStart.disabled = false;
+    cameraStatus.textContent = "Đang quét… đưa mã QR vào khung hình";
+    scanCameraLoop();
+  }
+
+  function stopCamera(){
+    cameraState.running = false;
+    if(cameraState.rafId){
+      cancelAnimationFrame(cameraState.rafId);
+      cameraState.rafId = null;
+    }
+    if(cameraState.stream){
+      cameraState.stream.getTracks().forEach(t => t.stop());
+      cameraState.stream = null;
+    }
+    cameraVideo.srcObject = null;
+    cameraWrap.style.display = "none";
+    btnCameraStart.style.display = "";
+    btnCameraStop.style.display = "none";
+  }
+
+  function scanCameraLoop(){
+    if(!cameraState.running) return;
+    if(cameraVideo.readyState === cameraVideo.HAVE_ENOUGH_DATA){
+      const w = cameraVideo.videoWidth, h = cameraVideo.videoHeight;
+      if(w && h){
+        cameraState.canvas.width = w;
+        cameraState.canvas.height = h;
+        const ctx = cameraState.canvas.getContext("2d");
+        ctx.drawImage(cameraVideo, 0, 0, w, h);
+        try{
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const result = jsQR(imgData.data, w, h, { inversionAttempts: "dontInvert" });
+          if(result && result.data){
+            addCameraResult(result.data);
+          }
+        }catch(e){ /* bỏ qua khung hình lỗi, thử tiếp khung sau */ }
+      }
+    }
+    cameraState.rafId = requestAnimationFrame(scanCameraLoop);
+  }
+
+  function addCameraResult(content){
+    // Không thêm trùng — camera quét liên tục nên cùng 1 mã sẽ được nhận diện
+    // hàng chục lần/giây khi còn trong khung hình, chỉ giữ 1 dòng cho mỗi mã.
+    if(cameraState.results.some(r => r.content === content)) return;
+    const time = new Date().toLocaleTimeString("vi-VN");
+    cameraState.results.push({ content, time, checked: true });
+    cameraStatus.textContent = `Đã quét được ${cameraState.results.length} mã — tiếp tục đưa mã khác vào khung hình, hoặc bấm "Dừng camera" khi xong.`;
+    renderCameraResults();
+  }
+
+  function renderCameraResults(){
+    cameraResultList.innerHTML = "";
+    cameraEmptyState.style.display = cameraState.results.length ? "none" : "block";
+
+    cameraState.results.forEach((r, i) => {
+      const li = document.createElement("li");
+      li.className = "file-chip";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = r.checked;
+      checkbox.setAttribute("aria-label", "Chọn mã để xuất Excel");
+      checkbox.style.cssText = "flex:none;width:18px;height:18px;accent-color:#22d3ee;";
+      checkbox.addEventListener("change", () => {
+        r.checked = checkbox.checked;
+        updateCameraButtons();
+      });
+
+      // Dùng textContent (không phải innerHTML) vì nội dung mã QR là dữ liệu
+      // không tin cậy — tránh rủi ro chèn HTML/script lạ nếu ai đó cố tình
+      // tạo mã QR chứa mã độc.
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "name";
+      nameSpan.style.flex = "1";
+      nameSpan.textContent = r.content;
+
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "size";
+      timeSpan.textContent = r.time;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Xoá";
+      btn.setAttribute("aria-label", "Xoá mã đã quét");
+      btn.addEventListener("click", () => {
+        cameraState.results.splice(i, 1);
+        renderCameraResults();
+      });
+
+      li.appendChild(checkbox);
+      li.appendChild(nameSpan);
+      li.appendChild(timeSpan);
+      li.appendChild(btn);
+      cameraResultList.appendChild(li);
+    });
+
+    updateCameraButtons();
+  }
+
+  function updateCameraButtons(){
+    const hasAny = cameraState.results.length > 0;
+    const hasChecked = cameraState.results.some(r => r.checked);
+    btnCameraClear.disabled = !hasAny;
+    btnCameraExport.disabled = !hasChecked;
+  }
+
+  function clearCameraResults(){
+    cameraState.results = [];
+    renderCameraResults();
+  }
+
+  async function exportCameraSelected(){
+    const selected = cameraState.results.filter(r => r.checked);
+    if(selected.length === 0) return;
+    const results = selected.map(r => ({ content: r.content, filename: `Camera ${r.time}` }));
+    btnCameraExport.disabled = true;
+    try{
+      await exportScanResults(results);
+    }finally{
+      updateCameraButtons();
+    }
   }
 
 })();
