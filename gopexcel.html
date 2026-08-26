@@ -590,6 +590,14 @@
       </div>
     </div>
 
+    <div class="field" style="margin-bottom:16px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);">
+        <input type="checkbox" id="addFilenameCol" checked style="width:18px;height:18px;accent-color:#22d3ee;flex:none;">
+        Thêm cột "Tên File" ở cuối mỗi dòng
+      </label>
+      <p class="field-hint">Đang bật: mỗi dòng dữ liệu trong file kết quả sẽ có thêm 1 cột ghi tên file Excel gốc mà dòng đó lấy ra. Tắt đi nếu không cần biết dòng nào tới từ file nào.</p>
+    </div>
+
     <div class="btn-row" style="justify-content:flex-start;">
       <button type="button" class="btn-primary" id="btnStart">▶ Bắt đầu gộp</button>
       <button type="button" class="btn-secondary" id="btnCancel" disabled>■ Hủy</button>
@@ -988,7 +996,7 @@
   // ============================================================
   // 4 chế độ gộp — bám sát logic bản Python (Excel Merger Pro)
   // ============================================================
-  async function mergeWithHeaderRow1(files, log, progress, isCancelled, outName, rowsPerFile){
+  async function mergeWithHeaderRow1(files, log, progress, isCancelled, outName, rowsPerFile, addFilenameCol){
     let writer = null;
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -1007,13 +1015,14 @@
           if(first.done) continue;
           const headerRow = first.value;
           if(!writer){
-            writer = new StreamingFileWriter("Data", [headerRow], outName, rowsPerFile, log);
+            const headerOut = addFilenameCol ? [...headerRow, "Tên File"] : headerRow;
+            writer = new StreamingFileWriter("Data", [headerOut], outName, rowsPerFile, log);
             log(`    → Lấy tiêu đề từ sheet '${sheetName}'`);
           }
           for(const row of gen){
             if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(row)) continue;
-            await writer.writeRow(row);
+            await writer.writeRow(addFilenameCol ? [...row, file.name] : row);
           }
         }catch(err){
           if(err instanceof MergeCancelled) throw err;
@@ -1029,7 +1038,7 @@
     return writer.finish();
   }
 
-  async function mergeWithCustomHeader(files, headerRowCount, log, progress, isCancelled, outName, rowsPerFile){
+  async function mergeWithCustomHeader(files, headerRowCount, log, progress, isCancelled, outName, rowsPerFile, addFilenameCol){
     let writer = null;
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -1052,13 +1061,16 @@
           }
           if(headerChunk.length === 0) continue;
           if(!writer){
-            writer = new StreamingFileWriter("Data", headerChunk, outName, rowsPerFile, log);
+            const headerOut = addFilenameCol
+              ? headerChunk.map((hr, idx) => idx === headerChunk.length - 1 ? [...hr, "Tên File"] : [...hr, ""])
+              : headerChunk;
+            writer = new StreamingFileWriter("Data", headerOut, outName, rowsPerFile, log);
             log(`    → Lấy ${headerChunk.length} dòng tiêu đề từ sheet '${sheetName}'`);
           }
           for(const row of gen){
             if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(row)) continue;
-            await writer.writeRow(row);
+            await writer.writeRow(addFilenameCol ? [...row, file.name] : row);
           }
         }catch(err){
           if(err instanceof MergeCancelled) throw err;
@@ -1074,7 +1086,7 @@
     return writer.finish();
   }
 
-  async function mergeNoHeader(files, log, progress, isCancelled, outName, rowsPerFile){
+  async function mergeNoHeader(files, log, progress, isCancelled, outName, rowsPerFile, addFilenameCol){
     const writer = new StreamingFileWriter("Data", null, outName, rowsPerFile, log);
     const total = files.length;
     for(let fi = 0; fi < total; fi++){
@@ -1091,7 +1103,7 @@
           for(const row of iterRowsLazy(wb, sheetName)){
             if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(row)) continue;
-            await writer.writeRow(row);
+            await writer.writeRow(addFilenameCol ? [...row, file.name] : row);
           }
         }catch(err){
           if(err instanceof MergeCancelled) throw err;
@@ -1107,7 +1119,7 @@
     return writer.finish();
   }
 
-  async function mergeSheetsMode(files, log, progress, isCancelled, outName, rowsPerFile){
+  async function mergeSheetsMode(files, log, progress, isCancelled, outName, rowsPerFile, addFilenameCol){
     const usedNames = new Set();
     const groupWriter = new StreamingSheetGroupWriter(outName, rowsPerFile, log);
     let totalSheets = 0;
@@ -1125,7 +1137,10 @@
         const newName = uniqueSheetName(sheetName, usedNames);
         try{
           const rows = [];
-          for(const row of iterRowsLazy(wb, sheetName)) rows.push(sanitizeRow(row));
+          for(const row of iterRowsLazy(wb, sheetName)){
+            const clean = sanitizeRow(row);
+            rows.push(addFilenameCol ? [...clean, file.name] : clean);
+          }
           await groupWriter.addSheet(newName, rows);
           totalSheets++;
           if(newName !== sheetName) log(`    → Sheet '${sheetName}' → đổi tên thành '${newName}' (trùng tên)`);
@@ -1153,7 +1168,7 @@
   // Tất cả các sheet được chọn (từ mọi file) được GỘP CHUNG VÀO 1 SHEET kết quả
   // duy nhất (giống cách gộp của chế độ 2): lấy đúng số dòng tiêu đề từ sheet
   // đầu tiên gặp được, các sheet sau tự bỏ đúng số dòng đó và chỉ gộp phần dữ liệu.
-  async function mergeSelectedSheetsMode(files, fileMeta, filterText, headerRowCount, log, progress, isCancelled, outName, rowsPerFile){
+  async function mergeSelectedSheetsMode(files, fileMeta, filterText, headerRowCount, log, progress, isCancelled, outName, rowsPerFile, addFilenameCol){
     let writer = null;
     const filterNames = (filterText || "").split(",").map(s => s.trim()).filter(Boolean);
     const filterSet = new Set(filterNames.map(s => s.toLowerCase()));
@@ -1202,13 +1217,16 @@
           }
           if(headerChunk.length === 0) continue;
           if(!writer){
-            writer = new StreamingFileWriter("Data", headerChunk, outName, rowsPerFile, log);
+            const headerOut = addFilenameCol
+              ? headerChunk.map((hr, idx) => idx === headerChunk.length - 1 ? [...hr, "Tên File"] : [...hr, ""])
+              : headerChunk;
+            writer = new StreamingFileWriter("Data", headerOut, outName, rowsPerFile, log);
             log(`    → Lấy ${headerChunk.length} dòng tiêu đề từ sheet '${sheetName}'`);
           }
           for(const row of gen){
             if(isCancelled()) throw new MergeCancelled();
             if(isBlankRow(row)) continue;
-            await writer.writeRow(row);
+            await writer.writeRow(addFilenameCol ? [...row, file.name] : row);
           }
         }catch(err){
           if(err instanceof MergeCancelled) throw err;
@@ -1468,6 +1486,7 @@
     outputNameInput.value = outName;
     const rowsPerFile = Math.min(900000, Math.max(20000, parseInt(rowsPerFileInput.value, 10) || 200000));
     rowsPerFileInput.value = rowsPerFile;
+    const addFilenameCol = $("addFilenameCol").checked;
 
     logBox.innerHTML = "";
     logBox.classList.remove("show");
@@ -1482,17 +1501,17 @@
       const isCancelled = () => state.cancelRequested;
 
       if(state.mode === 1){
-        filesWritten = await mergeWithHeaderRow1(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeWithHeaderRow1(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile, addFilenameCol);
       }else if(state.mode === 2){
         const n = Math.max(1, parseInt(headerRowCountInput.value, 10) || 1);
-        filesWritten = await mergeWithCustomHeader(state.files, n, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeWithCustomHeader(state.files, n, logMsg, updateProgress, isCancelled, outName, rowsPerFile, addFilenameCol);
       }else if(state.mode === 3){
-        filesWritten = await mergeNoHeader(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeNoHeader(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile, addFilenameCol);
       }else if(state.mode === 4){
-        filesWritten = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeSheetsMode(state.files, logMsg, updateProgress, isCancelled, outName, rowsPerFile, addFilenameCol);
       }else{
         const n5 = Math.max(1, parseInt(headerRowCountInput.value, 10) || 1);
-        filesWritten = await mergeSelectedSheetsMode(state.files, state.fileMeta, sheetNameFilterInput.value, n5, logMsg, updateProgress, isCancelled, outName, rowsPerFile);
+        filesWritten = await mergeSelectedSheetsMode(state.files, state.fileMeta, sheetNameFilterInput.value, n5, logMsg, updateProgress, isCancelled, outName, rowsPerFile, addFilenameCol);
       }
 
       updateProgress(100);
