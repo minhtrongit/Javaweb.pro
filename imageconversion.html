@@ -357,6 +357,21 @@
     width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;
     font:inherit;font-size:14px;background:rgba(255,255,255,0.04);color:var(--ink);
   }
+  /* select cần nền ĐẶC (không trong suốt) vì khi mở danh sách xổ xuống, trình
+     duyệt vẽ khung riêng không có nền trang phía sau — nếu để nền trong suốt
+     sẽ bị trắng, khiến chữ trắng bị chìm không đọc được. */
+  .field select{
+    background:#111827;
+  }
+  .field select option{
+    background:#111827;
+    color:var(--ink);
+  }
+  .field select optgroup{
+    background:#111827;
+    color:var(--ink-soft);
+    font-style:normal;
+  }
   .field input:focus, .field select:focus{border-color:var(--accent);}
   .field .field-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
   .field-quality{display:flex;align-items:center;gap:10px;}
