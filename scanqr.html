@@ -1952,10 +1952,23 @@
     cameraState.rafId = requestAnimationFrame(scanCameraLoop);
   }
 
+  // Theo dõi lần gần nhất mỗi nội dung mã được "thấy" trong khung hình, để phân
+  // biệt: (a) mã vẫn đang nằm liên tục trong khung hình (chỉ 1 lượt quét, không
+  // lưu lặp) với (b) mã đã bị rời khỏi khung hình rồi quay lại / quét lại có chủ
+  // đích (coi là 1 lượt quét MỚI, vẫn lưu thành dòng mới dù trùng nội dung).
+  const RESCAN_GAP_MS = 1200;
+  const cameraLastSeen = new Map(); // content -> thời điểm thấy gần nhất
+
   function addCameraResult(content){
-    // Không thêm trùng — camera quét liên tục nên cùng 1 mã sẽ được nhận diện
-    // hàng chục lần/giây khi còn trong khung hình, chỉ giữ 1 dòng cho mỗi mã.
-    if(cameraState.results.some(r => r.content === content)) return;
+    const now = Date.now();
+    const lastSeen = cameraLastSeen.get(content);
+    cameraLastSeen.set(content, now);
+
+    // Vẫn đang trong cùng 1 lượt đưa mã vào khung hình (khoảng cách giữa 2 lần
+    // "thấy" quá ngắn) -> bỏ qua, tránh camera quét ~30 khung hình/giây tạo ra
+    // hàng chục dòng giống hệt nhau chỉ trong 1 giây.
+    if(lastSeen && (now - lastSeen) < RESCAN_GAP_MS) return;
+
     const time = new Date().toLocaleTimeString("vi-VN");
     cameraState.results.push({ content, time, checked: true });
     cameraStatus.textContent = `Đã quét được ${cameraState.results.length} mã — tiếp tục đưa mã khác vào khung hình, hoặc bấm "Dừng camera" khi xong.`;
@@ -2020,6 +2033,7 @@
 
   function clearCameraResults(){
     cameraState.results = [];
+    cameraLastSeen.clear();
     renderCameraResults();
   }
 
