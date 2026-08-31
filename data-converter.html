@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Converter — Excel ⇄ SQL / SQLite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.js"></script>
+<style>
+  :root{
+    --bg:#0B1220;
+    --bg-grid:#111c30;
+    --surface:#101929;
+    --surface-alt:#162134;
+    --border:#223349;
+    --border-soft:#1a2740;
+    --text:#E4ECF7;
+    --text-dim:#7488A3;
+    --ink:#5EC8D8;
+    --ink-dim:#3A7C8A;
+    --action:#FF7A59;
+    --action-dim:#c4523a;
+    --ok:#6BCB77;
+    --warn:#F2C94C;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0/28px 100%,
+      var(--bg);
+    background-blend-mode:normal;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px dashed var(--border);
+    padding-bottom:18px; margin-bottom:28px; flex-wrap:wrap; gap:10px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px;height:34px;border:1.5px solid var(--ink);border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);
+    position:relative;
+  }
+  .brand-mark::after{content:'';position:absolute;inset:4px;border:1px dashed var(--ink-dim);border-radius:2px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0;font-weight:700;letter-spacing:-0.01em;}
+  .subtitle{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-dim);margin-top:2px;}
+  .status-pill{
+    font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;
+    border:1px solid var(--border);border-radius:20px;color:var(--text-dim);
+    display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);}
+  .status-pill.busy .status-dot{background:var(--warn);animation:pulse 1s infinite;}
+  .status-pill.ready .status-dot{background:var(--ok);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  section{margin-bottom:30px;}
+  .section-label{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;
+    color:var(--ink); text-transform:uppercase; margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .section-label .num{color:var(--text-dim);}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border-soft);}
+
+  .dropzone{
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius);
+    background:var(--surface);
+    padding:36px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--ink);
+    background:var(--surface-alt);
+  }
+  .dropzone .dz-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;margin-bottom:6px;}
+  .dropzone .dz-sub{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-dim);}
+  .dropzone .dz-formats{margin-top:14px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+  .fmt-tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink);
+    border:1px solid var(--ink-dim);padding:2px 7px;border-radius:3px;
+  }
+  #fileInput{display:none;}
+  .file-active{
+    display:none;
+    margin-top:12px;padding:10px 14px;background:var(--surface-alt);
+    border:1px solid var(--border);border-radius:var(--radius);
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);
+    align-items:center;justify-content:space-between;gap:10px;
+  }
+  .file-active.show{display:flex;}
+  .file-active .fname{color:var(--ok);}
+  .clear-btn{
+    background:none;border:1px solid var(--border);color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;
+    border-radius:4px;cursor:pointer;
+  }
+  .clear-btn:hover{color:var(--action);border-color:var(--action-dim);}
+
+  /* table cards (schema cards) */
+  #tableCards{display:none;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+  #tableCards.show{display:grid;}
+  .tcard{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:0; overflow:hidden; cursor:pointer; position:relative;
+    transition:border-color .15s, transform .1s;
+  }
+  .tcard:hover{border-color:var(--ink-dim);}
+  .tcard.selected{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset;}
+  .tcard.previewing{outline:1px dashed var(--action);outline-offset:-4px;}
+  .tcard-head{
+    display:flex;align-items:center;gap:8px;padding:10px 12px;
+    border-bottom:1px dashed var(--border-soft); background:var(--surface-alt);
+  }
+  .tcard-head input{accent-color:var(--ink);width:14px;height:14px;flex-shrink:0;}
+  .tcard-name{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;
+  }
+  .tcard-body{padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);}
+  .tcard-body .row{display:flex;justify-content:space-between;margin-bottom:3px;}
+  .tcard-stamp{
+    position:absolute;top:8px;right:8px;
+    font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);
+    border:1px solid var(--border-soft);padding:1px 5px;border-radius:3px;
+    display:none;
+  }
+  .select-all-row{display:flex;justify-content:flex-end;margin:8px 0 0;gap:10px;}
+  .select-all-row button{
+    background:none;border:1px solid var(--border);color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;
+    border-radius:4px;cursor:pointer;
+  }
+  .select-all-row button:hover{color:var(--ink);border-color:var(--ink-dim);}
+
+  /* preview grid */
+  #previewWrap{display:none;}
+  #previewWrap.show{display:block;}
+  .preview-title{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-dim);margin-bottom:8px;}
+  .preview-title b{color:var(--text);}
+  .grid-scroll{
+    max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--surface);
+  }
+  table.datagrid{border-collapse:collapse;width:100%;font-family:'JetBrains Mono',monospace;font-size:11.5px;}
+  table.datagrid th{
+    position:sticky;top:0;background:var(--surface-alt);color:var(--ink);
+    text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);
+    white-space:nowrap;font-weight:600;
+  }
+  table.datagrid td{
+    padding:6px 10px;border-bottom:1px solid var(--border-soft);color:var(--text);
+    white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;
+  }
+  table.datagrid tr:hover td{background:rgba(94,200,216,0.05);}
+
+  /* export panel */
+  .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:640px){.export-grid{grid-template-columns:1fr;}}
+  .field-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:block;}
+  .fmt-options{display:flex;flex-wrap:wrap;gap:8px;}
+  .fmt-opt{
+    border:1px solid var(--border);background:var(--surface);border-radius:5px;
+    padding:8px 12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12.5px;
+    color:var(--text-dim);transition:.12s;
+  }
+  .fmt-opt:hover{border-color:var(--ink-dim);color:var(--text);}
+  .fmt-opt.active{border-color:var(--ink);color:var(--ink);background:rgba(94,200,216,0.08);}
+  select.dialect-select{
+    width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:9px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  }
+  .hint{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:8px;line-height:1.5;}
+
+  .convert-btn{
+    margin-top:22px;width:100%;padding:14px;border:none;border-radius:6px;
+    background:var(--action);color:#0B1220;font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:14.5px;cursor:pointer;letter-spacing:.01em;
+    transition:transform .08s, background .15s;
+  }
+  .convert-btn:hover{background:#ff8f6e;}
+  .convert-btn:active{transform:scale(0.99);}
+  .convert-btn:disabled{background:var(--border);color:var(--text-dim);cursor:not-allowed;}
+
+  .log{
+    margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);
+    border-left:2px solid var(--border);padding-left:10px;min-height:14px;white-space:pre-wrap;
+  }
+  .log .err{color:#ff8f6e;}
+  .log .ok{color:var(--ok);}
+
+  footer{
+    margin-top:50px;text-align:center;font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;color:var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">DB</div>
+      <div>
+        <h1>Data Converter</h1>
+        <div class="subtitle">Excel / CSV ⇄ SQL dump / SQLite .db / JSON</div>
+      </div>
+    </div>
+    <div class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">chờ file</span></div>
+  </header>
+
+  <section>
+    <div class="section-label"><span class="num">01</span> Nạp dữ liệu</div>
+    <div class="dropzone" id="dropzone">
+      <div class="dz-title">Thả file vào đây hoặc bấm để chọn</div>
+      <div class="dz-sub">Đọc được nhiều bảng/sheet trong 1 file — bạn sẽ chọn bảng cần xuất ở bước sau</div>
+      <div class="dz-formats">
+        <span class="fmt-tag">.xlsx</span><span class="fmt-tag">.xls</span><span class="fmt-tag">.csv</span>
+        <span class="fmt-tag">.db</span><span class="fmt-tag">.sqlite</span><span class="fmt-tag">.sqlite3</span>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.db,.sqlite,.sqlite3">
+    </div>
+    <div class="file-active" id="fileActive">
+      <span>Đang nạp: <span class="fname" id="fnameLabel"></span></span>
+      <button class="clear-btn" id="clearBtn">Xoá & chọn file khác</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label"><span class="num">02</span> Bảng phát hiện được</div>
+    <div id="tableCards"></div>
+    <div class="select-all-row" id="selectAllRow" style="display:none;">
+      <button id="selectAllBtn">Chọn tất cả</button>
+      <button id="selectNoneBtn">Bỏ chọn</button>
+    </div>
+  </section>
+
+  <section id="previewWrap">
+    <div class="section-label"><span class="num">03</span> Xem trước dữ liệu</div>
+    <div class="preview-title">Đang xem: <b id="previewTableName">—</b> <span id="previewMeta"></span></div>
+    <div class="grid-scroll"><table class="datagrid" id="previewTable"></table></div>
+  </section>
+
+  <section>
+    <div class="section-label"><span class="num">04</span> Xuất dữ liệu</div>
+    <div class="export-grid">
+      <div>
+        <span class="field-label">Định dạng đích</span>
+        <div class="fmt-options" id="fmtOptions">
+          <div class="fmt-opt active" data-fmt="sql">SQL dump (.sql)</div>
+          <div class="fmt-opt" data-fmt="sqlite">SQLite (.db)</div>
+          <div class="fmt-opt" data-fmt="excel">Excel (.xlsx)</div>
+          <div class="fmt-opt" data-fmt="csv">CSV (.csv)</div>
+          <div class="fmt-opt" data-fmt="json">JSON (.json)</div>
+        </div>
+        <div class="hint" id="fmtHint"></div>
+      </div>
+      <div id="dialectWrap">
+        <span class="field-label">Dialect SQL</span>
+        <select class="dialect-select" id="dialectSelect">
+          <option value="mysql">MySQL</option>
+          <option value="sqlite">SQLite</option>
+          <option value="postgres">PostgreSQL / chuẩn ANSI</option>
+        </select>
+        <div class="hint">Ảnh hưởng cách trích dẫn tên cột/bảng (backtick vs dấu ngoặc kép) và kiểu dữ liệu.</div>
+      </div>
+    </div>
+    <button class="convert-btn" id="convertBtn" disabled>Chuyển đổi & tải xuống</button>
+    <div class="log" id="log"></div>
+  </section>
+
+  <footer>javaweb.pro · Data Converter chạy hoàn toàn trong trình duyệt — file không tải lên server nào</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  let tables = [];          // [{name, headers, rows, colTypes}]
+  let selected = new Set(); // table names selected
+  let previewing = null;    // table name currently previewed
+  let currentFileName = "";
+  let currentFmt = "sql";
+  let sqlPromise = null;
+
+  const el = id => document.getElementById(id);
+  const dropzone = el('dropzone'), fileInput = el('fileInput'), fileActive = el('fileActive'),
+        fnameLabel = el('fnameLabel'), clearBtn = el('clearBtn'), tableCards = el('tableCards'),
+        selectAllRow = el('selectAllRow'), previewWrap = el('previewWrap'), previewTable = el('previewTable'),
+        previewTableName = el('previewTableName'), previewMeta = el('previewMeta'), convertBtn = el('convertBtn'),
+        logBox = el('log'), statusPill = el('statusPill'), statusText = el('statusText'),
+        fmtOptions = el('fmtOptions'), fmtHint = el('fmtHint'), dialectWrap = el('dialectWrap'), dialectSelect = el('dialectSelect');
+
+  function setStatus(mode, text){
+    statusPill.className = 'status-pill' + (mode ? ' ' + mode : '');
+    statusText.textContent = text;
+  }
+  function log(msg, cls){
+    const line = document.createElement('div');
+    if(cls) line.className = cls;
+    line.textContent = msg;
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  function clearLog(){ logBox.innerHTML = ''; }
+
+  // ---------- helpers: identifiers / types / escaping ----------
+  function sanitizeIdent(name){
+    let s = String(name == null ? 'col' : name).trim().replace(/[^a-zA-Z0-9_À-ỹ]/g,'_');
+    s = s.normalize ? s : s;
+    if(/^[0-9]/.test(s)) s = '_' + s;
+    if(!s) s = 'col';
+    return s;
+  }
+  function quoteIdent(name, dialect){
+    const s = sanitizeIdent(name);
+    if(dialect === 'mysql') return '`' + s + '`';
+    return '"' + s + '"';
+  }
+  function inferColType(values){
+    let allInt = true, allNum = true, hasVal = false;
+    for(const v of values){
+      if(v === null || v === undefined || v === '') continue;
+      hasVal = true;
+      const n = Number(v);
+      if(Number.isNaN(n)){ allInt = false; allNum = false; break; }
+      if(!Number.isInteger(n)) allInt = false;
+    }
+    if(!hasVal) return 'TEXT';
+    if(allInt) return 'INTEGER';
+    if(allNum) return 'REAL';
+    return 'TEXT';
+  }
+  function typeForDialect(baseType, dialect){
+    if(dialect === 'mysql'){
+      if(baseType === 'INTEGER') return 'INT';
+      if(baseType === 'REAL') return 'DOUBLE';
+      return 'TEXT';
+    }
+    return baseType; // sqlite / postgres use TEXT/INTEGER/REAL fine
+  }
+  function sqlLiteral(v, baseType){
+    if(v === null || v === undefined || v === '') return 'NULL';
+    if(baseType === 'INTEGER' || baseType === 'REAL'){
+      const n = Number(v);
+      return Number.isNaN(n) ? 'NULL' : String(n);
+    }
+    return "'" + String(v).replace(/'/g, "''") + "'";
+  }
+  function downloadBlob(content, filename, mime){
+    const blob = content instanceof Blob ? content : new Blob([content], {type: mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }
+  function baseName(fname){
+    return fname.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g,'_') || 'data';
+  }
+
+  // ---------- loading sql.js ----------
+  function loadSQL(){
+    if(!sqlPromise){
+      sqlPromise = initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/${f}` });
+    }
+    return sqlPromise;
+  }
+
+  // ---------- file handling ----------
+  dropzone.addEventListener('click', ()=> fileInput.click());
+  dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e=>{
+    e.preventDefault(); dropzone.classList.remove('drag');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e=>{
+    if(e.target.files.length) handleFile(e.target.files[0]);
+  });
+  clearBtn.addEventListener('click', resetAll);
+
+  function resetAll(){
+    tables = []; selected.clear(); previewing = null; currentFileName = '';
+    fileActive.classList.remove('show');
+    fileInput.value = '';
+    tableCards.innerHTML = ''; tableCards.classList.remove('show');
+    selectAllRow.style.display = 'none';
+    previewWrap.classList.remove('show');
+    convertBtn.disabled = true;
+    clearLog();
+    setStatus('', 'chờ file');
+  }
+
+  function handleFile(file){
+    resetAll();
+    currentFileName = file.name;
+    fnameLabel.textContent = file.name;
+    fileActive.classList.add('show');
+    setStatus('busy', 'đang đọc file...');
+    clearLog();
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+
+    if(['db','sqlite','sqlite3'].includes(ext)){
+      reader.onload = async function(e){
+        try{
+          const SQL = await loadSQL();
+          const db = new SQL.Database(new Uint8Array(e.target.result));
+          const res = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+          const names = res.length ? res[0].values.map(r=>r[0]) : [];
+          if(!names.length){ log('Không tìm thấy bảng nào trong file SQLite này.', 'err'); setStatus('','lỗi'); return; }
+          names.forEach(tn=>{
+            const r = db.exec(`SELECT * FROM "${tn}"`);
+            const headers = r.length ? r[0].columns : [];
+            const rows = r.length ? r[0].values : [];
+            const colTypes = headers.map((h,i)=> inferColType(rows.map(row=>row[i])));
+            tables.push({name: tn, headers, rows, colTypes});
+          });
+          db.close();
+          finishLoad('SQLite');
+        }catch(err){
+          log('Lỗi đọc SQLite: ' + err.message, 'err'); setStatus('','lỗi');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else if(ext === 'csv'){
+      reader.onload = function(e){
+        try{
+          const wb = XLSX.read(e.target.result, {type:'string'});
+          loadWorkbook(wb);
+          finishLoad('CSV');
+        }catch(err){
+          log('Lỗi đọc CSV: ' + err.message, 'err'); setStatus('','lỗi');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    } else if(['xlsx','xls'].includes(ext)){
+      reader.onload = function(e){
+        try{
+          const wb = XLSX.read(e.target.result, {type:'array'});
+          loadWorkbook(wb);
+          finishLoad('Excel');
+        }catch(err){
+          log('Lỗi đọc Excel: ' + err.message, 'err'); setStatus('','lỗi');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      log('Định dạng file không được hỗ trợ: .' + ext, 'err');
+      setStatus('','lỗi');
+    }
+  }
+
+  function loadWorkbook(wb){
+    wb.SheetNames.forEach(sheetName=>{
+      const ws = wb.Sheets[sheetName];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, blankrows:false});
+      if(!aoa.length) return;
+      let headers = aoa[0].map((h,i)=> h === null || h === '' ? ('col_'+(i+1)) : String(h));
+      const rows = aoa.slice(1);
+      const colTypes = headers.map((h,i)=> inferColType(rows.map(row=>row[i])));
+      tables.push({name: sheetName, headers, rows, colTypes});
+    });
+  }
+
+  function finishLoad(kind){
+    if(!tables.length){
+      log('Không đọc được dữ liệu nào từ file.', 'err'); setStatus('','lỗi'); return;
+    }
+    renderTableCards();
+    // auto-select all + preview first
+    tables.forEach(t=> selected.add(t.name));
+    updateCardSelection();
+    previewTableByName(tables[0].name);
+    convertBtn.disabled = false;
+    setStatus('ready', `${kind} · ${tables.length} bảng`);
+    log(`✓ Đã đọc ${tables.length} bảng từ ${currentFileName}`, 'ok');
+  }
+
+  function renderTableCards(){
+    tableCards.innerHTML = '';
+    tableCards.classList.add('show');
+    selectAllRow.style.display = tables.length > 1 ? 'flex' : 'none';
+    tables.forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'tcard';
+      card.dataset.name = t.name;
+      card.innerHTML = `
+        <div class="tcard-head">
+          <input type="checkbox" data-name="${escapeAttr(t.name)}">
+          <span class="tcard-name">${escapeHtml(t.name)}</span>
+        </div>
+        <div class="tcard-body">
+          <div class="row"><span>cột</span><span>${t.headers.length}</span></div>
+          <div class="row"><span>dòng</span><span>${t.rows.length}</span></div>
+        </div>`;
+      const checkbox = card.querySelector('input');
+      checkbox.addEventListener('click', e=> e.stopPropagation());
+      checkbox.addEventListener('change', ()=>{
+        if(checkbox.checked) selected.add(t.name); else selected.delete(t.name);
+        updateCardSelection();
+      });
+      card.addEventListener('click', ()=> previewTableByName(t.name));
+      tableCards.appendChild(card);
+    });
+    updateCardSelection();
+  }
+
+  function updateCardSelection(){
+    [...tableCards.children].forEach(card=>{
+      const name = card.dataset.name;
+      const cb = card.querySelector('input');
+      cb.checked = selected.has(name);
+      card.classList.toggle('selected', selected.has(name));
+      card.classList.toggle('previewing', name === previewing);
+    });
+    convertBtn.disabled = selected.size === 0;
+  }
+
+  el('selectAllBtn').addEventListener('click', ()=>{ tables.forEach(t=>selected.add(t.name)); updateCardSelection(); });
+  el('selectNoneBtn').addEventListener('click', ()=>{ selected.clear(); updateCardSelection(); });
+
+  function previewTableByName(name){
+    previewing = name;
+    updateCardSelection();
+    const t = tables.find(x=>x.name === name);
+    if(!t) return;
+    previewWrap.classList.add('show');
+    previewTableName.textContent = name;
+    previewMeta.textContent = `(${t.headers.length} cột · ${t.rows.length} dòng · hiển thị tối đa 100 dòng)`;
+    const thead = '<thead><tr>' + t.headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
+    const bodyRows = t.rows.slice(0,100).map(r=>
+      '<tr>' + t.headers.map((h,i)=> `<td>${r[i]===null||r[i]===undefined?'':escapeHtml(String(r[i]))}</td>`).join('') + '</tr>'
+    ).join('');
+    previewTable.innerHTML = thead + '<tbody>' + bodyRows + '</tbody>';
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- export format selector ----------
+  const fmtHints = {
+    sql: 'Tạo file .sql gồm CREATE TABLE + INSERT cho mỗi bảng đã chọn. Dùng được cho MySQL, SQLite, PostgreSQL.',
+    sqlite: 'Đóng gói tất cả bảng đã chọn thành 1 file SQLite .db, dùng ngay với DB Browser for SQLite, Python sqlite3, v.v.',
+    excel: 'Mỗi bảng đã chọn thành 1 sheet trong file .xlsx (giữ nguyên header + dữ liệu).',
+    csv: 'Mỗi bảng đã chọn xuất thành 1 file .csv riêng (tải nhiều file nếu chọn nhiều bảng).',
+    json: 'Mỗi bảng đã chọn xuất thành 1 file .json (mảng object, key = tên cột).'
+  };
+  fmtOptions.addEventListener('click', e=>{
+    const opt = e.target.closest('.fmt-opt');
+    if(!opt) return;
+    [...fmtOptions.children].forEach(c=>c.classList.remove('active'));
+    opt.classList.add('active');
+    currentFmt = opt.dataset.fmt;
+    fmtHint.textContent = fmtHints[currentFmt];
+    dialectWrap.style.display = currentFmt === 'sql' ? 'block' : 'none';
+  });
+  fmtHint.textContent = fmtHints.sql;
+
+  // ---------- export builders ----------
+  function buildCreateTable(table, dialect){
+    const tn = quoteIdent(table.name, dialect);
+    const cols = table.headers.map((h,i)=> `  ${quoteIdent(h,dialect)} ${typeForDialect(table.colTypes[i], dialect)}`).join(',\n');
+    return `CREATE TABLE ${tn} (\n${cols}\n);`;
+  }
+  function buildInserts(table, dialect){
+    const tn = quoteIdent(table.name, dialect);
+    const colList = table.headers.map(h=>quoteIdent(h,dialect)).join(', ');
+    const chunkSize = 500;
+    const out = [];
+    for(let i=0;i<table.rows.length;i+=chunkSize){
+      const chunk = table.rows.slice(i, i+chunkSize);
+      const valuesSql = chunk.map(row=>
+        '(' + table.headers.map((h,ci)=> sqlLiteral(row[ci], table.colTypes[ci])).join(', ') + ')'
+      ).join(',\n');
+      out.push(`INSERT INTO ${tn} (${colList}) VALUES\n${valuesSql};`);
+    }
+    return out.join('\n\n');
+  }
+  function buildSqlDump(selTables, dialect){
+    let parts = [`-- Data Converter export · dialect: ${dialect} · nguồn: ${currentFileName}`, ''];
+    selTables.forEach(t=>{
+      parts.push(`-- Bảng: ${t.name} (${t.rows.length} dòng)`);
+      parts.push(buildCreateTable(t, dialect));
+      if(t.rows.length) parts.push(buildInserts(t, dialect));
+      parts.push('');
+    });
+    return parts.join('\n');
+  }
+  async function buildSqliteDb(selTables){
+    const SQL = await loadSQL();
+    const db = new SQL.Database();
+    selTables.forEach(t=>{
+      db.run(buildCreateTable(t, 'sqlite'));
+      if(!t.rows.length) return;
+      const colList = t.headers.map(h=>quoteIdent(h,'sqlite')).join(', ');
+      const placeholders = t.headers.map(()=> '?').join(', ');
+      const stmt = db.prepare(`INSERT INTO ${quoteIdent(t.name,'sqlite')} (${colList}) VALUES (${placeholders})`);
+      t.rows.forEach(row=>{
+        const vals = row.map((v,ci)=>{
+          if(v === null || v === undefined || v === '') return null;
+          const bt = t.colTypes[ci];
+          if(bt === 'INTEGER' || bt === 'REAL'){ const n = Number(v); return Number.isNaN(n) ? null : n; }
+          return String(v);
+        });
+        stmt.run(vals);
+      });
+      stmt.free();
+    });
+    const data = db.export();
+    db.close();
+    return data;
+  }
+  function buildExcel(selTables){
+    const wb = XLSX.utils.book_new();
+    selTables.forEach(t=>{
+      const aoa = [t.headers, ...t.rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      let sheetName = sanitizeIdent(t.name).slice(0,31) || 'Sheet';
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+    return XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  }
+  function csvEscape(v){
+    if(v === null || v === undefined) return '';
+    const s = String(v);
+    if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+  function buildCsv(table){
+    const lines = [table.headers.map(csvEscape).join(',')];
+    table.rows.forEach(r=> lines.push(table.headers.map((h,i)=>csvEscape(r[i])).join(',')));
+    return '\uFEFF' + lines.join('\r\n');
+  }
+  function buildJson(table){
+    const arr = table.rows.map(r=>{
+      const obj = {};
+      table.headers.forEach((h,i)=> obj[h] = r[i]);
+      return obj;
+    });
+    return JSON.stringify(arr, null, 2);
+  }
+
+  // ---------- convert action ----------
+  convertBtn.addEventListener('click', async ()=>{
+    const selTables = tables.filter(t=> selected.has(t.name));
+    if(!selTables.length){ log('Chưa chọn bảng nào để xuất.', 'err'); return; }
+    clearLog();
+    convertBtn.disabled = true;
+    setStatus('busy', 'đang chuyển đổi...');
+    const fname = baseName(currentFileName);
+    try{
+      if(currentFmt === 'sql'){
+        const dialect = dialectSelect.value;
+        const sql = buildSqlDump(selTables, dialect);
+        downloadBlob(sql, `${fname}_${dialect}.sql`, 'text/plain;charset=utf-8');
+        log(`✓ Đã tạo file SQL (${dialect}) cho ${selTables.length} bảng.`, 'ok');
+      } else if(currentFmt === 'sqlite'){
+        const data = await buildSqliteDb(selTables);
+        downloadBlob(new Blob([data], {type:'application/x-sqlite3'}), `${fname}.db`);
+        log(`✓ Đã tạo file SQLite .db cho ${selTables.length} bảng.`, 'ok');
+      } else if(currentFmt === 'excel'){
+        const buf = buildExcel(selTables);
+        downloadBlob(new Blob([buf], {type:'application/octet-stream'}), `${fname}.xlsx`);
+        log(`✓ Đã tạo file Excel gồm ${selTables.length} sheet.`, 'ok');
+      } else if(currentFmt === 'csv'){
+        selTables.forEach((t,i)=>{
+          setTimeout(()=>{
+            downloadBlob(buildCsv(t), `${sanitizeIdent(t.name)}.csv`, 'text/csv;charset=utf-8');
+          }, i * 250);
+        });
+        log(`✓ Đang tải ${selTables.length} file CSV (mỗi bảng 1 file).`, 'ok');
+      } else if(currentFmt === 'json'){
+        selTables.forEach((t,i)=>{
+          setTimeout(()=>{
+            downloadBlob(buildJson(t), `${sanitizeIdent(t.name)}.json`, 'application/json;charset=utf-8');
+          }, i * 250);
+        });
+        log(`✓ Đang tải ${selTables.length} file JSON (mỗi bảng 1 file).`, 'ok');
+      }
+      setStatus('ready', `${tables.length} bảng · sẵn sàng`);
+    }catch(err){
+      log('Lỗi khi chuyển đổi: ' + err.message, 'err');
+      setStatus('', 'lỗi');
+    }finally{
+      convertBtn.disabled = selected.size === 0;
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
