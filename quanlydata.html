@@ -64,11 +64,20 @@
         <div class="input-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="searchInput" placeholder="Nhập từ khoá">
+          <button type="button" class="qr-btn" id="btnQrScan" title="Quét mã QR / mã vạch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="18" y1="14" x2="18" y2="21"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="18" x2="17" y2="18"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="18" x2="21" y2="21"/></svg>
+          </button>
         </div>
         <button class="btn btn-accent" id="btnSearch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Tìm kiếm
         </button>
+      </div>
+      <div class="qr-extract-range" title="Vị trí ký tự cần lấy từ mã QR/mã vạch quét được">
+        <span>Lấy ký tự</span>
+        <input type="number" id="qrFromPos" min="1" step="1" value="1">
+        <span>đến</span>
+        <input type="number" id="qrToPos" min="1" step="1" value="12">
       </div>
       <label class="exact-toggle" for="exactMatch">
         <input type="checkbox" id="exactMatch">
@@ -311,10 +320,39 @@
   </div>
 </div>
 
+<!-- Modal: Quét QR / mã vạch bằng camera -->
+<div class="modal" id="qrModal">
+  <div class="modal-backdrop" id="qrModalBackdrop"></div>
+  <div class="modal-card qr-modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Quét mã QR / mã vạch</h3>
+        <p>Đưa mã QR hoặc mã vạch vào giữa khung hình để quét.</p>
+      </div>
+      <button class="modal-close" id="qrModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-video-wrap">
+        <video id="qrVideo" autoplay muted playsinline></video>
+        <div class="qr-video-frame"></div>
+      </div>
+      <div class="qr-zoom-row">
+        <span>Zoom</span>
+        <input type="range" id="qrZoomSlider" min="1" max="5" step="0.1" value="3" disabled>
+        <span class="qr-zoom-val" id="qrZoomVal">3x</span>
+      </div>
+      <div class="hint" style="padding:0;margin-top:8px;" id="qrStatusText">Đang khởi động camera…</div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
