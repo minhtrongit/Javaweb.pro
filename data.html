@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý dữ liệu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1220;
+    --surface:#111A2E;
+    --surface-2:#152036;
+    --border:#223049;
+    --border-soft:#1A2740;
+    --accent:#2DD4BF;
+    --accent-dim:#17332F;
+    --accent-2:#F5A623;
+    --danger:#F0596B;
+    --text:#E6EDF7;
+    --text-muted:#8B98B1;
+    --text-faint:#5C6A85;
+    --radius:10px;
+    --font-display:'Be Vietnam Pro', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 90% -10%, rgba(45,212,191,0.08), transparent 60%),
+      radial-gradient(900px 500px at 5% 0%, rgba(245,166,35,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent); color:#04211D; }
+  a{color:var(--accent);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#2A3856;border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:#354369;}
+
+  header{
+    position:sticky; top:0; z-index:40;
+    background:rgba(11,18,32,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .header-inner{
+    max-width:1440px; margin:0 auto;
+    padding:16px 24px;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; margin-right:auto; }
+  .brand-mark{
+    width:38px;height:38px;border-radius:9px;
+    background:linear-gradient(135deg, var(--accent), #14877a);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display); font-weight:800; color:#04211D; font-size:15px;
+    flex-shrink:0;
+    box-shadow:0 0 0 1px rgba(45,212,191,0.35), 0 6px 18px -6px rgba(45,212,191,0.5);
+  }
+  .brand-text h1{ font-family:var(--font-display); font-size:16.5px; font-weight:700; margin:0; letter-spacing:.1px; }
+  .brand-text p{ margin:1px 0 0; font-size:12px; color:var(--text-muted); }
+
+  .source-chip{
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--border);
+    padding:7px 12px 7px 10px; border-radius:999px; font-size:12.5px; color:var(--text-muted);
+    max-width:300px;
+  }
+  .source-chip .dot{ width:7px;height:7px;border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+  .source-chip.ok .dot{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .source-chip.err .dot{ background:var(--danger); box-shadow:0 0 8px var(--danger); }
+  .source-chip .fname{ color:var(--text); font-family:var(--font-mono); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:13px;
+    border-radius:8px; border:1px solid var(--border); background:var(--surface);
+    color:var(--text); padding:9px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+    transition:.15s border-color, .15s background;
+    white-space:nowrap;
+  }
+  .btn:hover{ border-color:#33456B; background:var(--surface-2); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-accent{ background:var(--accent); color:#04211D; border-color:var(--accent); }
+  .btn-accent:hover{ filter:brightness(1.06); background:var(--accent); }
+  .btn-ghost{ background:transparent; }
+  .btn-sm{ padding:6px 10px; font-size:12px; }
+
+  .table-pick-list{ display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; margin-bottom:4px; }
+  .table-pick-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:9px; background:var(--bg); cursor:pointer; transition:border-color .12s; }
+  .table-pick-item:hover{ border-color:var(--accent); }
+  .table-pick-item input{ accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; }
+  .table-pick-item .tbl-name{ font-family:var(--font-mono); font-size:13px; color:var(--text); flex:1; }
+  .table-pick-item .tbl-count{ font-size:11.5px; color:var(--text-faint); white-space:nowrap; }
+
+  .col-check-actions{ display:flex; gap:8px; margin-bottom:10px; }
+  .col-check-list{ display:flex; flex-direction:column; gap:2px; max-height:320px; overflow-y:auto; border:1px solid var(--border); border-radius:9px; padding:6px; background:var(--bg); margin-bottom:4px; }
+  .col-check{ display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .col-check:hover{ background:var(--surface); }
+  .col-check input{ accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; }
+  .col-check span:not(.col-check-key){ flex:1; color:var(--text); }
+  .col-check-key{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); white-space:nowrap; }
+  .stat-select-row{ display:flex; gap:10px; }
+  .stat-select-row select{ flex:1; }
+  .btn svg{ width:14px; height:14px; flex-shrink:0; }
+  input[type=file]{ display:none; }
+
+  .wrap{ max-width:1440px; margin:0 auto; padding:22px 24px 60px; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; position:relative; overflow:hidden; }
+  .stat-card .num{ font-family:var(--font-display); font-size:22px; font-weight:700; }
+  .stat-card .lbl{ font-size:12px; color:var(--text-muted); margin-top:3px; }
+  .stat-card::after{ content:''; position:absolute; right:-16px; top:-16px; width:70px;height:70px;border-radius:50%; background:radial-gradient(circle, rgba(45,212,191,0.10), transparent 70%); }
+
+  .panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; }
+  .toolbar{ padding:16px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-bottom:1px solid var(--border-soft); }
+  .search-box{ flex:1 1 260px; position:relative; min-width:220px; display:flex; gap:8px; }
+  .search-box .input-wrap{ position:relative; flex:1; }
+  .search-box svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px;height:15px; color:var(--text-faint); }
+  .search-box input{
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:9px 46px 9px 32px; border-radius:8px; font-size:13.5px; font-family:var(--font-body);
+  }
+  .search-box input:focus{ outline:none; border-color:var(--accent); }
+
+  .qr-btn{
+    position:absolute; right:3px; top:50%; transform:translateY(-50%);
+    width:38px; height:38px; border-radius:7px; border:1px solid transparent;
+    background:transparent; color:var(--text-faint); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+    transition:.15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  }
+  .qr-btn svg{ width:19px; height:19px; pointer-events:none; }
+  .qr-btn:hover{ color:var(--accent); background:var(--accent-dim); border-color:rgba(45,212,191,0.3); }
+  .qr-btn:active{ background:var(--accent-dim); color:var(--accent); }
+
+  .qr-extract-range{
+    display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--text-muted);
+    white-space:nowrap; flex:0 0 auto;
+  }
+  .qr-extract-range input{
+    width:36px; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:8px 2px; border-radius:8px; font-size:12.5px; font-family:var(--font-mono); text-align:center;
+  }
+  .qr-extract-range input:focus{ outline:none; border-color:var(--accent); }
+
+  @media (max-width:720px){
+    .search-box input{ padding-right:50px; }
+    .qr-btn{ width:42px; height:42px; }
+    .qr-btn svg{ width:20px; height:20px; }
+  }
+
+  .qr-modal-card{ width:min(460px, 100%); }
+  .qr-video-wrap{
+    position:relative; width:100%; aspect-ratio:4/3; background:#000; border-radius:10px;
+    overflow:hidden; border:1px solid var(--border);
+  }
+  .qr-video-wrap video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .qr-video-frame{
+    position:absolute; inset:14%; border:2px solid var(--accent); border-radius:12px;
+    box-shadow:0 0 0 2000px rgba(0,0,0,0.35); pointer-events:none;
+  }
+  .qr-zoom-row{ display:flex; align-items:center; gap:10px; margin-top:14px; font-size:12.5px; color:var(--text-muted); }
+  .qr-zoom-row input[type=range]{ flex:1; accent-color:var(--accent); }
+  .qr-zoom-val{ font-family:var(--font-mono); color:var(--text); min-width:28px; text-align:right; }
+  select{
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:9px 10px; border-radius:8px; font-size:13px; font-family:var(--font-body);
+    min-width:150px;
+  }
+  select:disabled{ opacity:.45; }
+  select:focus{ outline:none; border-color:var(--accent); }
+  .toolbar .count{ font-size:12.5px; color:var(--text-muted); margin-left:auto; padding-left:8px; white-space:nowrap; }
+  .hint{ font-size:12px; color:var(--text-faint); padding:0 16px 14px; margin-top:-4px; }
+
+  .exact-toggle{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-muted); cursor:pointer; user-select:none; white-space:nowrap; }
+  .exact-toggle input{ accent-color:var(--accent); width:14px; height:14px; cursor:pointer; }
+  .exact-toggle:hover{ color:var(--text); }
+
+  .col-filter-row th{ position:static; padding:8px 10px 10px; background:var(--surface); border-bottom:1px solid var(--border-soft); cursor:default; text-transform:none; letter-spacing:normal; }
+  .col-filter-row input{
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:6px 8px; border-radius:6px; font-size:12px; font-family:var(--font-body); font-weight:400;
+    text-transform:none; letter-spacing:normal;
+  }
+  .col-filter-row input::placeholder{ color:var(--text-faint); }
+  .col-filter-row input:focus{ outline:none; border-color:var(--accent); }
+
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:820px; }
+  thead th{
+    text-align:left; font-family:var(--font-display); font-weight:600; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);
+    padding:11px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface);
+    cursor:pointer; user-select:none; white-space:nowrap;
+  }
+  thead th:hover{ color:var(--text); }
+  thead th .arrow{ font-size:10px; margin-left:4px; opacity:.6; }
+  tbody td{ padding:11px 14px; border-bottom:1px solid var(--border-soft); vertical-align:top; }
+  tbody tr{ cursor:pointer; transition:.12s background; }
+  tbody tr:hover{ background:var(--surface-2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .name-cell{ font-weight:600; }
+  .mono{ font-family:var(--font-mono); font-size:12px; color:var(--text-muted); }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; background:var(--accent-dim); color:var(--accent); border:1px solid rgba(45,212,191,0.28); white-space:nowrap; }
+
+  .empty-state{ padding:60px 20px; text-align:center; color:var(--text-muted); }
+  .empty-state svg{ width:40px;height:40px; color:var(--text-faint); margin-bottom:10px; }
+
+  .pagination{ display:flex; align-items:center; gap:6px; padding:14px 16px; justify-content:flex-end; flex-wrap:wrap; }
+  .pagination .pg-info{ font-size:12.5px; color:var(--text-muted); margin-right:auto; }
+  .pg-btn{ width:30px;height:30px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text-muted); font-size:12.5px; cursor:pointer; display:flex;align-items:center;justify-content:center; font-family:var(--font-mono); }
+  .pg-btn:hover:not(:disabled){ border-color:var(--accent); color:var(--text); }
+  .pg-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .pg-btn.active{ background:var(--accent); color:#04211D; border-color:var(--accent); font-weight:700; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(4,8,16,0.6); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:.2s opacity; z-index:50; }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+
+  .drawer{ position:fixed; top:0; right:0; height:100%; width:min(460px, 100%); background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:.28s cubic-bezier(.22,.9,.32,1); z-index:51; display:flex; flex-direction:column; }
+  .drawer.show{ transform:translateX(0); }
+  .drawer-head{ padding:20px 22px 16px; border-bottom:1px solid var(--border-soft); position:relative; }
+  .drawer-head .stt{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
+  .drawer-head h2{ font-family:var(--font-display); font-size:19px; margin:6px 0 0; line-height:1.3; }
+  .drawer-close{ position:absolute; top:16px; right:18px; width:30px;height:30px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-muted); cursor:pointer; display:flex;align-items:center;justify-content:center; }
+  .drawer-close:hover{ color:var(--text); border-color:#33456B; }
+  .drawer-body{ padding:18px 22px 40px; overflow-y:auto; flex:1; }
+  .dgroup{ margin-bottom:22px; }
+  .dgroup-title{ font-family:var(--font-display); font-size:11.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--accent); font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .dgroup-title::after{ content:''; flex:1; height:1px; background:var(--border-soft); }
+  .dfield{ display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid var(--border-soft); font-size:13px; }
+  .dfield:last-child{ border-bottom:none; }
+  .dfield .k{ color:var(--text-muted); flex-shrink:0; }
+  .dfield .v{ text-align:right; font-weight:500; word-break:break-word; }
+  .dfield .v.mono{ font-family:var(--font-mono); font-weight:400; }
+
+  /* Modal (Excel matching) */
+  .modal{
+    position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:.2s opacity; padding:20px;
+  }
+  .modal.show{ opacity:1; pointer-events:auto; }
+  .modal-backdrop{ position:absolute; inset:0; background:rgba(4,8,16,0.7); backdrop-filter:blur(3px); }
+  .modal-card{
+    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    width:min(600px, 100%); max-height:88vh; overflow-y:auto; box-shadow:0 30px 70px -20px rgba(0,0,0,0.6);
+  }
+  .modal-head{ padding:20px 24px 14px; border-bottom:1px solid var(--border-soft); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .modal-head h3{ font-family:var(--font-display); font-size:17px; margin:0 0 4px; }
+  .modal-head p{ margin:0; font-size:12.5px; color:var(--text-muted); }
+  .modal-close{ width:30px;height:30px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-muted); cursor:pointer; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .modal-close:hover{ color:var(--text); border-color:#33456B; }
+  .modal-body{ padding:20px 24px 24px; }
+  .step{ margin-bottom:18px; }
+  .step-label{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--text); margin-bottom:8px; }
+  .step-num{ width:20px;height:20px; border-radius:50%; background:var(--accent-dim); color:var(--accent); font-size:11px; font-weight:700; display:flex;align-items:center;justify-content:center; font-family:var(--font-mono); flex-shrink:0; }
+  .step select, .step .file-btn{ width:100%; }
+  .file-drop{
+    border:1.5px dashed var(--border); border-radius:9px; padding:16px; text-align:center; cursor:pointer;
+    font-size:12.5px; color:var(--text-muted); transition:.15s;
+  }
+  .file-drop:hover{ border-color:var(--accent); color:var(--text); }
+  .file-drop .fn{ color:var(--accent); font-family:var(--font-mono); font-size:12px; margin-top:4px; word-break:break-all; }
+  .progress-wrap{ margin-top:14px; display:none; }
+  .progress-wrap.show{ display:block; }
+  .progress-bar-bg{ height:7px; border-radius:5px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
+  .progress-bar-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #14877a); transition:width .15s; }
+  .progress-text{ font-size:12px; color:var(--text-muted); margin-top:6px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:6px; }
+  .result-summary{ margin-top:14px; padding:12px 14px; background:var(--bg); border:1px solid var(--border); border-radius:9px; font-size:13px; display:none; }
+  .result-summary.show{ display:block; }
+  .result-summary b{ color:var(--accent); }
+
+  .loading-screen{ position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+  .spinner{ width:34px;height:34px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-screen p{ color:var(--text-muted); font-size:13px; }
+
+  .toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:12px 18px; border-radius:10px; font-size:13px; z-index:80; opacity:0; pointer-events:none; transition:.25s; box-shadow:0 12px 30px -8px rgba(0,0,0,0.5); max-width:460px; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.err{ border-color:rgba(240,89,107,0.4); }
+
+  footer{ text-align:center; padding:30px 20px 40px; color:var(--text-faint); font-size:12px; }
+
+  @media (max-width:720px){
+    .stat-row{ grid-template-columns:repeat(2,1fr); }
+    .toolbar .count{ margin-left:0; width:100%; }
+    thead th, tbody td{ padding:9px 10px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <p id="loadingText">Đang khởi tạo công cụ đọc dữ liệu…</p>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">DATA</div>
+      <div class="brand-text">
+        <h1>Quản lý dữ liệu</h1>
+        
+      </div>
+    </div>
+    <div class="source-chip" id="sourceChip">
+      <span class="dot"></span>
+      <span class="fname" id="sourceFname">Hãy chọn</span>
+    </div>
+    <button class="btn" id="btnPickFile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Chọn file
+    </button>
+    <input type="file" id="filePicker" accept=".db,.sqlite,.sqlite3,.xlsx,.xls">
+    <button class="btn" id="btnImportData">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Import
+    </button>
+    <button class="btn" id="btnExcelSearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Search Excel
+    </button>
+    <button class="btn btn-accent" id="btnExport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M6 15v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/><path d="M9 10l3 3 3-3"/></svg>
+      Excel
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Tổng số</div></div>
+    <div class="stat-card"><div class="num" id="statCustom1">—</div><div class="lbl" id="statCustom1Lbl">Số Group</div></div>
+    <div class="stat-card"><div class="num" id="statCustom2">—</div><div class="lbl" id="statCustom2Lbl">Số Group</div></div>
+    <div class="stat-card"><div class="num" id="statFiltered">0</div><div class="lbl">Đang hiển thị</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="toolbar">
+      <div class="search-box">
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Nhập từ khoá">
+          <button type="button" class="qr-btn" id="btnQrScan" title="Quét mã QR / mã vạch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="18" y1="14" x2="18" y2="21"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="18" x2="17" y2="18"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="18" x2="21" y2="21"/></svg>
+          </button>
+        </div>
+        <button class="btn btn-accent" id="btnSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Tìm kiếm
+        </button>
+      </div>
+      <div class="qr-extract-range" title="Vị trí ký tự cần lấy từ mã QR/mã vạch quét được">
+        <span>Lấy ký tự</span>
+        <input type="number" id="qrFromPos" min="1" step="1" value="1">
+        <span>đến</span>
+        <input type="number" id="qrToPos" min="1" step="1" value="12">
+      </div>
+      <label class="exact-toggle" for="exactMatch">
+        <input type="checkbox" id="exactMatch">
+        Tìm chính xác
+      </label>
+      <button class="btn btn-ghost" id="btnReset">Đặt lại</button>
+      <span class="count" id="resultCount">0 kết quả</span>
+    </div>
+    <div class="hint">Nhập điều kiện rồi bấm <b>Tìm kiếm</b> </div>
+    <div class="table-scroll">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div>Không tìm thấy kết quả phù hợp.</div>
+      </div>
+    </div>
+    <div class="pagination">
+      <span class="pg-info" id="pgInfo"></span>
+      <button class="pg-btn" id="pgFirst">«</button>
+      <button class="pg-btn" id="pgPrev">‹</button>
+      <span id="pgNumbers" style="display:flex;gap:6px;"></span>
+      <button class="pg-btn" id="pgNext">›</button>
+      <button class="pg-btn" id="pgLast">»</button>
+    </div>
+  </div>
+
+  <footer>Dữ liệu được đọc và xử lý trực tiếp trên trình duyệt (không tải lên máy chủ nào) · Định dạng: SQLite (.db)</footer>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="stt" id="drawerStt">HỒ SƠ #—</div>
+    <h2 id="drawerName">—</h2>
+    <button class="drawer-close" id="drawerClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- Modal: Tìm kiếm đối chiếu từ file Excel -->
+<div class="modal" id="excelModal">
+  <div class="modal-backdrop" id="excelModalBackdrop"></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Tìm kiếm đối chiếu từ file Excel</h3>
+        <p>So khớp một cột trong file Excel với một cột trong dữ liệu, xuất kết quả gồm 2 sheet: tìm thấy &amp; không tìm thấy.</p>
+      </div>
+      <button class="modal-close" id="excelModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">1</span> Chọn file Excel</div>
+        <div class="file-drop" id="excelDrop">
+          <div id="excelDropText">Bấm để chọn file Excel (.xlsx, .xls, .csv)</div>
+          <div class="fn" id="excelFileName"></div>
+        </div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv">
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">2</span> Chọn sheet trong file Excel</div>
+        <select id="excelSheetSelect" disabled><option value="">— Chọn file trước —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">3</span> Chọn cột trong Excel cần đối chiếu</div>
+        <select id="excelColSelect" disabled><option value="">— Chọn sheet trước —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">4</span> Chọn cột trong dữ liệu (.db) để so khớp</div>
+        <select id="dbColSelect"><option value="">— Chưa có dữ liệu —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">5</span> Chọn cột dữ liệu (.db) muốn có trong file kết quả (không chọn = xuất tất cả cột)</div>
+        <div class="col-check-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExcelExportSelectAll">Chọn tất cả</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExcelExportSelectNone">Bỏ chọn tất cả</button>
+        </div>
+        <div class="col-check-list" id="excelExportColList"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunExcelMatch" style="flex:1;" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Bắt đầu đối chiếu &amp; xuất Excel
+        </button>
+      </div>
+
+      <div class="progress-wrap" id="excelProgressWrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
+        <div class="progress-text" id="excelProgressText">Đang xử lý…</div>
+      </div>
+
+      <div class="result-summary" id="excelResultSummary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Chọn bảng dữ liệu trong file .db (khi file có nhiều bảng) -->
+<div class="modal" id="tableSelectModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" style="max-width:540px;">
+    <div class="modal-head">
+      <div>
+        <h3 id="tableSelectModalTitle">Chọn bảng dữ liệu</h3>
+        <p id="tableSelectModalDesc">File .db này có nhiều bảng — hãy chọn bảng bạn muốn làm việc.</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="table-pick-list" id="tablePickList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btnCancelTablePick">Hủy</button>
+        <button class="btn btn-accent" id="btnConfirmTable" style="flex:1;" disabled>Tiếp tục</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Chọn cột muốn hiển thị / tìm kiếm -->
+<div class="modal" id="columnSelectModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" style="max-width:560px;">
+    <div class="modal-head">
+      <div>
+        <h3>Chọn cột hiển thị</h3>
+        <p id="colSelectSubtitle">Thiết lập cách hiển thị dữ liệu.</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="step-label" style="margin-bottom:8px;"><span class="step-num">1</span> Chọn cột hiển thị trong bảng kết quả &amp; dùng để tìm kiếm</div>
+      <div class="col-check-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnColSelectAll">Chọn tất cả</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnColSelectNone">Bỏ chọn tất cả</button>
+      </div>
+      <div class="col-check-list" id="colSelectList"></div>
+
+      <div class="step" style="margin-top:16px;">
+        <div class="step-label"><span class="step-num">2</span> Chọn cột thống kê (2 ô số ở trên cùng — đếm số giá trị khác nhau)</div>
+        <div class="stat-select-row">
+          <select id="statCol1Select"><option value="">— Không dùng —</option></select>
+          <select id="statCol2Select"><option value="">— Không dùng —</option></select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btnCancelColSelect">Hủy</button>
+        <button class="btn btn-accent" id="btnConfirmColumns" style="flex:1;" disabled>Xác nhận &amp; hiển thị dữ liệu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Xuất Excel kết quả (chọn cột muốn xuất) -->
+<div class="modal" id="exportModal">
+  <div class="modal-backdrop" id="exportModalBackdrop"></div>
+  <div class="modal-card" style="max-width:560px;">
+    <div class="modal-head">
+      <div>
+        <h3>Xuất Excel kết quả</h3>
+        <p>Chọn các cột muốn xuất. Nếu không chọn cột nào, toàn bộ cột trong bảng sẽ được xuất.</p>
+      </div>
+      <button class="modal-close" id="exportModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="col-check-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnExportSelectAll">Chọn tất cả</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnExportSelectNone">Bỏ chọn tất cả</button>
+      </div>
+      <div class="col-check-list" id="exportColList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunExport" style="flex:1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M6 15v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/><path d="M9 10l3 3 3-3"/></svg>
+          Xuất Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Import thêm dữ liệu từ file .db khác -->
+<div class="modal" id="importModal">
+  <div class="modal-backdrop" id="importModalBackdrop"></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Import thêm dữ liệu (.db)</h3>
+        <p>Nạp thêm dữ liệu từ một file .db khác (cùng cấu trúc cột) vào dữ liệu đang xem.</p>
+      </div>
+      <button class="modal-close" id="importModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">1</span> Chọn file .db cần import (cùng cấu trúc dữ liệu)</div>
+        <div class="file-drop" id="importDrop">
+          <div id="importDropText">Bấm để chọn file .db, .sqlite, .sqlite3</div>
+          <div class="fn" id="importFileName"></div>
+        </div>
+        <input type="file" id="importFileInput" accept=".db,.sqlite,.sqlite3">
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">2</span> Cách xử lý dữ liệu trùng</div>
+        <label class="exact-toggle" for="importDedupe" style="margin-bottom:4px;">
+          <input type="checkbox" id="importDedupe">
+          Xóa dữ liệu cũ nếu trùng Mã số BHXH (ghi đè bằng dữ liệu mới import)
+        </label>
+        <div class="hint" style="padding:6px 0 0;">Nếu <b>không tích</b>: dữ liệu mới sẽ được thêm vào, giữ nguyên toàn bộ dữ liệu cũ dù có trùng Mã số BHXH.<br>Nếu <b>tích chọn</b>: các bản ghi cũ có Mã số BHXH trùng với dữ liệu import sẽ bị xóa trước, sau đó thêm dữ liệu mới vào.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunImport" style="flex:1;" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          Bắt đầu import
+        </button>
+      </div>
+
+      <div class="progress-wrap" id="importProgressWrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="importProgressFill"></div></div>
+        <div class="progress-text" id="importProgressText">Đang xử lý…</div>
+      </div>
+
+      <div class="result-summary" id="importResultSummary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quét QR / mã vạch bằng camera -->
+<div class="modal" id="qrModal">
+  <div class="modal-backdrop" id="qrModalBackdrop"></div>
+  <div class="modal-card qr-modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Quét mã QR / mã vạch</h3>
+        <p>Đưa mã QR hoặc mã vạch vào giữa khung hình để quét.</p>
+      </div>
+      <button class="modal-close" id="qrModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-video-wrap">
+        <video id="qrVideo" autoplay muted playsinline></video>
+        <div class="qr-video-frame"></div>
+      </div>
+      <div class="qr-zoom-row">
+        <span>Zoom</span>
+        <input type="range" id="qrZoomSlider" min="1" max="5" step="0.1" value="3" disabled>
+        <span class="qr-zoom-val" id="qrZoomVal">3x</span>
+      </div>
+      <div class="hint" style="padding:0;margin-top:8px;" id="qrStatusText">Đang khởi động camera…</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  const DEFAULT_FILENAME = "DLHGDCV93.db";
+  const PAGE_SIZE = 50;
+  const LARGE_EXPORT_WARN = 200000;
+  const SCAN_CHUNK = 20000;
+  const FETCH_BATCH = 500;
+
+  const COLUMN_LABELS = {
+    STT:"STT", MaSoBHXH:"Mã hộ (Mã số BHXH hộ)", TenChuHo:"Thông tin chủ hộ",
+    Col5:"STT trong hộ", Col6:"Họ và tên", Col7:"Mã số BHXH", Col8:"Ngày sinh",
+    Col9:"Giới tính", Col10:"Địa chỉ (dữ liệu gốc)", Col11:"Quan hệ với chủ hộ",
+    Col12:"Số CCCD/CMND", Col13:"Mã đối tượng (ĐT)", Col14:"Giá trị thẻ (thời hạn BHYT)",
+    Col16:"Col16", Col17:"Mã cơ quan quản lý", Col18:"Ghi chú 1", Col19:"Ghi chú 2",
+    Thon:"Thôn/Bản/Tổ dân phố", XaPhuong:"Xã/Phường/Thị trấn", Huyen:"Huyện/Thị xã", TenFile:"File nguồn"
+  };
+  const el = (id) => document.getElementById(id);
+  const loadingScreen = el("loadingScreen");
+  const loadingText = el("loadingText");
+  const toastEl = el("toast");
+
+  function isMonoCol(col){ return /(stt|ma|bhxh|cccd|code|^id$|_id$)/i.test(col || ""); }
+
+  function showToast(msg, isErr){
+    toastEl.textContent = msg;
+    toastEl.className = "toast show" + (isErr ? " err" : "");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>{ toastEl.classList.remove("show"); }, 4200);
+  }
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+  function escHtml(s){ return (s===undefined||s===null?"":s.toString()).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function escAttr(s){ return escHtml(s).replace(/"/g,"&quot;"); }
+  function norm(s){ return (s||"").toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d"); }
+
+  // ---------------- Trạng thái toàn cục ----------------
+  let SQLModule = null;
+  let db = null;
+  let tableName = "";
+  let dbColumns = [];      // toàn bộ cột có trong bảng đang chọn
+  let displayCols = [];    // các cột người dùng chọn để hiển thị/tìm kiếm
+  let statColumn1 = "";    // cột dùng cho ô thống kê tuỳ chọn 1 (đếm giá trị khác nhau)
+  let statColumn2 = "";    // cột dùng cho ô thống kê tuỳ chọn 2 (đếm giá trị khác nhau)
+  let currentSort = { col: "", dir: 1 };
+  let currentPage = 1;
+  let currentTotal = 0;
+  let currentWhere = { clause: "", params: [] };
+  let colFilterInputs = [];  // các ô lọc theo từng cột (được tạo lại mỗi khi đổi cột hiển thị)
+
+  // Trạng thái tạm trong lúc "chọn bảng → chọn cột" khi nạp 1 file .db mới
+  let stagingDb = null;
+  let stagingTables = [];
+  let stagingTableName = "";
+  let stagingDbColumns = [];
+  let stagingLabel = "";
+
+  function setSource(name, ok){
+    const chip = el("sourceChip");
+    chip.className = "source-chip " + (ok ? "ok" : "err");
+    el("sourceFname").textContent = name;
+  }
+
+  function runSQLOn(dbInst, sql, params){
+    const stmt = dbInst.prepare(sql);
+    if(params && params.length) stmt.bind(params);
+    const cols = stmt.getColumnNames();
+    const rows = [];
+    while(stmt.step()){ rows.push(stmt.get()); }
+    stmt.free();
+    return { columns: cols, values: rows };
+  }
+  function runSQL(sql, params){ return runSQLOn(db, sql, params); }
+  function runExec(sql, params){
+    if(params && params.length){ runSQL(sql, params); return; }
+    db.run(sql);
+  }
+
+  async function initSql(){
+    return await initSqlJs({ locateFile: f => `https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/${f}` });
+  }
+
+  // ---------------- Helper dùng chung: danh sách checkbox chọn cột ----------------
+  function buildColumnChecklist(container, columns, checkedCols){
+    const checkedSet = new Set(checkedCols || []);
+    container.innerHTML = columns.map(c=>{
+      const label = COLUMN_LABELS[c] || c;
+      const checked = checkedSet.has(c) ? "checked" : "";
+      return `<label class="col-check">
+        <input type="checkbox" value="${escAttr(c)}" ${checked}>
+        <span>${escHtml(label)}</span>
+        <span class="col-check-key">${escHtml(c)}</span>
+      </label>`;
+    }).join("");
+  }
+  function getCheckedColumns(container){
+    return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb=>cb.value);
+  }
+  function setAllChecked(container, checked){
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb=> cb.checked = checked);
+  }
+
+  // ---------------- Nạp CSDL: Bước 1 — mở file & liệt kê các bảng ----------------
+  let pendingPickMode = "db"; // "db" | "excel" — quyết định hành vi của modal chọn bảng/sheet
+  let pendingExcelWorkbook = null;
+
+  async function openDatabaseBytesAndPickTable(bytes, label){
+    if(!SQLModule){ loadingText.textContent = "Đang khởi tạo công cụ đọc SQLite…"; SQLModule = await initSql(); }
+    loadingText.textContent = "Đang mở tệp dữ liệu…";
+    await sleep(10);
+
+    if(stagingDb){ try{ stagingDb.close(); }catch(e){} stagingDb = null; }
+    stagingDb = new SQLModule.Database(new Uint8Array(bytes));
+    stagingLabel = label;
+
+    const tblRes = runSQLOn(stagingDb, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+    if(!tblRes.values.length){
+      try{ stagingDb.close(); }catch(e){}
+      stagingDb = null;
+      throw new Error("Không tìm thấy bảng dữ liệu nào trong file.");
+    }
+    stagingTables = tblRes.values.map(v=>v[0]);
+
+    loadingScreen.style.display = "none";
+
+    if(stagingTables.length === 1){
+      chooseStagingTable(stagingTables[0]);
+    }else{
+      openTableSelectModal(stagingTables, "db");
+    }
+  }
+
+  // ---------------- Nạp CSDL từ file Excel: chuyển 1 sheet thành 1 bảng SQLite tạm ----------------
+  async function openExcelAsDataSource(bytes, label){
+    loadingText.textContent = "Đang đọc file Excel…";
+    await sleep(10);
+    let wb;
+    try{ wb = XLSX.read(new Uint8Array(bytes), {type:"array"}); }
+    catch(err){ throw new Error("Không đọc được file Excel: " + err.message); }
+    const sheetNames = (wb.SheetNames||[]).filter(n=>wb.Sheets[n]);
+    if(!sheetNames.length) throw new Error("File Excel không có sheet dữ liệu nào.");
+
+    pendingExcelWorkbook = wb;
+    stagingLabel = label;
+    loadingScreen.style.display = "none";
+
+    if(sheetNames.length === 1){
+      await buildStagingDbFromExcelSheet(wb, sheetNames[0], label);
+    }else{
+      openTableSelectModal(sheetNames, "excel");
+    }
+  }
+
+  function sanitizeColumnNames(rawHeaders){
+    const used = new Set();
+    return rawHeaders.map((h,i)=>{
+      let name = (h===undefined||h===null?"":String(h)).trim().replace(/[^\p{L}\p{N}_]+/gu, "_").replace(/^_+|_+$/g,"");
+      if(!name) name = "Cot" + (i+1);
+      let finalName = name, n=2;
+      while(used.has(finalName)){ finalName = name + "_" + n; n++; }
+      used.add(finalName);
+      return finalName;
+    });
+  }
+
+  async function buildStagingDbFromExcelSheet(wb, sheetName, label){
+    loadingScreen.style.display = "flex";
+    loadingText.textContent = `Đang chuyển sheet "${sheetName}" sang cơ sở dữ liệu…`;
+    await sleep(10);
+    try{
+      if(!SQLModule){ SQLModule = await initSql(); }
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:""});
+      if(!rows.length) throw new Error(`Sheet "${sheetName}" không có dữ liệu.`);
+      const headers = sanitizeColumnNames(rows[0]);
+      const dataRows = rows.slice(1).filter(r=> r.some(v=> v!==undefined && v!==null && String(v).trim()!==""));
+
+      if(stagingDb){ try{ stagingDb.close(); }catch(e){} }
+      stagingDb = new SQLModule.Database();
+      const tblName = "data";
+      stagingDb.run(`CREATE TABLE "${tblName}" (${headers.map(h=>`"${h}" TEXT`).join(",")})`);
+
+      const insertSql = `INSERT INTO "${tblName}" (${headers.map(h=>`"${h}"`).join(",")}) VALUES (${headers.map(()=>"?").join(",")})`;
+      stagingDb.run("BEGIN TRANSACTION");
+      const stmt = stagingDb.prepare(insertSql);
+      for(let i=0;i<dataRows.length;i++){
+        const r = dataRows[i];
+        stmt.run(headers.map((h,ci)=> r[ci]===undefined || r[ci]===null ? "" : String(r[ci])));
+        if(i % 3000 === 0){
+          loadingText.textContent = `Đang chuyển dữ liệu Excel… ${i.toLocaleString('vi-VN')}/${dataRows.length.toLocaleString('vi-VN')}`;
+          await sleep(0);
+        }
+      }
+      stmt.free();
+      stagingDb.run("COMMIT");
+
+      stagingTableName = tblName;
+      stagingDbColumns = headers;
+      stagingLabel = `${label} — sheet "${sheetName}"`;
+
+      loadingScreen.style.display = "none";
+      openColumnSelectModal();
+    }catch(err){
+      loadingScreen.style.display = "none";
+      showToast("Lỗi khi chuyển đổi Excel: " + err.message, true);
+      if(stagingDb){ try{ stagingDb.close(); }catch(e){} }
+      cancelStagingLoad();
+    }
+  }
+
+  function openTableSelectModal(names, mode){
+    pendingPickMode = mode;
+    el("tableSelectModalTitle").textContent = mode==="excel" ? "Chọn sheet dữ liệu" : "Chọn bảng dữ liệu";
+    el("tableSelectModalDesc").textContent = mode==="excel"
+      ? "File Excel này có nhiều sheet — hãy chọn sheet bạn muốn dùng làm dữ liệu."
+      : "File .db này có nhiều bảng — hãy chọn bảng bạn muốn làm việc.";
+
+    const list = el("tablePickList");
+    list.innerHTML = names.map(t=>{
+      let count = "—";
+      try{
+        if(mode==="excel"){
+          const ws = pendingExcelWorkbook.Sheets[t];
+          const range = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : null;
+          count = range ? Math.max(0, range.e.r - range.s.r).toLocaleString('vi-VN') : "—";
+        }else{
+          count = runSQLOn(stagingDb, `SELECT COUNT(*) FROM "${t}"`).values[0][0].toLocaleString('vi-VN');
+        }
+      }catch(e){}
+      return `<label class="table-pick-item">
+        <input type="radio" name="tablePick" value="${escAttr(t)}">
+        <span class="tbl-name">${escHtml(t)}</span>
+        <span class="tbl-count">${count} dòng</span>
+      </label>`;
+    }).join("");
+    list.querySelectorAll('input[name="tablePick"]').forEach(r=>{
+      r.addEventListener("change", ()=>{ el("btnConfirmTable").disabled = false; });
+    });
+    el("btnConfirmTable").disabled = true;
+    el("tableSelectModal").classList.add("show");
+  }
+  function closeTableSelectModal(){ el("tableSelectModal").classList.remove("show"); }
+
+  el("btnConfirmTable").addEventListener("click", async ()=>{
+    const picked = el("tablePickList").querySelector('input[name="tablePick"]:checked');
+    if(!picked) return;
+    closeTableSelectModal();
+    if(pendingPickMode === "excel"){
+      await buildStagingDbFromExcelSheet(pendingExcelWorkbook, picked.value, stagingLabel);
+    }else{
+      chooseStagingTable(picked.value);
+    }
+  });
+  el("btnCancelTablePick").addEventListener("click", ()=>{
+    closeTableSelectModal();
+    cancelStagingLoad();
+  });
+
+  // ---------------- Nạp CSDL: Bước 2 — chọn cột muốn hiển thị + cột thống kê ----------------
+  function chooseStagingTable(tblName){
+    stagingTableName = tblName;
+    const pragma = runSQLOn(stagingDb, `PRAGMA table_info("${tblName}")`);
+    stagingDbColumns = pragma.values.map(r => r[1]);
+    if(!stagingDbColumns.length){
+      showToast("Bảng \"" + tblName + "\" không có cột dữ liệu nào.", true);
+      cancelStagingLoad();
+      return;
+    }
+    openColumnSelectModal();
+  }
+
+  function fillStatColSelect(selectEl, preferredList){
+    selectEl.innerHTML = '<option value="">— Không dùng —</option>' +
+      stagingDbColumns.map(c=>`<option value="${escAttr(c)}">${escHtml(COLUMN_LABELS[c]||c)}</option>`).join("");
+    const preferred = preferredList.find(c=>stagingDbColumns.includes(c));
+    selectEl.value = preferred || "";
+  }
+
+  function openColumnSelectModal(){
+    el("colSelectSubtitle").textContent = `Bảng "${stagingTableName}" — ${stagingDbColumns.length} cột.`;
+    buildColumnChecklist(el("colSelectList"), stagingDbColumns, stagingDbColumns); // mặc định chọn tất cả
+    fillStatColSelect(el("statCol1Select"), ["MaSoBHXH"]);
+    fillStatColSelect(el("statCol2Select"), ["Huyen"]);
+    updateColSelectConfirmState();
+    el("columnSelectModal").classList.add("show");
+  }
+  function closeColumnSelectModal(){ el("columnSelectModal").classList.remove("show"); }
+  function updateColSelectConfirmState(){
+    el("btnConfirmColumns").disabled = getCheckedColumns(el("colSelectList")).length === 0;
+  }
+  el("colSelectList").addEventListener("change", updateColSelectConfirmState);
+  el("btnColSelectAll").addEventListener("click", ()=>{ setAllChecked(el("colSelectList"), true); updateColSelectConfirmState(); });
+  el("btnColSelectNone").addEventListener("click", ()=>{ setAllChecked(el("colSelectList"), false); updateColSelectConfirmState(); });
+  el("btnCancelColSelect").addEventListener("click", ()=>{
+    closeColumnSelectModal();
+    cancelStagingLoad();
+  });
+  el("btnConfirmColumns").addEventListener("click", async ()=>{
+    const chosen = getCheckedColumns(el("colSelectList"));
+    if(!chosen.length) return;
+    const statCol1 = el("statCol1Select").value;
+    const statCol2 = el("statCol2Select").value;
+    closeColumnSelectModal();
+    await finishLoadingWithColumns(chosen, statCol1, statCol2);
+  });
+
+  function cancelStagingLoad(){
+    if(stagingDb){ try{ stagingDb.close(); }catch(e){} }
+    stagingDb = null;
+    stagingTables = [];
+    stagingTableName = "";
+    stagingDbColumns = [];
+    stagingLabel = "";
+    pendingExcelWorkbook = null;
+    loadingScreen.style.display = "none";
+    if(!db) setSource("Chưa có Data", false);
+  }
+
+  // ---------------- Nạp CSDL: Bước 3 — hoàn tất (đánh chỉ mục, thống kê, hiển thị) ----------------
+  async function finishLoadingWithColumns(chosenCols, statCol1, statCol2){
+    loadingScreen.style.display = "flex";
+    loadingText.textContent = "Đang hoàn tất nạp dữ liệu…";
+    await sleep(10);
+
+    if(db){ try{ db.close(); }catch(e){} }
+    db = stagingDb;
+    tableName = stagingTableName;
+    dbColumns = stagingDbColumns;
+    displayCols = chosenCols;
+    statColumn1 = statCol1 || "";
+    statColumn2 = statCol2 || "";
+    stagingDb = null;
+    pendingExcelWorkbook = null;
+
+    loadingText.textContent = "Đang tạo chỉ mục tăng tốc tìm kiếm…";
+    await sleep(10);
+    const idxCols = Array.from(new Set([...displayCols, statColumn1, statColumn2])).filter(c=>c && dbColumns.includes(c));
+    for(const c of idxCols){
+      try{ runExec(`CREATE INDEX IF NOT EXISTS "idx_${c}" ON "${tableName}"("${c}")`); }catch(e){ /* bỏ qua nếu lỗi */ }
+      await sleep(0);
+    }
+
+    const cnt = runSQL(`SELECT COUNT(*) FROM "${tableName}"`);
+    currentTotal = cnt.values[0][0];
+    el("statTotal").textContent = currentTotal.toLocaleString('vi-VN');
+
+    updateCustomStats();
+
+    currentSort = { col: displayCols.includes("STT") ? "STT" : displayCols[0], dir: 1 };
+    buildDisplayTableHeader();
+    buildDbColSelect();
+
+    _allCountCache = null;
+    setSource(stagingLabel, true);
+
+    currentWhere = { clause:"", params:[] };
+    currentPage = 1;
+    await executeSearch(true);
+
+    loadingScreen.style.display = "none";
+    showToast(`Đã tải "${stagingLabel}" — bảng "${tableName}" — ${currentTotal.toLocaleString('vi-VN')} bản ghi, ${displayCols.length} cột hiển thị.`, false);
+  }
+
+  // Tính lại 2 ô thống kê tuỳ chọn (đếm số giá trị khác nhau) theo cột người dùng đã chọn
+  function updateCustomStats(){
+    const cfg = [
+      { col: statColumn1, numEl: el("statCustom1"), lblEl: el("statCustom1Lbl") },
+      { col: statColumn2, numEl: el("statCustom2"), lblEl: el("statCustom2Lbl") },
+    ];
+    cfg.forEach(({col, numEl, lblEl})=>{
+      if(!col || !dbColumns.includes(col)){
+        numEl.textContent = "—";
+        lblEl.textContent = "Chưa chọn cột thống kê";
+        return;
+      }
+      const label = COLUMN_LABELS[col] || col;
+      lblEl.textContent = `Số "${label}" khác nhau`;
+      try{
+        const r = runSQL(`SELECT COUNT(DISTINCT "${col}") FROM "${tableName}" WHERE "${col}" IS NOT NULL AND "${col}" != ''`);
+        numEl.textContent = r.values[0][0].toLocaleString('vi-VN');
+      }catch(e){
+        numEl.textContent = "—";
+      }
+    });
+  }
+
+  // ---------------- Dựng lại tiêu đề bảng + ô lọc theo cột (mỗi khi đổi cột hiển thị) ----------------
+  function buildDisplayTableHeader(){
+    const thead = el("tableHead");
+    const filterRowHtml = displayCols.map(c=>{
+      const label = COLUMN_LABELS[c] || c;
+      return `<th><input type="text" class="col-filter" data-col="${escAttr(c)}" placeholder="Lọc ${escAttr(label)}…"></th>`;
+    }).join("");
+    const titleRowHtml = displayCols.map(c=>{
+      const label = COLUMN_LABELS[c] || c;
+      return `<th data-col="${escAttr(c)}">${escHtml(label)}</th>`;
+    }).join("");
+    thead.innerHTML = `<tr class="col-filter-row">${filterRowHtml}</tr><tr>${titleRowHtml}</tr>`;
+
+    colFilterInputs = Array.from(thead.querySelectorAll(".col-filter"));
+    colFilterInputs.forEach(inp=>{
+      inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter") executeSearch(false); });
+      inp.addEventListener("click", (e)=> e.stopPropagation());
+    });
+
+    thead.querySelectorAll("tr:not(.col-filter-row) th").forEach(th=>{
+      th.addEventListener("click", ()=>{
+        const col = th.dataset.col;
+        if(!displayCols.includes(col)) return;
+        if(currentSort.col === col){ currentSort.dir *= -1; } else { currentSort = { col, dir: 1 }; }
+        thead.querySelectorAll("th .arrow").forEach(a=>a.remove());
+        const arrow = document.createElement("span");
+        arrow.className = "arrow";
+        arrow.textContent = currentSort.dir===1 ? "▲" : "▼";
+        th.appendChild(arrow);
+        currentPage = 1;
+        renderPage();
+      });
+    });
+  }
+
+  async function tryLoadDefaultFile(){
+    loadingText.textContent = "Đang tải dữ liệu mặc định…";
+    try{
+      const resp = await fetch("./" + DEFAULT_FILENAME, {cache:"no-store"});
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
+      const buf = await resp.arrayBuffer();
+      await openDatabaseBytesAndPickTable(buf, DEFAULT_FILENAME);
+    }catch(err){
+      setSource("Chưa có Data", false);
+      showToast("Không tự tải được \"" + DEFAULT_FILENAME + "\" (thường do mở trực tiếp bằng file://). Hãy dùng nút “Chọn file dữ liệu” hoặc chạy trang qua một máy chủ cục bộ.", true);
+    }finally{
+      loadingScreen.style.display = "none";
+    }
+  }
+
+  el("filePicker").addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    loadingScreen.style.display = "flex";
+    loadingText.textContent = "Đang đọc " + file.name + "…";
+    try{
+      const buf = await file.arrayBuffer();
+      const ext = (file.name.split(".").pop()||"").toLowerCase();
+      if(ext === "xlsx" || ext === "xls"){
+        await openExcelAsDataSource(buf, file.name);
+      }else{
+        await openDatabaseBytesAndPickTable(buf, file.name);
+      }
+    }catch(err){
+      showToast("Lỗi khi đọc file: " + err.message, true);
+      if(!db) setSource("Lỗi đọc file", false);
+      loadingScreen.style.display = "none";
+    }finally{
+      e.target.value = "";
+    }
+  });
+  el("btnPickFile").addEventListener("click", ()=> el("filePicker").click());
+
+  // ---------------- Import thêm dữ liệu từ file .db khác ----------------
+  let importFileBytes = null;
+  let importFileName = "";
+
+  function openImportModal(){
+    if(!db){ showToast("Vui lòng chọn file dữ liệu (.db) chính trước khi import thêm.", true); return; }
+    el("importModal").classList.add("show");
+  }
+  function closeImportModal(){ el("importModal").classList.remove("show"); }
+  el("btnImportData").addEventListener("click", openImportModal);
+  el("importModalClose").addEventListener("click", closeImportModal);
+  el("importModalBackdrop").addEventListener("click", closeImportModal);
+
+  el("importDrop").addEventListener("click", ()=> el("importFileInput").click());
+  el("importFileInput").addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      importFileBytes = await file.arrayBuffer();
+      importFileName = file.name;
+      el("importFileName").textContent = file.name;
+      el("btnRunImport").disabled = false;
+      el("importResultSummary").classList.remove("show");
+      el("importProgressWrap").classList.remove("show");
+    }catch(err){
+      showToast("Lỗi khi đọc file: " + err.message, true);
+    }
+  });
+
+  function setImportProgress(pct, text){
+    el("importProgressWrap").classList.add("show");
+    el("importProgressFill").style.width = Math.max(0,Math.min(100,pct)) + "%";
+    el("importProgressText").textContent = text;
+  }
+
+  el("btnRunImport").addEventListener("click", async ()=>{
+    if(!importFileBytes || !db) return;
+    const dedupe = el("importDedupe").checked;
+    el("btnRunImport").disabled = true;
+    el("importResultSummary").classList.remove("show");
+
+    let importDb = null;
+    try{
+      setImportProgress(2, "Đang mở file import…");
+      await sleep(0);
+      if(!SQLModule){ SQLModule = await initSql(); }
+      importDb = new SQLModule.Database(new Uint8Array(importFileBytes));
+
+      const tblRes = runSQLOn(importDb, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+      if(!tblRes.values.length) throw new Error("File import không có bảng dữ liệu nào.");
+      const candidateTables = tblRes.values.map(v=>v[0]);
+
+      // File import có thể có nhiều bảng — tự động dùng bảng đầu tiên có đầy đủ cột khớp với dữ liệu hiện tại
+      let importTableName = null;
+      for(const t of candidateTables){
+        const cols = runSQLOn(importDb, `PRAGMA table_info("${t}")`).values.map(r=>r[1]);
+        if(dbColumns.every(c=>cols.includes(c))){ importTableName = t; break; }
+      }
+      if(!importTableName){
+        const detail = candidateTables.length>1 ? ` (đã kiểm tra ${candidateTables.length} bảng: ${candidateTables.join(", ")})` : "";
+        throw new Error("Không tìm thấy bảng nào trong file import có cấu trúc cột khớp với dữ liệu hiện tại" + detail + ".");
+      }
+
+      setImportProgress(12, "Đang đọc dữ liệu từ file import…");
+      await sleep(0);
+      const colsList = dbColumns.slice();
+      const selectSql = `SELECT ${colsList.map(c=>`"${c}"`).join(",")} FROM "${importTableName}"`;
+      const importRows = runSQLOn(importDb, selectSql).values;
+      importDb.close();
+      importDb = null;
+
+      if(!importRows.length) throw new Error("File import không có dữ liệu nào.");
+
+      const totalBefore = runSQL(`SELECT COUNT(*) FROM "${tableName}"`).values[0][0];
+      let deletedCount = 0;
+
+      if(dedupe && dbColumns.includes("MaSoBHXH")){
+        const idx = colsList.indexOf("MaSoBHXH");
+        const uniqueMaHo = Array.from(new Set(importRows.map(r=>r[idx]).filter(v=>v!==null && v!==undefined && v!=="")));
+        setImportProgress(25, `Đang xóa dữ liệu cũ trùng Mã số BHXH (${uniqueMaHo.length.toLocaleString('vi-VN')} mã)…`);
+        await sleep(0);
+        for(let i=0;i<uniqueMaHo.length;i+=500){
+          const batch = uniqueMaHo.slice(i, i+500);
+          const placeholders = batch.map(()=>"?").join(",");
+          runExec(`DELETE FROM "${tableName}" WHERE "MaSoBHXH" IN (${placeholders})`, batch);
+          await sleep(0);
+        }
+        const totalAfterDelete = runSQL(`SELECT COUNT(*) FROM "${tableName}"`).values[0][0];
+        deletedCount = totalBefore - totalAfterDelete;
+      }
+
+      setImportProgress(45, `Đang chèn ${importRows.length.toLocaleString('vi-VN')} dòng dữ liệu mới…`);
+      await sleep(0);
+
+      const placeholders = colsList.map(()=>"?").join(",");
+      const insertSql = `INSERT INTO "${tableName}" (${colsList.map(c=>`"${c}"`).join(",")}) VALUES (${placeholders})`;
+      db.run("BEGIN TRANSACTION");
+      try{
+        const stmt = db.prepare(insertSql);
+        for(let i=0;i<importRows.length;i++){
+          stmt.run(importRows[i]);
+          if(i % 3000 === 0){
+            setImportProgress(45 + (i/importRows.length)*40, `Đang chèn dữ liệu… ${i.toLocaleString('vi-VN')}/${importRows.length.toLocaleString('vi-VN')}`);
+            await sleep(0);
+          }
+        }
+        stmt.free();
+        db.run("COMMIT");
+      }catch(insertErr){
+        try{ db.run("ROLLBACK"); }catch(e){}
+        throw insertErr;
+      }
+
+      setImportProgress(92, "Đang cập nhật thống kê…");
+      await sleep(0);
+
+      _allCountCache = null;
+      const cnt = runSQL(`SELECT COUNT(*) FROM "${tableName}"`);
+      currentTotal = cnt.values[0][0];
+      el("statTotal").textContent = currentTotal.toLocaleString('vi-VN');
+      updateCustomStats();
+
+      currentPage = 1;
+      await executeSearch(true);
+
+      setImportProgress(100, "Hoàn tất.");
+      const summary = el("importResultSummary");
+      summary.classList.add("show");
+      summary.innerHTML = `Đã import <b>${importRows.length.toLocaleString('vi-VN')}</b> dòng từ "${escHtml(importFileName)}".` +
+        (dedupe
+          ? `<br>Chế độ: <b>Xóa dữ liệu cũ trùng Mã số BHXH</b> — đã xóa <b>${deletedCount.toLocaleString('vi-VN')}</b> bản ghi cũ trước khi thêm mới.`
+          : `<br>Chế độ: <b>Thêm dữ liệu mới</b> — giữ nguyên toàn bộ dữ liệu cũ dù trùng mã.`) +
+        `<br>Tổng số bản ghi hiện tại: <b>${currentTotal.toLocaleString('vi-VN')}</b>.`;
+      showToast("Import dữ liệu thành công.", false);
+
+      importFileBytes = null;
+      importFileName = "";
+      el("importFileInput").value = "";
+      el("importFileName").textContent = "";
+    }catch(err){
+      if(importDb){ try{ importDb.close(); }catch(e){} }
+      showToast("Lỗi khi import: " + err.message, true);
+      el("importProgressWrap").classList.remove("show");
+    }finally{
+      el("btnRunImport").disabled = !importFileBytes;
+    }
+  });
+
+  // ---------------- Xây WHERE từ điều kiện hiện tại ----------------
+  function buildWhere(){
+    const parts = [];
+    const params = [];
+    const exact = el("exactMatch").checked;
+
+    // Ô tìm kiếm chung — áp dụng trên các cột đang hiển thị (OR giữa các cột)
+    const q = el("searchInput").value.trim();
+    if(q){
+      const searchCols = displayCols.filter(c=>dbColumns.includes(c));
+      if(searchCols.length){
+        if(exact){
+          parts.push("(" + searchCols.map(c=>`"${c}" = ?`).join(" OR ") + ")");
+          searchCols.forEach(()=>params.push(q));
+        }else{
+          const like = "%" + q + "%";
+          parts.push("(" + searchCols.map(c=>`"${c}" LIKE ?`).join(" OR ") + ")");
+          searchCols.forEach(()=>params.push(like));
+        }
+      }
+    }
+
+    // Các ô tìm kiếm theo từng cột (phía trên tiêu đề) — kết hợp AND với nhau và với ô tìm kiếm chung
+    colFilterInputs.forEach(inp=>{
+      const col = inp.dataset.col;
+      const val = inp.value.trim();
+      if(!val || !dbColumns.includes(col)) return;
+      if(exact){
+        parts.push(`"${col}" = ?`);
+        params.push(val);
+      }else{
+        parts.push(`"${col}" LIKE ?`);
+        params.push("%" + val + "%");
+      }
+    });
+
+    return { clause: parts.length ? ("WHERE " + parts.join(" AND ")) : "", params };
+  }
+
+  async function executeSearch(silent){
+    if(!db){ return; }
+    currentWhere = buildWhere();
+    const cnt = runSQL(`SELECT COUNT(*) FROM "${tableName}" ${currentWhere.clause}`, currentWhere.params);
+    currentTotal = cnt.values[0][0];
+    currentPage = 1;
+    renderPage();
+    if(!silent) showToast(`Tìm thấy ${currentTotal.toLocaleString('vi-VN')} kết quả.`, false);
+  }
+
+  el("btnSearch").addEventListener("click", ()=> executeSearch(false));
+  el("searchInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") executeSearch(false); });
+  el("btnReset").addEventListener("click", ()=>{
+    el("searchInput").value = "";
+    colFilterInputs.forEach(inp=> inp.value = "");
+    el("exactMatch").checked = false;
+    executeSearch(false);
+  });
+
+  // ---------------- Quét QR / mã vạch bằng camera ----------------
+  const QR_POS_STORE_KEY = "qrExtractRange_v1";
+  const QR_DEFAULT_ZOOM = 3;
+  let qrReader = null;
+  let qrVideoTrack = null;
+  let qrScanActive = false;
+
+  function loadQrExtractRange(){
+    let from = 1, to = 12;
+    try{
+      const saved = JSON.parse(localStorage.getItem(QR_POS_STORE_KEY) || "null");
+      if(saved && saved.from && saved.to){ from = saved.from; to = saved.to; }
+    }catch(e){}
+    el("qrFromPos").value = from;
+    el("qrToPos").value = to;
+  }
+  function saveQrExtractRange(){
+    const from = parseInt(el("qrFromPos").value, 10) || 1;
+    const to = parseInt(el("qrToPos").value, 10) || 12;
+    try{ localStorage.setItem(QR_POS_STORE_KEY, JSON.stringify({from, to})); }catch(e){}
+  }
+  loadQrExtractRange();
+  el("qrFromPos").addEventListener("change", saveQrExtractRange);
+  el("qrToPos").addEventListener("change", saveQrExtractRange);
+
+  function extractQrSubstring(rawText){
+    const text = (rawText || "").toString();
+    let from = parseInt(el("qrFromPos").value, 10);
+    let to = parseInt(el("qrToPos").value, 10);
+    if(!from || from < 1) from = 1;
+    if(!to || to < from) to = text.length;
+    const sub = text.slice(from - 1, to);
+    return sub || text;
+  }
+
+  function getQrVideoTrack(){
+    const stream = el("qrVideo").srcObject;
+    return stream ? stream.getVideoTracks()[0] : null;
+  }
+
+  async function applyQrZoom(zoomVal){
+    if(!qrVideoTrack) return;
+    try{ await qrVideoTrack.applyConstraints({ advanced: [{ zoom: zoomVal }] }); }catch(e){}
+  }
+
+  async function setupQrZoomControl(){
+    const slider = el("qrZoomSlider");
+    const track = getQrVideoTrack();
+    qrVideoTrack = track;
+    if(!track || typeof track.getCapabilities !== "function"){ slider.disabled = true; return; }
+    const caps = track.getCapabilities();
+    if(!caps.zoom){ slider.disabled = true; return; }
+    const min = caps.zoom.min ?? 1;
+    const max = caps.zoom.max ?? 5;
+    const step = caps.zoom.step || 0.1;
+    const defaultZoom = Math.min(Math.max(QR_DEFAULT_ZOOM, min), max);
+    slider.min = min; slider.max = max; slider.step = step;
+    slider.value = defaultZoom;
+    slider.disabled = false;
+    el("qrZoomVal").textContent = defaultZoom.toFixed(1).replace(/\.0$/,"") + "x";
+    await applyQrZoom(defaultZoom);
+  }
+
+  el("qrZoomSlider").addEventListener("input", (e)=>{
+    const v = Number(e.target.value);
+    el("qrZoomVal").textContent = v.toFixed(1).replace(/\.0$/,"") + "x";
+    applyQrZoom(v);
+  });
+
+  function handleQrDecoded(text){
+    if(!qrScanActive) return;
+    qrScanActive = false;
+    const extracted = extractQrSubstring(text);
+    el("searchInput").value = extracted;
+    closeQrModal();
+    showToast("Đã quét mã: " + extracted, false);
+    if(db) executeSearch(false);
+  }
+
+  async function openQrModal(){
+    if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+      showToast("Trình duyệt không hỗ trợ truy cập camera.", true);
+      return;
+    }
+    if(typeof ZXing === "undefined"){
+      showToast("Không tải được thư viện quét mã (ZXing). Kiểm tra kết nối mạng.", true);
+      return;
+    }
+    el("qrModal").classList.add("show");
+    el("qrStatusText").textContent = "Đang khởi động camera…";
+    el("qrZoomSlider").disabled = true;
+    qrScanActive = true;
+    try{
+      if(!qrReader) qrReader = new ZXing.BrowserMultiFormatReader();
+      const constraints = {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+      await qrReader.decodeFromConstraints(constraints, el("qrVideo"), (result, err)=>{
+        if(result) handleQrDecoded(result.getText());
+      });
+      el("qrStatusText").textContent = "Đưa mã QR / mã vạch vào khung hình…";
+      await setupQrZoomControl();
+    }catch(err){
+      showToast("Không thể mở camera: " + err.message, true);
+      closeQrModal();
+    }
+  }
+
+  function closeQrModal(){
+    qrScanActive = false;
+    el("qrModal").classList.remove("show");
+    try{ if(qrReader) qrReader.reset(); }catch(e){}
+    const videoEl = el("qrVideo");
+    if(videoEl.srcObject){
+      videoEl.srcObject.getTracks().forEach(t=>{ try{ t.stop(); }catch(e){} });
+      videoEl.srcObject = null;
+    }
+    qrVideoTrack = null;
+  }
+
+  el("btnQrScan").addEventListener("click", openQrModal);
+  el("qrModalClose").addEventListener("click", closeQrModal);
+  el("qrModalBackdrop").addEventListener("click", closeQrModal);
+
+  // ---------------- Vẽ bảng / phân trang (truy vấn SQL trực tiếp theo trang) ----------------
+  function renderPage(){
+    if(!db){ return; }
+    const totalPages = Math.max(1, Math.ceil(currentTotal / PAGE_SIZE));
+    if(currentPage > totalPages) currentPage = totalPages;
+    const offset = (currentPage-1) * PAGE_SIZE;
+
+    const selCols = displayCols.filter(c=>dbColumns.includes(c));
+    const orderCol = selCols.includes(currentSort.col) ? currentSort.col : selCols[0];
+    const sql = `SELECT rowid, ${selCols.map(c=>`"${c}"`).join(",")} FROM "${tableName}" ${currentWhere.clause}
+                 ORDER BY "${orderCol}" ${currentSort.dir===1?"ASC":"DESC"} LIMIT ? OFFSET ?`;
+    const res = runSQL(sql, [...currentWhere.params, PAGE_SIZE, offset]);
+
+    const tbody = el("tableBody");
+    el("emptyState").style.display = currentTotal===0 ? "block" : "none";
+
+    tbody.innerHTML = res.values.map(row=>{
+      const rowid = row[0];
+      const cells = selCols.map((c,i)=>{
+        const val = row[i+1]; // +1 vì cột 0 là rowid
+        const cls = isMonoCol(c) ? " class=\"mono\"" : "";
+        return `<td${cls}>${escHtml(val)||"—"}</td>`;
+      }).join("");
+      return `<tr data-rowid="${rowid}">${cells}</tr>`;
+    }).join("");
+
+    tbody.querySelectorAll("tr").forEach(tr=>{
+      tr.addEventListener("click", ()=> openDrawer(Number(tr.dataset.rowid)));
+    });
+
+    el("resultCount").textContent = currentTotal.toLocaleString('vi-VN') + " kết quả";
+    el("statFiltered").textContent = currentTotal.toLocaleString('vi-VN');
+    renderPagination(totalPages, currentTotal, offset, res.values.length);
+  }
+
+  function renderPagination(totalPages, total, offset, shown){
+    el("pgInfo").textContent = total===0 ? "" :
+      `${(offset+1).toLocaleString('vi-VN')}–${(offset+shown).toLocaleString('vi-VN')} / ${total.toLocaleString('vi-VN')}`;
+    el("pgFirst").disabled = currentPage===1;
+    el("pgPrev").disabled = currentPage===1;
+    el("pgNext").disabled = currentPage>=totalPages;
+    el("pgLast").disabled = currentPage>=totalPages;
+
+    const nums = el("pgNumbers");
+    nums.innerHTML = "";
+    const windowSize = 5;
+    let s = Math.max(1, currentPage - Math.floor(windowSize/2));
+    let e = Math.min(totalPages, s + windowSize - 1);
+    s = Math.max(1, e - windowSize + 1);
+    for(let p=s; p<=e; p++){
+      const b = document.createElement("button");
+      b.className = "pg-btn" + (p===currentPage ? " active" : "");
+      b.textContent = p;
+      b.addEventListener("click", ()=>{ currentPage = p; renderPage(); });
+      nums.appendChild(b);
+    }
+  }
+  el("pgFirst").addEventListener("click", ()=>{ currentPage=1; renderPage(); });
+  el("pgPrev").addEventListener("click", ()=>{ currentPage=Math.max(1,currentPage-1); renderPage(); });
+  el("pgNext").addEventListener("click", ()=>{ currentPage++; renderPage(); });
+  el("pgLast").addEventListener("click", ()=>{ currentPage=Math.ceil(currentTotal/PAGE_SIZE)||1; renderPage(); });
+
+  // ---------------- Ngăn kéo chi tiết (lấy đầy đủ toàn bộ cột theo rowid) ----------------
+  function openDrawer(rowid){
+    const res = runSQL(`SELECT rowid, * FROM "${tableName}" WHERE rowid = ?`, [rowid]);
+    if(!res.values.length) return;
+    const cols = res.columns.filter(c=>c!=="rowid");
+    const row = res.values[0];
+    const g = (name)=>{ const i = res.columns.indexOf(name); return i===-1 ? "" : row[i]; };
+
+    const titleCol = displayCols.find(c=>g(c)) || cols.find(c=>g(c));
+    el("drawerStt").textContent = "BẢN GHI #" + rowid;
+    el("drawerName").textContent = (titleCol ? g(titleCol) : "") || "—";
+
+    const fields = cols.map(c=>[COLUMN_LABELS[c]||c, g(c), isMonoCol(c)]);
+
+    el("drawerBody").innerHTML = `<div class="dgroup">
+      <div class="dgroup-title">Toàn bộ thông tin (bảng "${escHtml(tableName)}")</div>
+      ${fields.map(f=>`<div class="dfield"><span class="k">${escHtml(f[0])}</span><span class="v${f[2]?' mono':''}">${escHtml(f[1])||"—"}</span></div>`).join("")}
+    </div>`;
+
+    el("overlay").classList.add("show");
+    el("drawer").classList.add("show");
+  }
+  function closeDrawer(){ el("overlay").classList.remove("show"); el("drawer").classList.remove("show"); }
+  el("overlay").addEventListener("click", closeDrawer);
+  el("drawerClose").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeDrawer(); closeExcelModal(); closeImportModal(); } });
+
+  // ---------------- Xuất Excel kết quả tìm kiếm hiện tại (chọn cột muốn xuất) ----------------
+  function openExportModal(){
+    if(!db){ showToast("Chưa có dữ liệu để xuất.", true); return; }
+    if(currentTotal === 0){ showToast("Không có dữ liệu phù hợp để xuất.", true); return; }
+    buildColumnChecklist(el("exportColList"), dbColumns, []); // mặc định không chọn cột nào = xuất tất cả
+    el("exportModal").classList.add("show");
+  }
+  function closeExportModal(){ el("exportModal").classList.remove("show"); }
+  el("btnExport").addEventListener("click", openExportModal);
+  el("exportModalClose").addEventListener("click", closeExportModal);
+  el("exportModalBackdrop").addEventListener("click", closeExportModal);
+  el("btnExportSelectAll").addEventListener("click", ()=> setAllChecked(el("exportColList"), true));
+  el("btnExportSelectNone").addEventListener("click", ()=> setAllChecked(el("exportColList"), false));
+
+  el("btnRunExport").addEventListener("click", async ()=>{
+    if(!db) return;
+    if(currentTotal > LARGE_EXPORT_WARN){
+      const ok = confirm(`Kết quả hiện có ${currentTotal.toLocaleString('vi-VN')} dòng — file Excel xuất ra có thể rất lớn và mất nhiều thời gian/bộ nhớ trình duyệt.\n\nBạn có muốn tiếp tục không?`);
+      if(!ok) return;
+    }
+    const chosen = getCheckedColumns(el("exportColList"));
+    const headerCols = chosen.length ? chosen : dbColumns; // không chọn cột nào => xuất tất cả cột trong bảng
+    closeExportModal();
+
+    loadingScreen.style.display = "flex";
+    loadingText.textContent = `Đang thu thập dữ liệu để xuất (0 / ${currentTotal.toLocaleString('vi-VN')})…`;
+    await sleep(10);
+
+    try{
+      const data = [];
+      let offset = 0;
+      while(offset < currentTotal){
+        const sql = `SELECT ${headerCols.map(c=>`"${c}"`).join(",")} FROM "${tableName}" ${currentWhere.clause} LIMIT ? OFFSET ?`;
+        const res = runSQL(sql, [...currentWhere.params, SCAN_CHUNK, offset]);
+        for(const row of res.values){
+          const obj = {};
+          headerCols.forEach((c,i)=>{ obj[COLUMN_LABELS[c] || c] = row[i]; });
+          data.push(obj);
+        }
+        offset += SCAN_CHUNK;
+        loadingText.textContent = `Đang thu thập dữ liệu để xuất (${Math.min(offset,currentTotal).toLocaleString('vi-VN')} / ${currentTotal.toLocaleString('vi-VN')})…`;
+        await sleep(0);
+      }
+
+      loadingText.textContent = "Đang tạo file Excel…";
+      await sleep(10);
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ket qua");
+      const stamp = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `DuLieu_XuatKetQua_${stamp}.xlsx`);
+      showToast(`Đã xuất ${data.length.toLocaleString('vi-VN')} bản ghi (${headerCols.length} cột) ra Excel.`, false);
+    }catch(err){
+      showToast("Lỗi khi xuất Excel: " + err.message, true);
+    }finally{
+      loadingScreen.style.display = "none";
+    }
+  });
+
+
+  // ===================================================================
+  // TÌM KIẾM ĐỐI CHIẾU TỪ FILE EXCEL
+  // ===================================================================
+  let excelWorkbook = null;
+  let excelSheetHeaders = [];
+  let excelSheetRows = [];   // toàn bộ dòng dữ liệu (mảng object) của sheet đang chọn
+
+  function buildDbColSelect(){
+    const sel = el("dbColSelect");
+    sel.innerHTML = dbColumns.map(c=>`<option value="${escAttr(c)}">${escHtml(COLUMN_LABELS[c]||c)}</option>`).join("");
+    // Ưu tiên chọn sẵn một cột định danh hay dùng nếu có
+    const preferred = ["MaSoBHXH","Col7","Col6","Col12"].find(c=>dbColumns.includes(c));
+    if(preferred) sel.value = preferred;
+    updateRunButtonState();
+    buildColumnChecklist(el("excelExportColList"), dbColumns, []); // mặc định không chọn cột nào = xuất tất cả cột
+  }
+
+  function openExcelModal(){
+    el("excelModal").classList.add("show");
+  }
+  function closeExcelModal(){
+    el("excelModal").classList.remove("show");
+  }
+  el("btnExcelSearch").addEventListener("click", openExcelModal);
+  el("excelModalClose").addEventListener("click", closeExcelModal);
+  el("excelModalBackdrop").addEventListener("click", closeExcelModal);
+
+  el("excelDrop").addEventListener("click", ()=> el("excelFileInput").click());
+
+  el("excelFileInput").addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    el("excelFileName").textContent = "Đang đọc " + file.name + "…";
+    try{
+      const buf = await file.arrayBuffer();
+      excelWorkbook = XLSX.read(buf, { type:"array" });
+      el("excelFileName").textContent = file.name;
+      const sheetSel = el("excelSheetSelect");
+      sheetSel.disabled = false;
+      sheetSel.innerHTML = '<option value="">— Chọn sheet —</option>' +
+        excelWorkbook.SheetNames.map(n=>`<option value="${escAttr(n)}">${escHtml(n)}</option>`).join("");
+      el("excelColSelect").disabled = true;
+      el("excelColSelect").innerHTML = '<option value="">— Chọn sheet trước —</option>';
+      excelSheetRows = [];
+      updateRunButtonState();
+    }catch(err){
+      showToast("Không đọc được file Excel: " + err.message, true);
+      el("excelFileName").textContent = "";
+    }
+  });
+
+  el("excelSheetSelect").addEventListener("change", (e)=>{
+    const sheetName = e.target.value;
+    const colSel = el("excelColSelect");
+    if(!sheetName){
+      colSel.disabled = true;
+      colSel.innerHTML = '<option value="">— Chọn sheet trước —</option>';
+      excelSheetRows = [];
+      updateRunButtonState();
+      return;
+    }
+    const ws = excelWorkbook.Sheets[sheetName];
+    excelSheetRows = XLSX.utils.sheet_to_json(ws, { defval:"" });
+    // Lấy danh sách cột (theo thứ tự xuất hiện, gộp từ vài dòng đầu để tránh thiếu cột)
+    const headerSet = [];
+    const sampleN = Math.min(excelSheetRows.length, 50);
+    for(let i=0;i<sampleN;i++){
+      Object.keys(excelSheetRows[i]).forEach(k=>{ if(!headerSet.includes(k)) headerSet.push(k); });
+    }
+    if(headerSet.length===0 && excelSheetRows.length){ Object.keys(excelSheetRows[0]).forEach(k=>headerSet.push(k)); }
+    excelSheetHeaders = headerSet;
+
+    colSel.disabled = false;
+    colSel.innerHTML = '<option value="">— Chọn cột —</option>' +
+      headerSet.map(h=>`<option value="${escAttr(h)}">${escHtml(h)}</option>`).join("");
+    updateRunButtonState();
+  });
+
+  el("excelColSelect").addEventListener("change", updateRunButtonState);
+  el("dbColSelect").addEventListener("change", updateRunButtonState);
+  el("btnExcelExportSelectAll").addEventListener("click", ()=> setAllChecked(el("excelExportColList"), true));
+  el("btnExcelExportSelectNone").addEventListener("click", ()=> setAllChecked(el("excelExportColList"), false));
+
+  function updateRunButtonState(){
+    const ok = db && excelSheetRows.length>0 && el("excelColSelect").value && el("dbColSelect").value;
+    el("btnRunExcelMatch").disabled = !ok;
+  }
+
+  async function buildIndexForDbColumn(colName, onProgress){
+    const map = new Map();
+    let offset = 0;
+    while(offset < currentTotalRowsForIndex()){
+      const res = runSQL(`SELECT rowid, "${colName}" FROM "${tableName}" LIMIT ? OFFSET ?`, [SCAN_CHUNK, offset]);
+      if(!res.values.length) break;
+      for(const row of res.values){
+        const key = norm(row[1]);
+        if(!key) continue;
+        if(!map.has(key)) map.set(key, []);
+        map.get(key).push(row[0]);
+      }
+      offset += res.values.length;
+      onProgress && onProgress(offset);
+      await sleep(0);
+      if(res.values.length < SCAN_CHUNK) break;
+    }
+    return map;
+  }
+  function currentTotalRowsForIndex(){
+    // Tổng số dòng thật sự trong bảng (không áp bộ lọc) — dùng cho việc quét dựng chỉ mục đối chiếu
+    return currentTotal_ALL();
+  }
+  let _allCountCache = null;
+  function currentTotal_ALL(){
+    if(_allCountCache===null){
+      const r = runSQL(`SELECT COUNT(*) FROM "${tableName}"`);
+      _allCountCache = r.values[0][0];
+    }
+    return _allCountCache;
+  }
+
+  async function fetchRowsByRowids(rowids){
+    const resultMap = new Map();
+    for(let i=0;i<rowids.length;i+=FETCH_BATCH){
+      const batch = rowids.slice(i, i+FETCH_BATCH);
+      const placeholders = batch.map(()=>"?").join(",");
+      const res = runSQL(`SELECT rowid, * FROM "${tableName}" WHERE rowid IN (${placeholders})`, batch);
+      res.values.forEach(v=>{
+        const obj = {};
+        res.columns.forEach((c,ci)=>{ if(c!=="rowid") obj[c] = v[ci]; });
+        resultMap.set(v[0], obj);
+      });
+      await sleep(0);
+    }
+    return resultMap;
+  }
+
+  function setExcelProgress(pct, text){
+    el("excelProgressWrap").classList.add("show");
+    el("excelProgressFill").style.width = Math.max(0,Math.min(100,pct)) + "%";
+    el("excelProgressText").textContent = text;
+  }
+
+  el("btnRunExcelMatch").addEventListener("click", async ()=>{
+    const excelCol = el("excelColSelect").value;
+    const dbCol = el("dbColSelect").value;
+    if(!excelCol || !dbCol || !excelSheetRows.length) return;
+
+    el("btnRunExcelMatch").disabled = true;
+    el("excelResultSummary").classList.remove("show");
+    _allCountCache = null;
+
+    try{
+      // Bước 1: dựng chỉ mục cho cột dữ liệu đã chọn
+      setExcelProgress(0, "Đang quét dữ liệu .db để dựng chỉ mục đối chiếu…");
+      const totalAll = currentTotal_ALL();
+      const indexMap = await buildIndexForDbColumn(dbCol, (done)=>{
+        setExcelProgress((done/Math.max(totalAll,1))*60, `Đang quét dữ liệu .db: ${done.toLocaleString('vi-VN')} / ${totalAll.toLocaleString('vi-VN')}`);
+      });
+
+      // Bước 2: so khớp từng dòng Excel
+      setExcelProgress(62, "Đang đối chiếu dữ liệu Excel…");
+      await sleep(0);
+      const matchedPairs = [];   // { rowid, excelRow }
+      const notFoundRows = [];
+      const rowidSet = new Set();
+      excelSheetRows.forEach(erow=>{
+        const val = erow[excelCol];
+        const key = norm(val);
+        const hit = key ? indexMap.get(key) : undefined;
+        if(hit && hit.length){
+          hit.forEach(rid=>{ matchedPairs.push({ rowid: rid, excelRow: erow }); rowidSet.add(rid); });
+        }else{
+          notFoundRows.push(erow);
+        }
+      });
+
+      // Bước 3: lấy đầy đủ dữ liệu .db cho các rowid tìm thấy
+      setExcelProgress(70, `Đang lấy dữ liệu chi tiết cho ${rowidSet.size.toLocaleString('vi-VN')} bản ghi khớp…`);
+      const uniqueRowids = Array.from(rowidSet);
+      const rowDataMap = await fetchRowsByRowids(uniqueRowids);
+      setExcelProgress(90, "Đang tạo file Excel kết quả…");
+      await sleep(10);
+
+      // Sheet 1: Tìm thấy — các cột .db đã chọn (hoặc tất cả nếu không chọn) + cột Excel (đặt ở cuối, tiền tố "[Excel]")
+      const chosenExportCols = getCheckedColumns(el("excelExportColList"));
+      const foundHeaderCols = chosenExportCols.length ? chosenExportCols : dbColumns;
+      const foundData = matchedPairs.map(p=>{
+        const dbRow = rowDataMap.get(p.rowid) || {};
+        const obj = {};
+        foundHeaderCols.forEach(c=>{ obj[COLUMN_LABELS[c]||c] = dbRow[c]; });
+        excelSheetHeaders.forEach(h=>{ obj["[Excel] " + h] = p.excelRow[h]; });
+        return obj;
+      });
+
+      // Sheet 2: Không tìm thấy — chỉ dữ liệu gốc từ Excel
+      const notFoundData = notFoundRows.map(r=>{
+        const obj = {};
+        excelSheetHeaders.forEach(h=> obj[h] = r[h]);
+        return obj;
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(foundData), "Tim thay");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(notFoundData), "Khong tim thay");
+      const stamp = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `DoiChieu_Excel_${stamp}.xlsx`);
+
+      setExcelProgress(100, "Hoàn tất.");
+      const summary = el("excelResultSummary");
+      summary.classList.add("show");
+      summary.innerHTML = `Đã xử lý <b>${excelSheetRows.length.toLocaleString('vi-VN')}</b> dòng Excel.<br>
+        Tìm thấy: <b>${matchedPairs.length.toLocaleString('vi-VN')}</b> dòng khớp (từ ${rowidSet.size.toLocaleString('vi-VN')} bản ghi trong .db).<br>
+        Không tìm thấy: <b>${notFoundRows.length.toLocaleString('vi-VN')}</b> dòng.<br>
+        File Excel kết quả đã được tải xuống.`;
+      showToast("Đối chiếu hoàn tất — đã tải file Excel kết quả.", false);
+    }catch(err){
+      showToast("Lỗi khi đối chiếu: " + err.message, true);
+    }finally{
+      el("btnRunExcelMatch").disabled = false;
+    }
+  });
+
+  // ---------------- Khởi động ----------------
+  tryLoadDefaultFile();
+
+})();
+
+</script>
+</body>
+</html>
