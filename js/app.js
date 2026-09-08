@@ -312,7 +312,7 @@
     stagingLabel = "";
     pendingExcelWorkbook = null;
     loadingScreen.style.display = "none";
-    if(!db) setSource("Chưa có dữ liệu — hãy chọn file .db", false);
+    if(!db) setSource("Chưa có Data", false);
   }
 
   // ---------------- Nạp CSDL: Bước 3 — hoàn tất (đánh chỉ mục, thống kê, hiển thị) ----------------
@@ -426,7 +426,7 @@
       const buf = await resp.arrayBuffer();
       await openDatabaseBytesAndPickTable(buf, DEFAULT_FILENAME);
     }catch(err){
-      setSource("Chưa có dữ liệu — hãy chọn file .db", false);
+      setSource("Chưa có Data", false);
       showToast("Không tự tải được \"" + DEFAULT_FILENAME + "\" (thường do mở trực tiếp bằng file://). Hãy dùng nút “Chọn file dữ liệu” hoặc chạy trang qua một máy chủ cục bộ.", true);
     }finally{
       loadingScreen.style.display = "none";
