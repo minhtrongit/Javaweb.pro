@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý dữ liệu chuyên nghiệp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <p id="loadingText">Đang khởi tạo công cụ đọc dữ liệu…</p>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">DATA</div>
+      <div class="brand-text">
+        <h1>Quản lý dữ liệu chuyên nghiệp</h1>
+        <p>Tra cứu &amp; quản lý dữ liệu động</p>
+      </div>
+    </div>
+    <div class="source-chip" id="sourceChip">
+      <span class="dot"></span>
+      <span class="fname" id="sourceFname">Chưa có dữ liệu</span>
+    </div>
+    <button class="btn" id="btnPickFile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Chọn file dữ liệu (.db / .xlsx)
+    </button>
+    <input type="file" id="filePicker" accept=".db,.sqlite,.sqlite3,.xlsx,.xls">
+    <button class="btn" id="btnImportData">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Import dữ liệu (.db)
+    </button>
+    <button class="btn" id="btnExcelSearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Tìm kiếm từ file Excel
+    </button>
+    <button class="btn btn-accent" id="btnExport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M6 15v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/><path d="M9 10l3 3 3-3"/></svg>
+      Xuất Excel kết quả
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Tổng số bản ghi trong CSDL</div></div>
+    <div class="stat-card"><div class="num" id="statCustom1">—</div><div class="lbl" id="statCustom1Lbl">Số giá trị khác nhau</div></div>
+    <div class="stat-card"><div class="num" id="statCustom2">—</div><div class="lbl" id="statCustom2Lbl">Số giá trị khác nhau</div></div>
+    <div class="stat-card"><div class="num" id="statFiltered">0</div><div class="lbl">Kết quả đang hiển thị</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="toolbar">
+      <div class="search-box">
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Nhập từ khoá cần tìm (áp dụng trên các cột đang hiển thị)… rồi bấm Tìm kiếm">
+        </div>
+        <button class="btn btn-accent" id="btnSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Tìm kiếm
+        </button>
+      </div>
+      <label class="exact-toggle" for="exactMatch">
+        <input type="checkbox" id="exactMatch">
+        Tìm chính xác
+      </label>
+      <button class="btn btn-ghost" id="btnReset">Đặt lại</button>
+      <span class="count" id="resultCount">0 kết quả</span>
+    </div>
+    <div class="hint">Nhập điều kiện tìm kiếm/lọc rồi bấm <b>Tìm kiếm</b> (hoặc phím Enter) để thực hiện truy vấn — dữ liệu lớn nên không tự tìm khi đang gõ.</div>
+    <div class="table-scroll">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div>Không tìm thấy kết quả phù hợp.</div>
+      </div>
+    </div>
+    <div class="pagination">
+      <span class="pg-info" id="pgInfo"></span>
+      <button class="pg-btn" id="pgFirst">«</button>
+      <button class="pg-btn" id="pgPrev">‹</button>
+      <span id="pgNumbers" style="display:flex;gap:6px;"></span>
+      <button class="pg-btn" id="pgNext">›</button>
+      <button class="pg-btn" id="pgLast">»</button>
+    </div>
+  </div>
+
+  <footer>Dữ liệu được đọc và xử lý trực tiếp trên trình duyệt (không tải lên máy chủ nào) · Định dạng: SQLite (.db)</footer>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="stt" id="drawerStt">HỒ SƠ #—</div>
+    <h2 id="drawerName">—</h2>
+    <button class="drawer-close" id="drawerClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- Modal: Tìm kiếm đối chiếu từ file Excel -->
+<div class="modal" id="excelModal">
+  <div class="modal-backdrop" id="excelModalBackdrop"></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Tìm kiếm đối chiếu từ file Excel</h3>
+        <p>So khớp một cột trong file Excel với một cột trong dữ liệu, xuất kết quả gồm 2 sheet: tìm thấy &amp; không tìm thấy.</p>
+      </div>
+      <button class="modal-close" id="excelModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">1</span> Chọn file Excel</div>
+        <div class="file-drop" id="excelDrop">
+          <div id="excelDropText">Bấm để chọn file Excel (.xlsx, .xls, .csv)</div>
+          <div class="fn" id="excelFileName"></div>
+        </div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv">
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">2</span> Chọn sheet trong file Excel</div>
+        <select id="excelSheetSelect" disabled><option value="">— Chọn file trước —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">3</span> Chọn cột trong Excel cần đối chiếu</div>
+        <select id="excelColSelect" disabled><option value="">— Chọn sheet trước —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">4</span> Chọn cột trong dữ liệu (.db) để so khớp</div>
+        <select id="dbColSelect"><option value="">— Chưa có dữ liệu —</option></select>
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">5</span> Chọn cột dữ liệu (.db) muốn có trong file kết quả (không chọn = xuất tất cả cột)</div>
+        <div class="col-check-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExcelExportSelectAll">Chọn tất cả</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExcelExportSelectNone">Bỏ chọn tất cả</button>
+        </div>
+        <div class="col-check-list" id="excelExportColList"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunExcelMatch" style="flex:1;" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Bắt đầu đối chiếu &amp; xuất Excel
+        </button>
+      </div>
+
+      <div class="progress-wrap" id="excelProgressWrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="excelProgressFill"></div></div>
+        <div class="progress-text" id="excelProgressText">Đang xử lý…</div>
+      </div>
+
+      <div class="result-summary" id="excelResultSummary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Chọn bảng dữ liệu trong file .db (khi file có nhiều bảng) -->
+<div class="modal" id="tableSelectModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" style="max-width:540px;">
+    <div class="modal-head">
+      <div>
+        <h3 id="tableSelectModalTitle">Chọn bảng dữ liệu</h3>
+        <p id="tableSelectModalDesc">File .db này có nhiều bảng — hãy chọn bảng bạn muốn làm việc.</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="table-pick-list" id="tablePickList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btnCancelTablePick">Hủy</button>
+        <button class="btn btn-accent" id="btnConfirmTable" style="flex:1;" disabled>Tiếp tục</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Chọn cột muốn hiển thị / tìm kiếm -->
+<div class="modal" id="columnSelectModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" style="max-width:560px;">
+    <div class="modal-head">
+      <div>
+        <h3>Chọn cột hiển thị</h3>
+        <p id="colSelectSubtitle">Thiết lập cách hiển thị dữ liệu.</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="step-label" style="margin-bottom:8px;"><span class="step-num">1</span> Chọn cột hiển thị trong bảng kết quả &amp; dùng để tìm kiếm</div>
+      <div class="col-check-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnColSelectAll">Chọn tất cả</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnColSelectNone">Bỏ chọn tất cả</button>
+      </div>
+      <div class="col-check-list" id="colSelectList"></div>
+
+      <div class="step" style="margin-top:16px;">
+        <div class="step-label"><span class="step-num">2</span> Chọn cột thống kê (2 ô số ở trên cùng — đếm số giá trị khác nhau)</div>
+        <div class="stat-select-row">
+          <select id="statCol1Select"><option value="">— Không dùng —</option></select>
+          <select id="statCol2Select"><option value="">— Không dùng —</option></select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btnCancelColSelect">Hủy</button>
+        <button class="btn btn-accent" id="btnConfirmColumns" style="flex:1;" disabled>Xác nhận &amp; hiển thị dữ liệu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Xuất Excel kết quả (chọn cột muốn xuất) -->
+<div class="modal" id="exportModal">
+  <div class="modal-backdrop" id="exportModalBackdrop"></div>
+  <div class="modal-card" style="max-width:560px;">
+    <div class="modal-head">
+      <div>
+        <h3>Xuất Excel kết quả</h3>
+        <p>Chọn các cột muốn xuất. Nếu không chọn cột nào, toàn bộ cột trong bảng sẽ được xuất.</p>
+      </div>
+      <button class="modal-close" id="exportModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="col-check-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnExportSelectAll">Chọn tất cả</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnExportSelectNone">Bỏ chọn tất cả</button>
+      </div>
+      <div class="col-check-list" id="exportColList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunExport" style="flex:1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M6 15v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"/><path d="M9 10l3 3 3-3"/></svg>
+          Xuất Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Import thêm dữ liệu từ file .db khác -->
+<div class="modal" id="importModal">
+  <div class="modal-backdrop" id="importModalBackdrop"></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Import thêm dữ liệu (.db)</h3>
+        <p>Nạp thêm dữ liệu từ một file .db khác (cùng cấu trúc cột) vào dữ liệu đang xem.</p>
+      </div>
+      <button class="modal-close" id="importModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">1</span> Chọn file .db cần import (cùng cấu trúc dữ liệu)</div>
+        <div class="file-drop" id="importDrop">
+          <div id="importDropText">Bấm để chọn file .db, .sqlite, .sqlite3</div>
+          <div class="fn" id="importFileName"></div>
+        </div>
+        <input type="file" id="importFileInput" accept=".db,.sqlite,.sqlite3">
+      </div>
+
+      <div class="step">
+        <div class="step-label"><span class="step-num">2</span> Cách xử lý dữ liệu trùng</div>
+        <label class="exact-toggle" for="importDedupe" style="margin-bottom:4px;">
+          <input type="checkbox" id="importDedupe">
+          Xóa dữ liệu cũ nếu trùng Mã số BHXH (ghi đè bằng dữ liệu mới import)
+        </label>
+        <div class="hint" style="padding:6px 0 0;">Nếu <b>không tích</b>: dữ liệu mới sẽ được thêm vào, giữ nguyên toàn bộ dữ liệu cũ dù có trùng Mã số BHXH.<br>Nếu <b>tích chọn</b>: các bản ghi cũ có Mã số BHXH trùng với dữ liệu import sẽ bị xóa trước, sau đó thêm dữ liệu mới vào.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btnRunImport" style="flex:1;" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          Bắt đầu import
+        </button>
+      </div>
+
+      <div class="progress-wrap" id="importProgressWrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="importProgressFill"></div></div>
+        <div class="progress-text" id="importProgressText">Đang xử lý…</div>
+      </div>
+
+      <div class="result-summary" id="importResultSummary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
