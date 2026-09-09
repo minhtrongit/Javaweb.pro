@@ -660,21 +660,42 @@
   }
 
   // -------- Print rendering --------
+  // QUAN TRỌNG: window.print() phải được gọi ĐỒNG BỘ, ngay trong hàm xử lý click.
+  // Nếu để nó chạy sau một Promise/setTimeout (ví dụ chờ tạo mã QR), nhiều trình
+  // duyệt (Safari/iOS, trình duyệt trong app Zalo, Messenger…) sẽ coi đây không
+  // còn là thao tác trực tiếp của người dùng và ÂM THẦM CHẶN lệnh in — bấm nút
+  // không có phản ứng gì, không báo lỗi. Vì vậy toàn bộ xử lý dưới đây chạy
+  // đồng bộ (không async/await, không setTimeout, không .then).
   $("drawerPrint").addEventListener("click", function(){
-    renderPrintDocs([currentRecord]).then(function(){
+    try{
+      if(!currentRecord){
+        alert("Chưa chọn hồ sơ nào để in. Vui lòng bấm vào một dòng trong bảng trước.");
+        return;
+      }
+      renderPrintDocs([currentRecord]);
       window.print();
-    });
+    }catch(err){
+      console.error(err);
+      alert("Không thể tạo bản in: " + err.message);
+    }
   });
 
   btnBatchPrint.addEventListener("click", function(){
-    var keys = Array.from(state.selected);
-    var records = state.rows
-      .filter(function(r){ return keys.indexOf(rowKey(r)) !== -1; })
-      .map(buildEditableRecord);
-    if(!records.length) return;
-    renderPrintDocs(records).then(function(){
+    try{
+      var keys = Array.from(state.selected);
+      var records = state.rows
+        .filter(function(r){ return keys.indexOf(rowKey(r)) !== -1; })
+        .map(buildEditableRecord);
+      if(!records.length){
+        alert("Vui lòng chọn ít nhất một dòng để in.");
+        return;
+      }
+      renderPrintDocs(records);
       window.print();
-    });
+    }catch(err){
+      console.error(err);
+      alert("Không thể tạo bản in: " + err.message);
+    }
   });
 
   function renderPrintDocs(records){
@@ -683,30 +704,31 @@
     printRoot.innerHTML = "";
     qrHost.innerHTML = "";
 
-    var qrJobs = records.map(function(rec, i){
+    records.forEach(function(rec, i){
       var pageId = "docPage" + i;
       printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId));
-      return makeQrDataUrl(rec.qr).then(function(dataUrl){
-        var img = document.getElementById(pageId + "_qrImg");
-        if(img && dataUrl) img.src = dataUrl;
-      });
+      var dataUrl = makeQrDataUrl(rec.qr);
+      var img = document.getElementById(pageId + "_qrImg");
+      if(img && dataUrl) img.src = dataUrl;
     });
-    return Promise.all(qrJobs);
   }
 
+  // Đọc mã QR ĐỒNG BỘ ngay sau khi khởi tạo — QRCode.js vẽ vào <canvas> ngay
+  // trong hàm khởi tạo (không cần chờ), nên có thể đọc toDataURL() ngay lập tức.
   function makeQrDataUrl(text){
-    return new Promise(function(resolve){
-      if(!text || typeof QRCode === "undefined"){ resolve(null); return; }
+    if(!text || typeof QRCode === "undefined") return null;
+    try{
       var holder = document.createElement("div");
       $("qrHiddenHost").appendChild(holder);
       new QRCode(holder, { text: text, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
-      setTimeout(function(){
-        var img = holder.querySelector("img");
-        var canvas = holder.querySelector("canvas");
-        var url = img && img.src ? img.src : (canvas ? canvas.toDataURL("image/png") : null);
-        resolve(url);
-      }, 60);
-    });
+      var canvas = holder.querySelector("canvas");
+      var img = holder.querySelector("img");
+      var url = canvas ? canvas.toDataURL("image/png") : (img ? img.src : null);
+      return url || null;
+    }catch(err){
+      console.error("Lỗi tạo mã QR:", err);
+      return null;
+    }
   }
 
   function renderDocPage(rec, pageId){
