@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tờ khai BHYT — Mẫu số 2</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --ink:#182430;
@@ -258,46 +257,47 @@
 
   /* ---------- Print document styling ---------- */
   .doc-page{
+    position:relative;
+    box-sizing:border-box;
     width:210mm;
     min-height:297mm;
-    padding:18mm 20mm;
+    padding:10mm 15mm 26mm;
     margin:0 auto 14px;
     background:#fff;
     font-family:"Times New Roman", Times, serif;
-    font-size:13.5pt;
-    line-height:1.42;
+    font-size:13pt;
+    line-height:1.22;
     color:#111;
   }
   .doc-topline{display:flex; justify-content:flex-end;}
   .doc-topline span{font-style:italic;}
-  .doc-national{text-align:center; font-weight:700; margin-top:2mm;}
+  .doc-national{text-align:center; font-weight:700; margin-top:0;}
   .doc-national .line2{font-weight:700;}
   .doc-national .rule{
-    width:34mm; border-bottom:1px solid #111; margin:1mm auto 0;
+    width:34mm; border-bottom:1px solid #111; margin:0.5mm auto 0;
   }
-  .doc-title{text-align:center; font-weight:700; margin-top:6mm; font-size:15pt;}
-  .doc-title .line2{margin-top:1mm;}
-  .doc-masothe{text-align:center; margin-top:3mm;}
-  .doc-section{font-weight:700; margin-top:6mm;}
-  .doc-row{margin-top:3mm; display:flex; gap:6mm;}
+  .doc-title{text-align:center; font-weight:700; margin-top:3mm; font-size:14.5pt;}
+  .doc-title .line2{margin-top:0.5mm;}
+  .doc-masothe{text-align:center; margin-top:2mm;}
+  .doc-section{font-weight:700; margin-top:3mm;}
+  .doc-row{margin-top:1.5mm; display:flex; gap:6mm;}
   .doc-row .c1{flex:1.4;}
   .doc-row .c2{flex:1;}
-  .doc-para{margin-top:3mm;}
-  .doc-indent{margin-left:6mm;}
-  .doc-indent2{margin-left:12mm;}
-  .fillval{border-bottom:1px dotted #333; padding:0 2px; font-weight:600;}
+  .doc-para{margin-top:1.5mm;}
+  .fillval{border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-width:6mm; display:inline-block;}
   .checkbox{display:inline-block; width:4mm; height:4mm; border:1px solid #111; vertical-align:-0.7mm; margin:0 1mm;}
   .doc-footer-grid{
-    margin-top:10mm;
+    margin-top:5mm;
     display:flex;
     justify-content:space-between;
   }
   .doc-footer-grid .left, .doc-footer-grid .right{width:48%; text-align:center;}
-  .doc-footer-grid .right .date-line{font-style:italic; margin-bottom:16mm;}
-  .doc-sign-name{margin-top:20mm; font-weight:700;}
-  .doc-qr-block{margin-top:8mm; text-align:center;}
-  .doc-qr-block img{width:26mm; height:26mm;}
-  .doc-qr-code{font-size:9pt; margin-top:1mm; letter-spacing:.2px;}
+  .doc-footer-grid .right .date-line{font-style:italic; margin-bottom:12mm;}
+  .doc-sign-name{margin-top:14mm; font-weight:700;}
+  /* Khối QR neo cố định ở góc dưới-trái của trang in */
+  .doc-qr-block{position:absolute; left:15mm; bottom:8mm; text-align:left;}
+  .doc-qr-block img{width:22mm; height:22mm; display:block;}
+  .doc-qr-code{font-size:9pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
 
   @media print{
     body *{visibility:hidden;}
@@ -392,7 +392,6 @@
 
 <!-- ============ PRINT-ONLY AREA ============ -->
 <div id="printRoot"></div>
-<div id="qrHiddenHost" style="position:fixed; left:-9999px; top:-9999px;"></div>
 
 <script>
 (function(){
@@ -700,39 +699,28 @@
 
   function renderPrintDocs(records){
     var printRoot = $("printRoot");
-    var qrHost = $("qrHiddenHost");
     printRoot.innerHTML = "";
-    qrHost.innerHTML = "";
-
     records.forEach(function(rec, i){
       var pageId = "docPage" + i;
       printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId));
-      var dataUrl = makeQrDataUrl(rec.qr);
-      var img = document.getElementById(pageId + "_qrImg");
-      if(img && dataUrl) img.src = dataUrl;
     });
   }
 
-  // Đọc mã QR ĐỒNG BỘ ngay sau khi khởi tạo — QRCode.js vẽ vào <canvas> ngay
-  // trong hàm khởi tạo (không cần chờ), nên có thể đọc toDataURL() ngay lập tức.
-  function makeQrDataUrl(text){
-    if(!text || typeof QRCode === "undefined") return null;
-    try{
-      var holder = document.createElement("div");
-      $("qrHiddenHost").appendChild(holder);
-      new QRCode(holder, { text: text, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
-      var canvas = holder.querySelector("canvas");
-      var img = holder.querySelector("img");
-      var url = canvas ? canvas.toDataURL("image/png") : (img ? img.src : null);
-      return url || null;
-    }catch(err){
-      console.error("Lỗi tạo mã QR:", err);
-      return null;
-    }
+  // Ảnh QR được tạo bằng dịch vụ QR công khai, miễn phí (api.qrserver.com) —
+  // chỉ cần một thẻ <img> trỏ thẳng tới URL kèm nội dung mã QR, trình duyệt tự
+  // tải ảnh như ảnh bình thường. Cách này không cần thư viện JS, không cần
+  // canvas, không có vấn đề timing hay lỗi encode tiếng Việt (được xử lý qua
+  // encodeURIComponent chuẩn), nên chạy ổn định trên mọi trình duyệt/khi in.
+  // Lưu ý: cần có kết nối Internet tại thời điểm in để tải ảnh QR, và nội dung
+  // cột "QR" (mã tra cứu, không phải CCCD hay dữ liệu nhạy cảm) sẽ được gửi
+  // tới máy chủ của api.qrserver.com để tạo ảnh.
+  function qrImageUrl(text){
+    if(!text) return null;
+    return "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" + encodeURIComponent(text);
   }
 
   function renderDocPage(rec, pageId){
-    var gioiTinhTxt = rec.gioiTinh || "..............";
+    var gioiTinhTxt = rec.gioiTinh || "";
     return '' +
     '<div class="doc-page" id="'+pageId+'">' +
       '<div class="doc-topline"><span>Mẫu số 2</span></div>' +
@@ -753,27 +741,27 @@
         '<div class="c2">[02]. Giới tính: <span class="fillval">'+escapeHtml(gioiTinhTxt)+'</span></div>' +
       '</div>' +
       '<div class="doc-row">' +
-        '<div class="c1">[03]. Ngày, tháng, năm sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "......./......./..........")+'</span></div>' +
+        '<div class="c1">[03]. Ngày, tháng, năm sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "")+'</span></div>' +
         '<div class="c2">[04]. Dân tộc: Kinh</div>' +
       '</div>' +
       '<div class="doc-row">' +
         '<div class="c1">[05]. Quốc tịch: Việt Nam</div>' +
-        '<div class="c2">[06]. Số CCCD/ĐDCN/Hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "..................")+'</span></div>' +
+        '<div class="c2">[06]. Số CCCD/ĐDCN/Hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "")+'</span></div>' +
       '</div>' +
-      '<div class="doc-para">[07]. Điện thoại: <span class="fillval">'+escapeHtml(rec.dienThoai || "..................................")+'</span> &nbsp;&nbsp; [08]. Email (nếu có): <span class="fillval">'+escapeHtml(rec.email || "..................................")+'</span></div>' +
-      '<div class="doc-para">[09]. Nơi đăng ký khám, chữa bệnh ban đầu: <span class="fillval">'+escapeHtml(rec.noiKCB || "..................................")+'</span></div>' +
+      '<div class="doc-para">[07]. Điện thoại: <span class="fillval">'+escapeHtml(rec.dienThoai || "")+'</span> &nbsp;&nbsp; [08]. Email (nếu có): <span class="fillval">'+escapeHtml(rec.email || "")+'</span></div>' +
+      '<div class="doc-para">[09]. Nơi đăng ký khám, chữa bệnh ban đầu: <span class="fillval">'+escapeHtml(rec.noiKCB || "")+'</span></div>' +
       '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính:</div>' +
-      '<div class="doc-para doc-indent">[10.1]. Nhận thẻ bảo hiểm y tế bản điện tử: - VssID<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Email<span class="checkbox"></span></div>' +
-      '<div class="doc-para doc-indent">[10.2]. Nhận thẻ bảo hiểm y tế bản giấy, địa chỉ:<span class="checkbox"></span></div>' +
-      '<div class="doc-para doc-indent2">[10.2a]. Số nhà, đường/phố, thôn/xóm: <span class="fillval">'+escapeHtml(rec.ap || "..................................")+'</span></div>' +
-      '<div class="doc-row doc-indent2">' +
+      '<div class="doc-para">[10.1]. Nhận thẻ bảo hiểm y tế bản điện tử: - VssID<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Email<span class="checkbox"></span></div>' +
+      '<div class="doc-para">[10.2]. Nhận thẻ bảo hiểm y tế bản giấy, địa chỉ:<span class="checkbox"></span></div>' +
+      '<div class="doc-para">[10.2a]. Số nhà, đường/phố, thôn/xóm: <span class="fillval">'+escapeHtml(rec.ap || "")+'</span></div>' +
+      '<div class="doc-row">' +
         '<div class="c1">[10.2b]. Xã, phường: <span class="fillval">'+escapeHtml(rec.xa)+'</span></div>' +
         '<div class="c2">[10.2c]. Tỉnh: <span class="fillval">'+escapeHtml(rec.tinh)+'</span></div>' +
       '</div>' +
 
       '<div class="doc-section">II. Điều chỉnh thông tin ghi trên thẻ bảo hiểm y tế</div>' +
       '<div class="doc-para">[11]. Nội dung đề nghị điều chỉnh: <span class="fillval">'+escapeHtml(rec.noiDungHoan || "")+'</span></div>' +
-      '<div class="doc-para">[12]. Hồ sơ kèm theo (nếu có): <span class="fillval">'+escapeHtml(rec.hoSoKemTheo || "..................................")+'</span></div>' +
+      '<div class="doc-para">[12]. Hồ sơ kèm theo (nếu có): <span class="fillval">'+escapeHtml(rec.hoSoKemTheo || "")+'</span></div>' +
 
       '<div class="doc-footer-grid">' +
         '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
@@ -785,7 +773,7 @@
       '</div>' +
 
       '<div class="doc-qr-block">' +
-        '<img id="'+pageId+'_qrImg" alt="QR" onerror="this.style.display=\'none\'">' +
+        (rec.qr ? '<img src="'+qrImageUrl(rec.qr)+'" alt="QR" width="200" height="200" onerror="this.style.display=\'none\'">' : '') +
         '<div class="doc-qr-code">'+escapeHtml(rec.inDuoiQR)+'</div>' +
       '</div>' +
     '</div>';
