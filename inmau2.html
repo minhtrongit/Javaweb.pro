@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tờ khai BHYT — Mẫu số 2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --ink:#182430;
+    --ink-soft:#4b5966;
+    --paper:#f2f4f6;
+    --panel:#ffffff;
+    --line:#d7dde2;
+    --navy:#153152;
+    --navy-deep:#0f2440;
+    --seal:#a8402e;
+    --seal-dark:#8a3123;
+    --sage:#3c6b5e;
+    --sage-bg:#e7f0ec;
+    --focus:#2f6fb0;
+    --radius:6px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- App shell ---------- */
+  .app-header{
+    background:var(--navy-deep);
+    color:#fff;
+    padding:18px 28px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--seal);
+  }
+  .app-header h1{
+    font-size:1.25rem;
+    margin:0;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .app-header .subtitle{
+    color:#b9c6d3;
+    font-size:.85rem;
+    margin-top:2px;
+  }
+  .app-header .title-block{display:flex; flex-direction:column;}
+  .header-actions{display:flex; gap:10px; align-items:center;}
+
+  .icon-btn{
+    background:transparent;
+    border:1px solid rgba(255,255,255,.35);
+    color:#fff;
+    border-radius:var(--radius);
+    padding:8px 14px;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.12);}
+
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:22px 28px 60px;
+  }
+
+  /* ---------- Settings panel ---------- */
+  .settings-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:4px solid var(--focus);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    margin-bottom:20px;
+    display:none;
+  }
+  .settings-panel.open{display:block;}
+  .settings-panel label{
+    font-size:.82rem;
+    color:var(--ink-soft);
+    display:block;
+    margin-bottom:6px;
+  }
+  .settings-row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;}
+  .settings-row > div{flex:1; min-width:260px;}
+  .settings-panel input[type=text]{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:.9rem;
+  }
+  .settings-hint{font-size:.78rem; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .search-box{
+    flex:1;
+    min-width:240px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:11px 14px 11px 38px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:.95rem;
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%23768290" stroke-width="2"><circle cx="6.5" cy="6.5" r="5"/><line x1="10.5" y1="10.5" x2="15" y2="15"/></svg>') no-repeat 12px center;
+  }
+  select, .btn{
+    font-size:.9rem;
+    padding:10px 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-seal{
+    background:var(--seal);
+    color:#fff;
+    border-color:var(--seal);
+    font-weight:600;
+  }
+  .btn-seal:hover{background:var(--seal-dark);}
+  .btn-ghost{background:#fff; color:var(--ink);}
+  .btn-ghost:hover{background:#f1f3f5;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+
+  .status-line{
+    font-size:.82rem;
+    color:var(--ink-soft);
+    margin:2px 2px 14px;
+  }
+  .status-line strong{color:var(--ink);}
+  .status-line.error{color:var(--seal-dark);}
+
+  /* ---------- Table ---------- */
+  .table-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  table{width:100%; border-collapse:collapse; font-size:.87rem;}
+  thead th{
+    text-align:left;
+    background:#eef1f4;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid #edf0f2;
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#f7fafc; cursor:pointer;}
+  tbody tr.selected{background:var(--sage-bg);}
+  td.name-cell{font-weight:600;}
+  td.muted{color:var(--ink-soft);}
+  .empty-state{
+    padding:48px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .chk{width:34px; text-align:center;}
+
+  /* ---------- Detail drawer ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(15,24,40,.45);
+    display:none;
+    z-index:40;
+  }
+  .overlay.open{display:block;}
+  .drawer{
+    position:fixed;
+    top:0; right:0; bottom:0;
+    width:min(520px, 100%);
+    background:#fff;
+    box-shadow:-8px 0 30px rgba(0,0,0,.18);
+    transform:translateX(100%);
+    transition:transform .22s ease;
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+  }
+  .drawer.open{transform:translateX(0);}
+  .drawer-head{
+    padding:18px 22px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    background:#fafbfc;
+  }
+  .drawer-head h2{margin:0; font-size:1.05rem;}
+  .drawer-head .sub{font-size:.8rem; color:var(--ink-soft); margin-top:3px;}
+  .drawer-close{background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--ink-soft); line-height:1;}
+  .drawer-body{padding:18px 22px; overflow-y:auto; flex:1;}
+  .drawer-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; background:#fafbfc;}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:.78rem;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field label .req{color:var(--seal); margin-left:2px;}
+  .field input, .field select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:.92rem;
+  }
+  .field.readonly input{background:#f5f6f8; color:var(--ink-soft);}
+  .field-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 14px;}
+  .section-label{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--sage);
+    font-weight:700;
+    margin:18px 0 8px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .section-label:first-child{margin-top:0; padding-top:0; border-top:none;}
+
+  /* ---------- Screen-only ---------- */
+  #printRoot{display:none;}
+
+  /* ---------- Print document styling ---------- */
+  .doc-page{
+    width:210mm;
+    min-height:297mm;
+    padding:18mm 20mm;
+    margin:0 auto 14px;
+    background:#fff;
+    font-family:"Times New Roman", Times, serif;
+    font-size:13.5pt;
+    line-height:1.42;
+    color:#111;
+  }
+  .doc-topline{display:flex; justify-content:flex-end;}
+  .doc-topline span{font-style:italic;}
+  .doc-national{text-align:center; font-weight:700; margin-top:2mm;}
+  .doc-national .line2{font-weight:700;}
+  .doc-national .rule{
+    width:34mm; border-bottom:1px solid #111; margin:1mm auto 0;
+  }
+  .doc-title{text-align:center; font-weight:700; margin-top:6mm; font-size:15pt;}
+  .doc-title .line2{margin-top:1mm;}
+  .doc-masothe{text-align:center; margin-top:3mm;}
+  .doc-section{font-weight:700; margin-top:6mm;}
+  .doc-row{margin-top:3mm; display:flex; gap:6mm;}
+  .doc-row .c1{flex:1.4;}
+  .doc-row .c2{flex:1;}
+  .doc-para{margin-top:3mm;}
+  .doc-indent{margin-left:6mm;}
+  .doc-indent2{margin-left:12mm;}
+  .fillval{border-bottom:1px dotted #333; padding:0 2px; font-weight:600;}
+  .checkbox{display:inline-block; width:4mm; height:4mm; border:1px solid #111; vertical-align:-0.7mm; margin:0 1mm;}
+  .doc-footer-grid{
+    margin-top:10mm;
+    display:flex;
+    justify-content:space-between;
+  }
+  .doc-footer-grid .left, .doc-footer-grid .right{width:48%; text-align:center;}
+  .doc-footer-grid .right .date-line{font-style:italic; margin-bottom:16mm;}
+  .doc-sign-name{margin-top:20mm; font-weight:700;}
+  .doc-qr-block{margin-top:8mm; text-align:center;}
+  .doc-qr-block img{width:26mm; height:26mm;}
+  .doc-qr-code{font-size:9pt; margin-top:1mm; letter-spacing:.2px;}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printRoot, #printRoot *{visibility:visible;}
+    #printRoot{display:block; position:absolute; left:0; top:0; width:100%;}
+    .doc-page{margin:0; box-shadow:none; page-break-after:always;}
+    .doc-page:last-child{page-break-after:auto;}
+  }
+
+  @media (max-width:720px){
+    main{padding:16px;}
+    .field-grid{grid-template-columns:1fr;}
+    thead th:nth-child(n+5), tbody td:nth-child(n+5){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="title-block">
+    <h1>Tờ khai BHYT — Mẫu số 2</h1>
+    <div class="subtitle">Tra cứu dữ liệu &amp; in tờ khai tham gia / điều chỉnh thông tin BHYT</div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btnSettings">⚙ Kết nối dữ liệu</button>
+  </div>
+</header>
+
+<main>
+
+  <section class="settings-panel" id="settingsPanel">
+    <div class="settings-row">
+      <div>
+        <label for="scriptUrl">URL Apps Script Web App (kết thúc bằng /exec)</label>
+        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      </div>
+      <button class="btn btn-primary" id="btnSaveUrl">Lưu &amp; tải dữ liệu</button>
+    </div>
+    <div class="settings-hint">
+      Dữ liệu được đọc trực tiếp từ Google Sheet thông qua Google Apps Script (xem file <code>apps-script.gs</code> đi kèm) —
+      trang này không cần máy chủ riêng. URL được lưu trong trình duyệt của bạn (localStorage), không gửi cho ai khác.
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Tìm theo họ tên, mã số BHXH, CCCD, mã điểm thu…">
+    </div>
+    <select id="filterDiemThu"><option value="">Tất cả mã điểm thu</option></select>
+    <button class="btn btn-ghost" id="btnReload">↻ Tải lại</button>
+    <button class="btn btn-seal" id="btnBatchPrint" disabled>🖨 In đã chọn (0)</button>
+  </div>
+
+  <div class="status-line" id="statusLine">Chưa kết nối dữ liệu — bấm “⚙ Kết nối dữ liệu” để nhập URL Apps Script.</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="chk"><input type="checkbox" id="chkAll"></th>
+          <th>Họ và tên</th>
+          <th>Mã số BHXH</th>
+          <th>Mã điểm thu</th>
+          <th>Giới tính</th>
+          <th>Ngày sinh</th>
+          <th>Ấp</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="7" class="empty-state">Chưa có dữ liệu để hiển thị.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ============ DETAIL / EDIT DRAWER ============ -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div>
+      <h2 id="drawerName">—</h2>
+      <div class="sub" id="drawerSub">—</div>
+    </div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot">
+    <button class="btn btn-ghost" id="drawerCancel">Đóng</button>
+    <button class="btn btn-seal" id="drawerPrint">🖨 Xem trước &amp; In / Xuất PDF</button>
+  </div>
+</div>
+
+<!-- ============ PRINT-ONLY AREA ============ -->
+<div id="printRoot"></div>
+<div id="qrHiddenHost" style="position:fixed; left:-9999px; top:-9999px;"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "bhyt_mau2_script_url";
+  var state = { rows: [], filtered: [], selected: new Set() };
+
+  // -------- DOM refs --------
+  var $ = function(id){ return document.getElementById(id); };
+  var settingsPanel = $("settingsPanel");
+  var scriptUrlInput = $("scriptUrl");
+  var statusLine = $("statusLine");
+  var tableBody = $("tableBody");
+  var searchInput = $("searchInput");
+  var filterDiemThu = $("filterDiemThu");
+  var chkAll = $("chkAll");
+  var btnBatchPrint = $("btnBatchPrint");
+
+  // -------- Settings panel --------
+  $("btnSettings").addEventListener("click", function(){
+    settingsPanel.classList.toggle("open");
+  });
+  scriptUrlInput.value = localStorage.getItem(STORAGE_KEY) || "";
+  $("btnSaveUrl").addEventListener("click", function(){
+    var url = scriptUrlInput.value.trim();
+    if(!url){ alert("Vui lòng nhập URL Apps Script Web App."); return; }
+    localStorage.setItem(STORAGE_KEY, url);
+    settingsPanel.classList.remove("open");
+    loadData();
+  });
+  $("btnReload").addEventListener("click", loadData);
+
+  // -------- JSONP loader (tránh lỗi CORS với GitHub Pages) --------
+  function jsonp(url){
+    return new Promise(function(resolve, reject){
+      var cbName = "__bhytCb" + Date.now();
+      var script = document.createElement("script");
+      var timeout = setTimeout(function(){
+        cleanup();
+        reject(new Error("Hết thời gian chờ phản hồi từ Apps Script."));
+      }, 15000);
+
+      function cleanup(){
+        clearTimeout(timeout);
+        delete window[cbName];
+        if(script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[cbName] = function(payload){
+        cleanup();
+        resolve(payload);
+      };
+      script.onerror = function(){
+        cleanup();
+        reject(new Error("Không gọi được URL Apps Script. Kiểm tra lại URL và quyền truy cập (Anyone)."));
+      };
+      var sep = url.indexOf("?") === -1 ? "?" : "&";
+      script.src = url + sep + "callback=" + cbName + "&_=" + Date.now();
+      document.body.appendChild(script);
+    });
+  }
+
+  function loadData(){
+    var url = localStorage.getItem(STORAGE_KEY);
+    if(!url){
+      statusLine.textContent = "Chưa kết nối dữ liệu — bấm “⚙ Kết nối dữ liệu” để nhập URL Apps Script.";
+      return;
+    }
+    statusLine.className = "status-line";
+    statusLine.textContent = "Đang tải dữ liệu…";
+    jsonp(url).then(function(payload){
+      if(!payload || payload.ok === false){
+        throw new Error((payload && payload.error) || "Phản hồi không hợp lệ.");
+      }
+      state.rows = payload.data || [];
+      state.selected.clear();
+      buildFilterOptions();
+      applyFilters();
+      statusLine.className = "status-line";
+      statusLine.innerHTML = "Đã tải <strong>" + state.rows.length + "</strong> bản ghi.";
+    }).catch(function(err){
+      statusLine.className = "status-line error";
+      statusLine.textContent = "Lỗi: " + err.message;
+    });
+  }
+
+  function buildFilterOptions(){
+    var codes = Array.from(new Set(state.rows.map(function(r){ return r["Mã điểm thu"]; }).filter(Boolean)));
+    codes.sort();
+    filterDiemThu.innerHTML = '<option value="">Tất cả mã điểm thu</option>' +
+      codes.map(function(c){ return '<option value="'+escapeAttr(c)+'">'+escapeHtml(c)+'</option>'; }).join("");
+  }
+
+  // -------- Search / filter --------
+  searchInput.addEventListener("input", applyFilters);
+  filterDiemThu.addEventListener("change", applyFilters);
+
+  function applyFilters(){
+    var q = searchInput.value.trim().toLowerCase();
+    var diem = filterDiemThu.value;
+    state.filtered = state.rows.filter(function(r){
+      if(diem && String(r["Mã điểm thu"]||"") !== diem) return false;
+      if(!q) return true;
+      var hay = [r["Họ và tên người tham gia"], r["Mã số BHXH"], r["CCCD"], r["Mã điểm thu"]]
+        .map(function(v){ return String(v||"").toLowerCase(); }).join(" | ");
+      return hay.indexOf(q) !== -1;
+    });
+    renderTable();
+  }
+
+  // -------- Table rendering --------
+  function renderTable(){
+    if(!state.filtered.length){
+      tableBody.innerHTML = '<tr><td colspan="7" class="empty-state">Không có bản ghi phù hợp.</td></tr>';
+      updateBatchButton();
+      return;
+    }
+    tableBody.innerHTML = state.filtered.map(function(r, i){
+      var key = rowKey(r);
+      var checked = state.selected.has(key) ? "checked" : "";
+      return '<tr data-idx="'+i+'">' +
+        '<td class="chk" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-key="'+escapeAttr(key)+'" '+checked+'></td>' +
+        '<td class="name-cell">'+escapeHtml(r["Họ và tên người tham gia"])+'</td>' +
+        '<td>'+escapeHtml(r["Mã số BHXH"])+'</td>' +
+        '<td class="muted">'+escapeHtml(r["Mã điểm thu"])+'</td>' +
+        '<td class="muted">'+escapeHtml(cleanRef(r["Giới tính"]))+'</td>' +
+        '<td class="muted">'+escapeHtml(cleanRef(r["Ngày sinh"]))+'</td>' +
+        '<td class="muted">'+escapeHtml(cleanRef(r["ấp"]))+'</td>' +
+      '</tr>';
+    }).join("");
+
+    Array.prototype.forEach.call(tableBody.querySelectorAll("tr[data-idx]"), function(tr){
+      tr.addEventListener("click", function(){
+        openDrawer(state.filtered[Number(tr.dataset.idx)]);
+      });
+    });
+    Array.prototype.forEach.call(tableBody.querySelectorAll(".row-chk"), function(cb){
+      cb.addEventListener("change", function(){
+        var key = cb.dataset.key;
+        if(cb.checked) state.selected.add(key); else state.selected.delete(key);
+        cb.closest("tr").classList.toggle("selected", cb.checked);
+        updateBatchButton();
+      });
+    });
+    updateBatchButton();
+  }
+
+  chkAll.addEventListener("change", function(){
+    state.filtered.forEach(function(r){
+      var key = rowKey(r);
+      if(chkAll.checked) state.selected.add(key); else state.selected.delete(key);
+    });
+    renderTable();
+  });
+
+  function updateBatchButton(){
+    btnBatchPrint.textContent = "🖨 In đã chọn (" + state.selected.size + ")";
+    btnBatchPrint.disabled = state.selected.size === 0;
+  }
+
+  function rowKey(r){
+    return String(r["Mã số BHXH"] || "") + "|" + String(r["Họ và tên người tham gia"] || "");
+  }
+  function cleanRef(v){
+    if(v === undefined || v === null) return "";
+    var s = String(v);
+    return s.indexOf("#REF!") !== -1 ? "" : s;
+  }
+  function escapeHtml(v){
+    return cleanRef(v).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function escapeAttr(v){ return escapeHtml(v); }
+
+  // -------- Detail drawer --------
+  var overlay = $("overlay"), drawer = $("drawer"), drawerBody = $("drawerBody");
+  var currentRecord = null;
+
+  function openDrawer(row){
+    currentRecord = buildEditableRecord(row);
+    $("drawerName").textContent = currentRecord.hoTen || "(chưa có tên)";
+    $("drawerSub").textContent = "Mã số BHXH: " + (currentRecord.maSoBHXH || "—");
+    drawerBody.innerHTML = renderForm(currentRecord);
+    bindFormInputs();
+    overlay.classList.add("open");
+    drawer.classList.add("open");
+  }
+  function closeDrawer(){
+    overlay.classList.remove("open");
+    drawer.classList.remove("open");
+  }
+  overlay.addEventListener("click", closeDrawer);
+  $("drawerClose").addEventListener("click", closeDrawer);
+  $("drawerCancel").addEventListener("click", closeDrawer);
+
+  function buildEditableRecord(row){
+    return {
+      hoTen: cleanRef(row["Họ và tên người tham gia"]),
+      maSoBHXH: cleanRef(row["Mã số BHXH"]),
+      gioiTinh: cleanRef(row["Giới tính"]),
+      ngaySinh: cleanRef(row["Ngày sinh"]),
+      cccd: cleanRef(row["CCCD"]),
+      ap: cleanRef(row["ấp"]),
+      xa: cleanRef(row["xã"]) || "Tân Nhuận Đông",
+      tinh: cleanRef(row["tỉnh"]) || "Đồng Tháp",
+      noiDungHoan: cleanRef(row["Nội dung hoàn"]),
+      qr: cleanRef(row["QR"]),
+      inDuoiQR: cleanRef(row["INDuoiQR"]) || cleanRef(row["QR"]),
+      dienThoai: "",
+      email: "",
+      noiKCB: "",
+      hoSoKemTheo: "",
+      ngayKeKhai: ""
+    };
+  }
+
+  function renderForm(rec){
+    function f(id, label, val, required){
+      return '<div class="field"><label>'+label+(required?' <span class="req">*</span>':'')+'</label>' +
+        '<input type="text" id="f_'+id+'" value="'+escapeAttr(val)+'"></div>';
+    }
+    return ''
+      + '<div class="section-label">Thông tin người tham gia</div>'
+      + '<div class="field-grid">'
+        + f("hoTen","Họ và tên",rec.hoTen,true)
+        + f("gioiTinh","Giới tính",rec.gioiTinh,true)
+      + '</div>'
+      + '<div class="field-grid">'
+        + f("ngaySinh","Ngày, tháng, năm sinh",rec.ngaySinh,true)
+        + f("cccd","Số CCCD/ĐDCN/Hộ chiếu",rec.cccd,true)
+      + '</div>'
+      + f("maSoBHXH","Mã số bảo hiểm xã hội",rec.maSoBHXH,true)
+      + '<div class="field-grid">'
+        + f("dienThoai","Điện thoại",rec.dienThoai,false)
+        + f("email","Email (nếu có)",rec.email,false)
+      + '</div>'
+      + f("noiKCB","Nơi đăng ký khám, chữa bệnh ban đầu",rec.noiKCB,false)
+
+      + '<div class="section-label">Địa chỉ nhận thẻ BHYT bản giấy</div>'
+      + f("ap","Số nhà, đường/phố, thôn/xóm (ấp)",rec.ap,false)
+      + '<div class="field-grid">'
+        + f("xa","Xã, phường",rec.xa,false)
+        + f("tinh","Tỉnh",rec.tinh,false)
+      + '</div>'
+
+      + '<div class="section-label">Điều chỉnh thông tin trên thẻ BHYT</div>'
+      + f("noiDungHoan","Nội dung đề nghị điều chỉnh",rec.noiDungHoan,false)
+      + f("hoSoKemTheo","Hồ sơ kèm theo (nếu có)",rec.hoSoKemTheo,false)
+
+      + '<div class="section-label">Mã tra cứu / QR</div>'
+      + f("qr","Chuỗi mã QR",rec.qr,false)
+      + f("inDuoiQR","Dòng chữ in dưới QR",rec.inDuoiQR,false)
+
+      + '<div class="section-label">Ngày kê khai</div>'
+      + f("ngayKeKhai","Ngày… tháng… năm 2026 (để trống nếu ghi tay)",rec.ngayKeKhai,false);
+  }
+
+  function bindFormInputs(){
+    Object.keys(currentRecord).forEach(function(key){
+      var el = $("f_" + key);
+      if(!el) return;
+      el.addEventListener("input", function(){ currentRecord[key] = el.value; });
+    });
+  }
+
+  // -------- Print rendering --------
+  $("drawerPrint").addEventListener("click", function(){
+    renderPrintDocs([currentRecord]).then(function(){
+      window.print();
+    });
+  });
+
+  btnBatchPrint.addEventListener("click", function(){
+    var keys = Array.from(state.selected);
+    var records = state.rows
+      .filter(function(r){ return keys.indexOf(rowKey(r)) !== -1; })
+      .map(buildEditableRecord);
+    if(!records.length) return;
+    renderPrintDocs(records).then(function(){
+      window.print();
+    });
+  });
+
+  function renderPrintDocs(records){
+    var printRoot = $("printRoot");
+    var qrHost = $("qrHiddenHost");
+    printRoot.innerHTML = "";
+    qrHost.innerHTML = "";
+
+    var qrJobs = records.map(function(rec, i){
+      var pageId = "docPage" + i;
+      printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId));
+      return makeQrDataUrl(rec.qr).then(function(dataUrl){
+        var img = document.getElementById(pageId + "_qrImg");
+        if(img && dataUrl) img.src = dataUrl;
+      });
+    });
+    return Promise.all(qrJobs);
+  }
+
+  function makeQrDataUrl(text){
+    return new Promise(function(resolve){
+      if(!text || typeof QRCode === "undefined"){ resolve(null); return; }
+      var holder = document.createElement("div");
+      $("qrHiddenHost").appendChild(holder);
+      new QRCode(holder, { text: text, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
+      setTimeout(function(){
+        var img = holder.querySelector("img");
+        var canvas = holder.querySelector("canvas");
+        var url = img && img.src ? img.src : (canvas ? canvas.toDataURL("image/png") : null);
+        resolve(url);
+      }, 60);
+    });
+  }
+
+  function renderDocPage(rec, pageId){
+    var gioiTinhTxt = rec.gioiTinh || "..............";
+    return '' +
+    '<div class="doc-page" id="'+pageId+'">' +
+      '<div class="doc-topline"><span>Mẫu số 2</span></div>' +
+      '<div class="doc-national">' +
+        'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM' +
+        '<div class="line2">Độc lập - Tự do - Hạnh phúc</div>' +
+        '<div class="rule"></div>' +
+      '</div>' +
+      '<div class="doc-title">' +
+        'TỜ KHAI' +
+        '<div class="line2">THAM GIA, ĐIỀU CHỈNH THÔNG TIN BẢO HIỂM Y TẾ</div>' +
+      '</div>' +
+      '<div class="doc-masothe">Mã số bảo hiểm y tế: <span class="fillval">'+escapeHtml(rec.maSoBHXH)+'</span></div>' +
+
+      '<div class="doc-section">I. Đăng ký tham gia bảo hiểm y tế lần đầu</div>' +
+      '<div class="doc-row">' +
+        '<div class="c1">[01]. Họ và tên: <span class="fillval">'+escapeHtml(rec.hoTen)+'</span></div>' +
+        '<div class="c2">[02]. Giới tính: <span class="fillval">'+escapeHtml(gioiTinhTxt)+'</span></div>' +
+      '</div>' +
+      '<div class="doc-row">' +
+        '<div class="c1">[03]. Ngày, tháng, năm sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "......./......./..........")+'</span></div>' +
+        '<div class="c2">[04]. Dân tộc: Kinh</div>' +
+      '</div>' +
+      '<div class="doc-row">' +
+        '<div class="c1">[05]. Quốc tịch: Việt Nam</div>' +
+        '<div class="c2">[06]. Số CCCD/ĐDCN/Hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "..................")+'</span></div>' +
+      '</div>' +
+      '<div class="doc-para">[07]. Điện thoại: <span class="fillval">'+escapeHtml(rec.dienThoai || "..................................")+'</span> &nbsp;&nbsp; [08]. Email (nếu có): <span class="fillval">'+escapeHtml(rec.email || "..................................")+'</span></div>' +
+      '<div class="doc-para">[09]. Nơi đăng ký khám, chữa bệnh ban đầu: <span class="fillval">'+escapeHtml(rec.noiKCB || "..................................")+'</span></div>' +
+      '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính:</div>' +
+      '<div class="doc-para doc-indent">[10.1]. Nhận thẻ bảo hiểm y tế bản điện tử: - VssID<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Email<span class="checkbox"></span></div>' +
+      '<div class="doc-para doc-indent">[10.2]. Nhận thẻ bảo hiểm y tế bản giấy, địa chỉ:<span class="checkbox"></span></div>' +
+      '<div class="doc-para doc-indent2">[10.2a]. Số nhà, đường/phố, thôn/xóm: <span class="fillval">'+escapeHtml(rec.ap || "..................................")+'</span></div>' +
+      '<div class="doc-row doc-indent2">' +
+        '<div class="c1">[10.2b]. Xã, phường: <span class="fillval">'+escapeHtml(rec.xa)+'</span></div>' +
+        '<div class="c2">[10.2c]. Tỉnh: <span class="fillval">'+escapeHtml(rec.tinh)+'</span></div>' +
+      '</div>' +
+
+      '<div class="doc-section">II. Điều chỉnh thông tin ghi trên thẻ bảo hiểm y tế</div>' +
+      '<div class="doc-para">[11]. Nội dung đề nghị điều chỉnh: <span class="fillval">'+escapeHtml(rec.noiDungHoan || "")+'</span></div>' +
+      '<div class="doc-para">[12]. Hồ sơ kèm theo (nếu có): <span class="fillval">'+escapeHtml(rec.hoSoKemTheo || "..................................")+'</span></div>' +
+
+      '<div class="doc-footer-grid">' +
+        '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
+        '<div class="right">' +
+          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm 2026")+'</div>' +
+          '<strong>NGƯỜI KÊ KHAI</strong>' +
+          '<div class="doc-sign-name">'+escapeHtml(rec.hoTen)+'</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="doc-qr-block">' +
+        '<img id="'+pageId+'_qrImg" alt="QR" onerror="this.style.display=\'none\'">' +
+        '<div class="doc-qr-code">'+escapeHtml(rec.inDuoiQR)+'</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // -------- Init --------
+  if(scriptUrlInput.value){ loadData(); } else { settingsPanel.classList.add("open"); }
+})();
+</script>
+</body>
+</html>
