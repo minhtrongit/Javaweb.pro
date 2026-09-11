@@ -255,6 +255,9 @@
 
   /* ---------- Screen-only ---------- */
   #printRoot{display:none;}
+  /* Trạng thái tạm thời để ĐO chiều cao thật của nội dung trước khi in (xem
+     hàm applyFitScaling) — hiện off-screen, không lộ ra màn hình. */
+  #printRoot.measuring{display:block !important; position:fixed !important; left:-9999px !important; top:0 !important;}
 
   /* ---------- Print document styling ---------- */
   .doc-page{
@@ -270,6 +273,10 @@
     line-height:1.22;
     color:#111;
   }
+  /* Khi bật "Vừa 1 trang": ép khung cố định đúng 1 trang A4 và cắt phần dư —
+     JS (applyFitScaling) sẽ co nhỏ .doc-content lại vừa khít trước khi cắt. */
+  .doc-page-fit{height:297mm; overflow:hidden;}
+  .doc-content{transform-origin:top left;}
   .doc-topline{display:flex; justify-content:flex-end;}
   .doc-topline span{font-style:italic;}
   .doc-national{text-align:center; font-weight:700; margin-top:0;}
@@ -304,15 +311,18 @@
   .fillval-line{display:block; width:100%; height:5mm; border-bottom:1px dotted #333;}
   /* Khối QR neo cố định ở góc dưới-trái của trang in */
   .doc-qr-block{position:absolute; left:15mm; bottom:8mm; text-align:left;}
-  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:19pt;}
+  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:14pt;}
   .doc-qr-img{width:22mm; height:22mm;}
   .doc-qr-img svg{display:block; width:100%; height:100%;}
   .doc-qr-code{font-size:11pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
 
   @media print{
-    body *{visibility:hidden;}
-    #printRoot, #printRoot *{visibility:visible;}
-    #printRoot{display:block; position:absolute; left:0; top:0; width:100%;}
+    /* Ẩn hẳn (display:none) mọi phần tử khác ngoài #printRoot khi in — dùng
+       display:none thay vì visibility:hidden vì visibility:hidden vẫn chiếm
+       chỗ trong bố cục trang, khiến các phần tử ẩn (đặc biệt là bảng dữ liệu
+       nhiều dòng) tạo ra các trang trắng thừa phía sau khi in ít trang. */
+    body > *:not(#printRoot){display:none !important;}
+    #printRoot{display:block;}
     .doc-page{margin:0; box-shadow:none; page-break-after:always;}
     .doc-page:last-child{page-break-after:auto;}
   }
@@ -332,6 +342,7 @@
     <div class="subtitle">Tra cứu dữ liệu &amp; in tờ khai tham gia / điều chỉnh thông tin BHYT</div>
   </div>
   <div class="header-actions">
+    <button class="icon-btn" id="btnNewBlank">🆕 In mới</button>
     <button class="icon-btn" id="btnPickExcel">📄 Chọn file Excel</button>
     <button class="icon-btn" id="btnSettings">⚙ Kết nối Google Sheet</button>
   </div>
@@ -382,10 +393,11 @@
           <th>Giới tính</th>
           <th>Ngày sinh</th>
           <th>Ấp</th>
+          <th class="chk" title="Tự co vừa khít 1 trang khi in">Vừa 1 trang</th>
         </tr>
       </thead>
       <tbody id="tableBody">
-        <tr><td colspan="7" class="empty-state">Chưa có dữ liệu để hiển thị.</td></tr>
+        <tr><td colspan="8" class="empty-state">Chưa có dữ liệu để hiển thị.</td></tr>
       </tbody>
     </table>
   </div>
@@ -443,7 +455,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   "use strict";
 
   var STORAGE_KEY = "bhyt_mau2_script_url";
-  var state = { rows: [], filtered: [], selected: new Set() };
+  var state = { rows: [], filtered: [], selected: new Set(), fitOff: new Set() };
 
   // -------- DOM refs --------
   var $ = function(id){ return document.getElementById(id); };
@@ -625,13 +637,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   // -------- Table rendering --------
   function renderTable(){
     if(!state.filtered.length){
-      tableBody.innerHTML = '<tr><td colspan="7" class="empty-state">Không có bản ghi phù hợp.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="8" class="empty-state">Không có bản ghi phù hợp.</td></tr>';
       updateBatchButton();
       return;
     }
     tableBody.innerHTML = state.filtered.map(function(r, i){
       var key = rowKey(r);
       var checked = state.selected.has(key) ? "checked" : "";
+      var fitChecked = state.fitOff.has(key) ? "" : "checked";
       return '<tr data-idx="'+i+'">' +
         '<td class="chk" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-key="'+escapeAttr(key)+'" '+checked+'></td>' +
         '<td class="name-cell">'+escapeHtml(r["Họ và tên người tham gia"])+'</td>' +
@@ -640,6 +653,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         '<td class="muted">'+escapeHtml(cleanRef(r["Giới tính"]))+'</td>' +
         '<td class="muted">'+escapeHtml(cleanRef(r["Ngày sinh"]))+'</td>' +
         '<td class="muted">'+escapeHtml(cleanRef(r["ấp"]))+'</td>' +
+        '<td class="chk" onclick="event.stopPropagation()"><input type="checkbox" class="fit-chk" data-key="'+escapeAttr(key)+'" '+fitChecked+'></td>' +
       '</tr>';
     }).join("");
 
@@ -654,6 +668,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         if(cb.checked) state.selected.add(key); else state.selected.delete(key);
         cb.closest("tr").classList.toggle("selected", cb.checked);
         updateBatchButton();
+      });
+    });
+    Array.prototype.forEach.call(tableBody.querySelectorAll(".fit-chk"), function(cb){
+      cb.addEventListener("change", function(){
+        var key = cb.dataset.key;
+        if(cb.checked) state.fitOff.delete(key); else state.fitOff.add(key);
       });
     });
     updateBatchButton();
@@ -702,12 +722,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   var overlay = $("overlay"), drawer = $("drawer"), drawerBody = $("drawerBody");
   var currentRecord = null;
 
-  function openDrawer(row){
-    currentRecord = buildEditableRecord(row);
-    $("drawerName").textContent = currentRecord.hoTen || "(chưa có tên)";
-    $("drawerSub").textContent = "Mã số BHXH: " + (currentRecord.maSoBHXH || "—");
+  function openDrawer(row, isBlank){
+    currentRecord = isBlank ? buildBlankRecord() : buildEditableRecord(row);
+    $("drawerName").textContent = isBlank ? "Tờ khai mới (nhập tay)" : (currentRecord.hoTen || "(chưa có tên)");
+    $("drawerSub").textContent = isBlank ? "Điền các trường cần thiết, để trống nếu không có" : ("Mã số BHXH: " + (currentRecord.maSoBHXH || "—"));
     drawerBody.innerHTML = renderForm(currentRecord);
-    bindFormInputs();
+    bindFormInputs(isBlank);
     overlay.classList.add("open");
     drawer.classList.add("open");
   }
@@ -718,6 +738,13 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   overlay.addEventListener("click", closeDrawer);
   $("drawerClose").addEventListener("click", closeDrawer);
   $("drawerCancel").addEventListener("click", closeDrawer);
+
+  // Nút "In mới": mở khung nhập liệu HOÀN TOÀN TRỐNG, không gắn với dòng dữ
+  // liệu nào từ Excel/Google Sheet — người dùng tự gõ tay mọi trường, trường
+  // nào không nhập sẽ để trống khi in (không báo lỗi, không tự điền mặc định).
+  $("btnNewBlank").addEventListener("click", function(){
+    openDrawer({}, true);
+  });
 
   function buildEditableRecord(row){
     return {
@@ -733,12 +760,46 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       qr: cleanRef(row["QR"]),
       inDuoiQR: cleanRef(row["INDuoiQR"]) || cleanRef(row["QR"]),
       stt: cleanRef(getCol(row, "STT")),
+      fitOnePage: !state.fitOff.has(rowKey(row)),
       dienThoai: "",
       email: "",
       noiKCB: "",
       hoSoKemTheo: "",
       ngayKeKhai: ""
     };
+  }
+
+  // Bản ghi trống cho nút "In mới" — một số trường có giá trị mặc định sẵn
+  // (vẫn sửa/xoá được bình thường trong khung nhập), các trường còn lại để
+  // trống hẳn cho người dùng tự gõ tay.
+  function buildBlankRecord(){
+    return {
+      hoTen: "",
+      maSoBHXH: "",
+      gioiTinh: "",
+      ngaySinh: "",
+      cccd: "",
+      ap: "",
+      xa: "",
+      tinh: "Đồng Tháp",
+      noiDungHoan: "Đề nghị cấp lại thẻ BHYT do thay đổi thông tin",
+      qr: "",
+      inDuoiQR: "",
+      stt: "",
+      fitOnePage: true,
+      dienThoai: "",
+      email: "",
+      noiKCB: "",
+      hoSoKemTheo: "",
+      ngayKeKhai: defaultKeKhaiDate()
+    };
+  }
+
+  // "Sa Đéc, ngày <hôm nay> tháng <hôm nay> năm <hôm nay>" — lấy đúng ngày
+  // hiện tại của máy người dùng tại thời điểm mở khung "In mới".
+  function defaultKeKhaiDate(){
+    var d = new Date();
+    return "Sa Đéc, ngày " + d.getDate() + " tháng " + (d.getMonth() + 1) + " năm " + d.getFullYear();
   }
 
   function renderForm(rec){
@@ -785,12 +846,25 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       + '</div>';
   }
 
-  function bindFormInputs(){
+  function bindFormInputs(isBlank){
     Object.keys(currentRecord).forEach(function(key){
       var el = $("f_" + key);
       if(!el) return;
       el.addEventListener("input", function(){ currentRecord[key] = el.value; });
     });
+
+    // Chế độ "In mới": khi người dùng gõ số CCCD, tự đồng bộ luôn vào ô mã QR
+    // (người dùng vẫn có thể tự sửa lại ô mã QR sau đó nếu muốn khác đi).
+    if(isBlank){
+      var cccdEl = $("f_cccd");
+      var qrEl = $("f_qr");
+      if(cccdEl && qrEl){
+        cccdEl.addEventListener("input", function(){
+          qrEl.value = cccdEl.value;
+          currentRecord.qr = cccdEl.value;
+        });
+      }
+    }
   }
 
   // -------- Print rendering --------
@@ -861,6 +935,37 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       var pageId = "docPage" + i;
       printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId));
     });
+    applyFitScaling(records);
+  }
+
+  // "Vừa 1 trang": đo chiều cao thật (chưa co) của phần nội dung từng trang
+  // và, nếu vượt quá 1 trang A4, tự động co nhỏ lại (transform:scale) để vừa
+  // khít trong đúng 1 trang — QR và STT ở góc vẫn giữ nguyên kích thước vì
+  // nằm ngoài phần được co. Chạy ĐỒNG BỘ (không setTimeout/Promise) để không
+  // phá vỡ yêu cầu window.print() phải gọi ngay trong thao tác click.
+  function applyFitScaling(records){
+    var printRoot = $("printRoot");
+    printRoot.classList.add("measuring");
+    records.forEach(function(rec, i){
+      if(!rec.fitOnePage) return;
+      var pageId = "docPage" + i;
+      var page = document.getElementById(pageId);
+      var content = document.getElementById(pageId + "_content");
+      if(!page || !content) return;
+
+      content.style.transform = "none";
+      var cs = window.getComputedStyle(page);
+      var padTop = parseFloat(cs.paddingTop) || 0;
+      var padBottom = parseFloat(cs.paddingBottom) || 0;
+      var available = page.clientHeight - padTop - padBottom;
+      var natural = content.scrollHeight;
+
+      if(available > 0 && natural > available){
+        var scale = available / natural;
+        content.style.transform = "scale(" + scale + ")";
+      }
+    });
+    printRoot.classList.remove("measuring");
   }
 
   // Mã QR được tạo HOÀN TOÀN ở phía trình duyệt bằng thư viện đã nhúng sẵn ở
@@ -894,8 +999,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
   function renderDocPage(rec, pageId){
     var gioiTinhTxt = rec.gioiTinh || "";
+    var pageClass = "doc-page" + (rec.fitOnePage ? " doc-page-fit" : "");
     return '' +
-    '<div class="doc-page" id="'+pageId+'">' +
+    '<div class="'+pageClass+'" id="'+pageId+'">' +
+      '<div class="doc-content" id="'+pageId+'_content">' +
       '<div class="doc-topline"><span>Mẫu số 2</span></div>' +
       '<div class="doc-national">' +
         'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM' +
@@ -941,10 +1048,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       '<div class="doc-footer-grid">' +
         '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
         '<div class="right">' +
-          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "Sa Đéc, ngày…… tháng…… năm 2026")+'</div>' +
+          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
           '<strong>NGƯỜI KÊ KHAI</strong>' +
           '<div class="doc-sign-name">&nbsp;</div>' +
         '</div>' +
+      '</div>' +
       '</div>' +
 
       '<div class="doc-qr-block">' +
