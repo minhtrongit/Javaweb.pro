@@ -289,12 +289,9 @@
   .doc-para{margin-top:1.5mm;}
   .fillval{border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-width:6mm; display:inline-block;}
   .fillval-tel{min-width:38mm;}
-  .doc-fillrow{display:flex; align-items:flex-end; gap:2px;}
+  .doc-fillrow{display:flex; align-items:flex-end; gap:2mm;}
   .doc-fillrow .flabel{white-space:nowrap;}
   .doc-fillrow .fillrest{flex:1; border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-height:1em;}
-  .fillval-phone{border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-width:42mm; display:inline-block;}
-  .doc-fillrow{display:flex; align-items:flex-end; gap:2mm;}
-  .doc-fillrow .fillval-fill{flex:1; border-bottom:1px dotted #333; padding:0 2px; font-weight:600; height:1em;}
   .checkbox{display:inline-block; width:4mm; height:4mm; border:1px solid #111; vertical-align:-0.7mm; margin:0 1mm;}
   .doc-footer-grid{
     margin-top:5mm;
@@ -307,10 +304,10 @@
   .fillval-line{display:block; width:100%; height:5mm; border-bottom:1px dotted #333;}
   /* Khối QR neo cố định ở góc dưới-trái của trang in */
   .doc-qr-block{position:absolute; left:15mm; bottom:8mm; text-align:left;}
-  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:11pt;}
+  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:19pt;}
   .doc-qr-img{width:22mm; height:22mm;}
   .doc-qr-img svg{display:block; width:100%; height:100%;}
-  .doc-qr-code{font-size:9pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
+  .doc-qr-code{font-size:11pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
 
   @media print{
     body *{visibility:hidden;}
@@ -883,6 +880,18 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     }
   }
 
+  // Dòng "nhãn: nội dung" có thể dài — 2 kiểu hiển thị:
+  //  - Có dữ liệu: chảy chữ bình thường như đoạn văn, dài quá thì tự xuống
+  //    dòng và canh thẳng lề trái với chính nhãn (không đẩy lên, không thụt
+  //    theo vị trí giá trị).
+  //  - Trống: hiện gạch chấm kéo dài hết phần còn lại của dòng để viết tay.
+  function fillLine(label, value){
+    if(value){
+      return '<div class="doc-para">'+label+' <strong>'+escapeHtml(value)+'</strong></div>';
+    }
+    return '<div class="doc-para doc-fillrow"><span class="flabel">'+label+'</span><span class="fillrest"></span></div>';
+  }
+
   function renderDocPage(rec, pageId){
     var gioiTinhTxt = rec.gioiTinh || "";
     return '' +
@@ -913,11 +922,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         '<div class="c2">[05]. Quốc tịch: Việt Nam</div>' +
       '</div>' +
       '<div class="doc-para">[07]. Điện thoại: <span class="fillval fillval-tel">'+escapeHtml(rec.dienThoai || "")+'</span> &nbsp;&nbsp; [08]. Email (nếu có): <span class="fillval">'+escapeHtml(rec.email || "")+'</span></div>' +
-      '<div class="doc-para doc-fillrow"><span class="flabel">[09]. Nơi đăng ký khám, chữa bệnh ban đầu:</span><span class="fillrest">'+escapeHtml(rec.noiKCB || "")+'</span></div>' +
+      fillLine("[09]. Nơi đăng ký khám, chữa bệnh ban đầu:", rec.noiKCB) +
       '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính:</div>' +
       '<div class="doc-para">[10.1]. Nhận thẻ bảo hiểm y tế bản điện tử: - VssID<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Email<span class="checkbox"></span></div>' +
       '<div class="doc-para">[10.2]. Nhận thẻ bảo hiểm y tế bản giấy, địa chỉ:<span class="checkbox"></span></div>' +
-      '<div class="doc-para">[10.2a]. Số nhà, đường/phố, thôn/xóm: <span class="fillval">'+escapeHtml(rec.ap || "")+'</span></div>' +
+      fillLine("[10.2a]. Số nhà, đường/phố, thôn/xóm:", rec.ap) +
       '<div class="doc-row">' +
         '<div class="c1">[10.2b]. Xã, phường: <span class="fillval">'+escapeHtml(rec.xa)+'</span></div>' +
         '<div class="c2">[10.2c]. Tỉnh: <span class="fillval">'+escapeHtml(rec.tinh)+'</span></div>' +
@@ -927,14 +936,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       '<div class="doc-para">[11]. Nội dung đề nghị điều chỉnh: <span class="fillval">'+escapeHtml(rec.noiDungHoan || "")+'</span></div>' +
       '<div class="doc-para"><span class="fillval-line"></span></div>' +
       '<div class="doc-para"><span class="fillval-line"></span></div>' +
-      '<div class="doc-para doc-fillrow"><span class="flabel">[12]. Hồ sơ kèm theo (nếu có):</span><span class="fillrest">'+escapeHtml(rec.hoSoKemTheo || "")+'</span></div>' +
+      fillLine("[12]. Hồ sơ kèm theo (nếu có):", rec.hoSoKemTheo) +
 
       '<div class="doc-footer-grid">' +
         '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
         '<div class="right">' +
-          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
+          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "Sa Đéc, ngày…… tháng…… năm 2026")+'</div>' +
           '<strong>NGƯỜI KÊ KHAI</strong>' +
-          '<div class="doc-sign-name">'+escapeHtml(rec.hoTen)+'</div>' +
+          '<div class="doc-sign-name">&nbsp;</div>' +
         '</div>' +
       '</div>' +
 
