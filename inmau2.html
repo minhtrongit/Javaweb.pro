@@ -311,7 +311,7 @@
   .fillval-line{display:block; width:100%; height:5mm; border-bottom:1px dotted #333;}
   /* Khối QR neo cố định ở góc dưới-trái của trang in */
   .doc-qr-block{position:absolute; left:15mm; bottom:8mm; text-align:left;}
-  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:19pt;}
+  .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:14pt;}
   .doc-qr-img{width:22mm; height:22mm;}
   .doc-qr-img svg{display:block; width:100%; height:100%;}
   .doc-qr-code{font-size:11pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
@@ -565,12 +565,17 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     };
     reader.onload = function(e){
       try{
-        var wb = XLSX.read(new Uint8Array(e.target.result), { type: "array", cellDates: true });
+        // cellDates:false — đọc số serial gốc, xử lý ngày tháng thủ công bên
+        // dưới (fixDateOnlyColumns) để tránh mọi sai số do đối tượng Date.
+        var wb = XLSX.read(new Uint8Array(e.target.result), { type: "array", cellDates: false });
         var sheetName = wb.SheetNames.find(function(n){
           return n.trim().toLowerCase() === "sheet2";
         }) || wb.SheetNames[0];
+        var ws = wb.Sheets[sheetName];
 
-        var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" })
+        fixDateOnlyColumns(ws, ["Ngày sinh"]);
+
+        var rows = XLSX.utils.sheet_to_json(ws, { defval: "" })
           .map(normalizeExcelRow);
 
         localStorage.removeItem(STORAGE_KEY); // ưu tiên dữ liệu Excel vừa chọn
@@ -595,19 +600,74 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     reader.readAsArrayBuffer(file);
   });
 
+  // Chuyển các cột NGÀY (ví dụ "Ngày sinh") khi ô Excel là kiểu Date thật
+  // (không phải text) sang chuỗi dd/mm/yyyy bằng cách đọc THẲNG số serial gốc
+  // của ô (cell.v) và quy đổi bằng XLSX.SSF.parse_date_code — hoàn toàn không
+  // qua đối tượng Date của JavaScript ở bất kỳ bước nào.
+  //
+  // LÝ DO: đối tượng Date mà thư viện tạo ra khi cellDates:true có thể lệch
+  // vài chục giây do sai số dấu phẩy động khi quy đổi số serial của Excel
+  // (ra 23:59:30 thay vì đúng 00:00:00) — độ lệch nhỏ này có thể đẩy ngày lùi
+  // qua nửa đêm, gây sai LỆCH CẢ NGÀY. Lỗi này xảy ra bất kể đọc bằng giờ địa
+  // phương hay UTC, vì nó nằm ngay trong bước tạo đối tượng Date, không phải
+  // do cách đọc ra sau đó. Đọc thẳng số serial + tính bằng số nguyên thì
+  // không có bước quy đổi giờ nào cả nên luôn chính xác tuyệt đối.
+  function fixDateOnlyColumns(ws, columnNames){
+    if(!ws || !ws["!ref"]) return;
+    var range = XLSX.utils.decode_range(ws["!ref"]);
+    var wanted = columnNames.map(function(n){ return n.trim().toLowerCase(); });
+    var targetCols = [];
+
+    var headerRow = range.s.r;
+    for(var c = range.s.c; c <= range.e.c; c++){
+      var hCell = ws[XLSX.utils.encode_cell({ r: headerRow, c: c })];
+      var label = (hCell && hCell.v != null) ? String(hCell.v).trim().toLowerCase() : "";
+      if(wanted.indexOf(label) !== -1) targetCols.push(c);
+    }
+    if(!targetCols.length) return;
+
+    for(var r = headerRow + 1; r <= range.e.r; r++){
+      targetCols.forEach(function(c){
+        var addr = XLSX.utils.encode_cell({ r: r, c: c });
+        var cell = ws[addr];
+        // Chỉ xử lý ô KIỂU SỐ (t === "n") — tức ô ngày thật của Excel.
+        // Ô đã là text (dd/mm/yyyy do người dùng gõ) có t === "s", bỏ qua,
+        // giữ nguyên như cũ (đúng theo mô tả: "để kiểu text thì tạo đúng").
+        if(!cell || cell.t !== "n" || typeof cell.v !== "number") return;
+        var dc = XLSX.SSF.parse_date_code(cell.v);
+        if(!dc) return;
+        var dd = String(dc.d).padStart(2, "0");
+        var mm = String(dc.m).padStart(2, "0");
+        cell.v = dd + "/" + mm + "/" + dc.y;
+        cell.t = "s";
+        delete cell.w;
+        delete cell.z;
+      });
+    }
+  }
+
   function normalizeExcelRow(row){
     var out = {};
     Object.keys(row).forEach(function(key){
       var v = row[key];
+      // Phòng hờ: nếu vẫn còn sót giá trị kiểu Date (cột khác ngoài danh sách
+      // đã xử lý ở fixDateOnlyColumns), quy đổi bằng UTC để giảm rủi ro lệch
+      // ngày — dù cách chắc chắn nhất vẫn là fixDateOnlyColumns ở trên.
       out[key] = (v instanceof Date) ? formatDateVN(v) : v;
     });
     return out;
   }
 
   function formatDateVN(d){
-    var dd = String(d.getDate()).padStart(2, "0");
-    var mm = String(d.getMonth() + 1).padStart(2, "0");
-    return dd + "/" + mm + "/" + d.getFullYear();
+    // QUAN TRỌNG: dùng getUTCDate/getUTCMonth/getUTCFullYear (KHÔNG dùng
+    // getDate/getMonth/getFullYear theo giờ địa phương). Thư viện đọc Excel
+    // (SheetJS) khi cellDates:true trả về ngày dạng mốc UTC 00:00:00 — nếu
+    // đọc bằng giờ địa phương, tuỳ múi giờ của máy/trình duyệt mà ngày có
+    // thể bị lùi/tới 1 ngày so với ngày thật trong file Excel. Đọc bằng UTC
+    // luôn cho đúng ngày gốc, bất kể máy đang ở múi giờ nào.
+    var dd = String(d.getUTCDate()).padStart(2, "0");
+    var mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return dd + "/" + mm + "/" + d.getUTCFullYear();
   }
 
   function buildFilterOptions(){
@@ -765,7 +825,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       email: "",
       noiKCB: "",
       hoSoKemTheo: "",
-      ngayKeKhai: ""
+      // Nếu file/sheet có cột "ngayky" (hoặc "Ngày ký") có dữ liệu thì dùng
+      // luôn giá trị đó cho dòng ngày kê khai; trống thì để trống — khi in,
+      // dòng trống sẽ tự hiện "……, ngày…… tháng…… năm ……" để ghi tay.
+      ngayKeKhai: cleanRef(getCol(row, "ngayky")) || cleanRef(getCol(row, "ngày ký"))
     };
   }
 
@@ -1048,7 +1111,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       '<div class="doc-footer-grid">' +
         '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
         '<div class="right">' +
-          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "Sa Đéc, ngày…… tháng…… năm 2026")+'</div>' +
+          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
           '<strong>NGƯỜI KÊ KHAI</strong>' +
           '<div class="doc-sign-name">&nbsp;</div>' +
         '</div>' +
