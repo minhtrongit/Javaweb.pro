@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét QR CCCD — Đã sửa lỗi ảnh & DB</title>
+    <title>Quét QR CCCD — Lưu dữ liệu vĩnh viễn</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -35,7 +35,12 @@
             0% { transform: translateY(0); }
             100% { transform: translateY(100%); }
         }
-        video { background: #1a1a1a; object-fit: cover; width: 100%; height: 100%; }
+        video {
+            background: #1a1a1a;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
@@ -45,7 +50,7 @@
                 <i class="fa-solid fa-id-card-clip text-2xl"></i>
                 <h1 class="text-xl font-bold">Quét QR CCCD</h1>
             </div>
-            <p class="text-center text-blue-100 mt-2">💾 Lưu vĩnh viễn | 📷 Quét ảnh & Camera | 📄 Xuất Excel</p>
+            <p class="text-center text-blue-100 mt-2">💾 Dữ liệu lưu trên máy | 🔍 Zoom 3x | 📋 Hàng loạt</p>
         </div>
     </header>
 
@@ -58,12 +63,12 @@
             
             <div class="grid md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block mb-2 font-medium text-gray-700">📷 Chọn ảnh từ máy</label>
+                    <label class="block mb-2 font-medium text-gray-700">Chọn ảnh từ máy</label>
                     <div class="border-2 border-dashed border-blue-200 rounded-xl p-3 text-center hover:border-primary cursor-pointer bg-light/50">
                         <input type="file" id="fileInput" accept="image/*" class="hidden" multiple>
                         <label for="fileInput" class="cursor-pointer block py-3">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-primary mb-1"></i>
-                            <p class="text-gray-600 text-sm">Kéo thả hoặc nhấn chọn ảnh</p>
+                            <p class="text-gray-600 text-sm">Kéo thả hoặc chọn ảnh</p>
                         </label>
                     </div>
                     
@@ -83,18 +88,18 @@
                 </div>
 
                 <div>
-                    <p class="font-medium text-gray-700 mb-2">Khung xem</p>
+                    <p class="font-medium text-gray-700 mb-2">Khung quét</p>
                     <div class="relative rounded-xl overflow-hidden aspect-square border-2 border-gray-200 bg-gray-800">
                         <video id="video" playsinline class="hidden absolute inset-0"></video>
                         <canvas id="canvas" class="hidden absolute inset-0 w-full h-full"></canvas>
-                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-contain bg-gray-900" alt="Xem ảnh QR">
+                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-contain bg-gray-100" alt="Xem trước QR">
                         
                         <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
                             <i class="fa-solid fa-qrcode text-5xl mb-2"></i>
                             <p class="text-sm">Mở camera hoặc chọn ảnh</p>
                         </div>
                         <div id="statusText" class="hidden absolute inset-0 flex items-center justify-center text-white bg-black/60 z-10">
-                            <span id="statusMsg">Đang xử lý...</span>
+                            <span id="statusMsg">Đang khởi tạo...</span>
                         </div>
                         <div id="scanLine" class="hidden absolute top-0 left-0 right-0 h-1 bg-blue-500 scan-border z-20"></div>
                     </div>
@@ -118,7 +123,7 @@
             </div>
         </section>
 
-        <!-- Danh sách dữ liệu -->
+        <!-- Danh sách dữ liệu có lưu vĩnh viễn -->
         <section id="listSection" class="hidden bg-white rounded-2xl shadow p-5 mb-6">
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <h2 class="text-lg font-semibold text-secondary flex items-center gap-2">
@@ -138,46 +143,42 @@
         </section>
 
         <section class="bg-green-50 rounded-xl p-4 text-sm border border-green-200">
-            <h3 class="font-semibold text-green-700 mb-2">💾 Dữ liệu lưu trên thiết bị</h3>
+            <h3 class="font-semibold text-green-700 mb-2">💾 Dữ liệu được lưu trên máy này</h3>
             <ul class="text-xs text-gray-600 space-y-1">
-                <li>✅ Đóng/mở lại trang → vẫn giữ nguyên dữ liệu</li>
-                <li>✅ Quét từ ảnh & camera đều lưu chung</li>
+                <li>✅ Đóng/mở trang lại vẫn giữ nguyên dữ liệu</li>
+                <li>✅ Không cần internet, không gửi dữ liệu lên server</li>
                 <li>⚠️ Xóa dữ liệu trình duyệt sẽ mất danh sách</li>
-                <li>💡 Nên Xuất Excel để sao lưu dữ liệu quan trọng</li>
+                <li>📄 Cột Excel: Nội dung gốc → Số CCCD → Họ tên → Ngày sinh → ...</li>
             </ul>
         </section>
     </main>
 
     <footer class="bg-dark text-gray-400 py-4 mt-8 text-center text-sm">
-        <p>© 2026 Quét QR CCCD — Lưu trên máy</p>
+        <p>© 2026 Quét QR CCCD — Lưu trên thiết bị</p>
     </footer>
 
     <script>
         // ==============================================
-        // PHẦN 1: INDEXEDDB - SỬA LẠI HOÀN CHỈNH
+        // PHẦN 1: INDEXEDDB - LƯU DỮ LIỆU VĨNH VIỄN TRÊN ĐIỆN THOẠI
         // ==============================================
         const DB_NAME = 'QRCCCD_DB';
-        const DB_VERSION = 2; // Tăng version để reset cấu trúc
+        const DB_VERSION = 1;
         const STORE_NAME = 'records';
         
         let db = null;
         let savedRecords = [];
 
-        // Mở & khởi tạo CSDL
+        // Mở cơ sở dữ liệu
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
                 
                 request.onupgradeneeded = (e) => {
                     db = e.target.result;
-                    // Xóa store cũ nếu có cấu trúc khác
-                    if (db.objectStoreNames.contains(STORE_NAME)) {
-                        db.deleteObjectStore(STORE_NAME);
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('rawQR', 'rawQR', { unique: true });
                     }
-                    // Tạo mới với khóa tự tăng
-                    const store = db.createObjectStore(STORE_NAME, { keyPath: '_id', autoIncrement: true });
-                    store.createIndex('rawQR', 'rawQR', { unique: true });
-                    console.log('✅ CSDL đã khởi tạo');
                 };
                 
                 request.onsuccess = (e) => {
@@ -186,12 +187,12 @@
                 };
                 
                 request.onerror = (e) => {
-                    reject(new Error('Không mở được CSDL: ' + e.target.error?.message));
+                    reject(new Error('Không mở được cơ sở dữ liệu'));
                 };
             });
         }
 
-        // Lưu 1 bản ghi
+        // Lưu 1 bản ghi vào DB
         function addRecordToDB(record) {
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -201,48 +202,40 @@
                     record._id = e.target.result;
                     resolve(record);
                 };
-                request.onerror = (e) => {
-                    console.log('Trùng hoặc lỗi:', e.target.error);
-                    reject(e.target.error);
-                };
+                request.onerror = () => reject(new Error('Đã tồn tại mã này'));
             });
         }
 
-        // Lấy TẤT CẢ bản ghi
-        function loadAllRecords() {
+        // Lấy tất cả bản ghi từ DB
+        function getAllRecords() {
             return new Promise((resolve) => {
-                if (!db) return resolve([]);
                 const tx = db.transaction(STORE_NAME, 'readonly');
                 const store = tx.objectStore(STORE_NAME);
                 const request = store.getAll();
-                request.onsuccess = () => {
-                    console.log('📂 Đã tải', request.result?.length, 'bản ghi');
-                    resolve(request.result || []);
-                };
-                request.onerror = () => resolve([]);
+                request.onsuccess = () => resolve(request.result || []);
             });
         }
 
         // Xóa 1 bản ghi
-        function deleteRecordByID(id) {
+        function deleteRecord(id) {
             return new Promise((resolve) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).delete(id);
-                tx.oncomplete = () => resolve();
+                tx.oncomplete = resolve;
             });
         }
 
-        // Xóa TOÀN BỘ
-        function clearAllFromDB() {
+        // Xóa TOÀN BỘ dữ liệu
+        function clearAllRecords() {
             return new Promise((resolve) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).clear();
-                tx.oncomplete = () => resolve();
+                tx.oncomplete = resolve;
             });
         }
 
         // ==============================================
-        // PHẦN 2: CÁC BIẾN & TRƯỜNG DỮ LIỆU
+        // PHẦN 2: CÁC BIẾN & PHẦN TỬ
         // ==============================================
         const FIELD_MAP = [
             { key: 'rawQR', label: 'Nội dung QR gốc' },
@@ -286,27 +279,23 @@
         let cooldownTimer = null;
 
         // ==============================================
-        // PHẦN 3: KHỞI TẠO - TẢI DỮ LIỆU KHI MỞ TRANG
+        // PHẦN 3: KHỞI TẠO & TẢI DỮ LIỆU KHI MỞ TRANG
         // ==============================================
         async function initApp() {
             try {
-                showStatus('Đang khởi tạo dữ liệu...');
                 await openDB();
-                savedRecords = await loadAllRecords();
+                showStatus('Đang tải dữ liệu...');
+                savedRecords = await getAllRecords();
                 renderAllRecords();
                 updateCount();
-                savedRecords.length && listSection.classList.remove('hidden');
                 hideStatus();
-                console.log('✅ Ứng dụng sẵn sàng');
             } catch (err) {
-                console.error('❌ Lỗi CSDL:', err);
-                showStatus('Lỗi lưu dữ liệu: ' + err.message);
-                alert('Lưu ý: Trình duyệt không hỗ trợ lưu dữ liệu vĩnh viễn.\nChi tiết: ' + err.message);
+                alert('Lưu ý: Trình duyệt không hỗ trợ lưu dữ liệu vĩnh viễn.\n' + err.message);
             }
         }
 
         // ==============================================
-        // PHẦN 4: CAMERA
+        // PHẦN 4: CAMERA & QUÉT
         // ==============================================
         async function startCamera() {
             try {
@@ -316,8 +305,8 @@
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
-                        width: { min: 640, ideal: 1280 },
-                        height: { min: 480, ideal: 720 }
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 }
                     },
                     audio: false
                 });
@@ -325,7 +314,6 @@
                 video.srcObject = stream;
                 video.classList.remove('hidden');
                 placeholder.classList.add('hidden');
-                previewImg.classList.add('hidden');
                 
                 await new Promise(resolve => {
                     video.onloadedmetadata = () => { video.play(); resolve(); };
@@ -337,7 +325,7 @@
                 scanLine.classList.remove('hidden');
                 zoomControl.classList.remove('hidden');
                 scanBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Dừng quét';
-                scanBtn.classList.add('bg-red-500');
+                scanBtn.classList.add('bg-red-500', 'hover:bg-red-600');
 
                 const track = stream.getVideoTracks()[0];
                 videoCap = track.getCapabilities();
@@ -352,11 +340,14 @@
                 } else {
                     zoomValue.textContent = '3.0x';
                     video.style.transform = 'scale(3.0)';
+                    video.style.transformOrigin = 'center center';
                 }
 
                 scanInterval = setInterval(scanFrame, 400);
             } catch (err) {
-                alert('❌ Không mở được camera:\n' + err.message);
+                showStatus('Lỗi: ' + err.message);
+                alert('Không mở được camera:\n' + err.message + 
+                    '\n👉 Mở bằng Chrome/Cốc Cốc/Edge & cho phép quyền Camera');
                 stopCamera();
             }
         }
@@ -394,58 +385,40 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0);
-            const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imgData.data, canvas.width, canvas.height);
             if (code) handleQRResult(code.data);
         }
 
-        // ==============================================
-        // PHẦN 5: QUÉT TỪ ẢNH - ĐÃ SỬA LỖI
-        // ==============================================
-        fileInput.addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files);
-            if (!files.length) return;
-            
-            for (const file of files) {
-                showStatus('Đang đọc ảnh...');
-                
-                const img = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const image = new Image();
-                        image.onload = () => resolve(image);
-                        image.src = ev.target.result;
+        fileInput.addEventListener('change', (e) => {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = new Image();
+                    img.onload = () => {
+                        previewImg.src = ev.target.result;
+                        previewImg.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                        setTimeout(() => decodeQRFromImage(img), 150);
                     };
-                    reader.readAsDataURL(file);
-                });
-
-                // Hiển thị ảnh xem trước
-                previewImg.src = img.src;
-                previewImg.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                video.classList.add('hidden');
-
-                // Quét mã QR
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.naturalWidth || img.width;
-                canvas.height = img.naturalHeight || img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imgData.data, canvas.width, canvas.height);
-                
-                if (code) {
-                    await handleQRResult(code.data);
-                } else {
-                    alert('⚠️ Không tìm thấy mã QR trong ảnh: ' + file.name);
-                }
-            }
-            
-            hideStatus();
-            fileInput.value = ''; // Reset để chọn lại cùng ảnh cũng được
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         });
 
+        function decodeQRFromImage(img) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            ctx.drawImage(img, 0, 0);
+            const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+            if (code) handleQRResult(code.data);
+            else alert('⚠️ Không tìm thấy mã QR');
+        }
+
         // ==============================================
-        // PHẦN 6: XỬ LÝ DỮ LIỆU & LƯU VÀO DB
+        // PHẦN 5: XỬ LÝ DỮ LIỆU QR & LƯU VÀO DB
         // ==============================================
         async function handleQRResult(rawText) {
             if (rawText === lastScannedText) return;
@@ -466,7 +439,7 @@
                 address: parts[8] || '',
                 features: parts[9] || '',
                 issuePlace: parts[10] || '',
-                scannedAt: new Date().toISOString()
+                createdAt: new Date().toISOString()
             };
 
             // Kiểm tra trùng
@@ -480,10 +453,10 @@
                 savedRecords.unshift(record);
                 renderAllRecords();
                 updateCount();
-                listSection.classList.remove('hidden');
                 showToast(`✅ Đã lưu: ${record.fullName || record.idNum || 'Mã mới'}`);
+                listSection.classList.remove('hidden');
             } catch (err) {
-                console.log('Bỏ qua bản ghi trùng');
+                // Trùng lặp thì bỏ qua
                 return;
             }
 
@@ -497,7 +470,7 @@
         }
 
         // ==============================================
-        // PHẦN 7: HIỂN THỊ DANH SÁCH
+        // PHẦN 6: HIỂN THỊ & QUẢN LÝ DANH SÁCH
         // ==============================================
         function renderAllRecords() {
             entryList.innerHTML = '';
@@ -519,18 +492,18 @@
                         <div class="break-all text-gray-500 mt-1">Nội dung gốc: ${record.rawQR.substring(0, 70)}${record.rawQR.length > 70 ? '...' : ''}</div>
                     </div>
                 </div>
-                <button class="del-btn text-gray-400 hover:text-red-500 p-1" title="Xóa">
+                <button class="del-btn text-gray-400 hover:text-red-500 p-1" title="Xóa mục này">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             `;
             
             card.querySelector('.del-btn').onclick = async () => {
                 if (!confirm('Xóa mục này?')) return;
-                await deleteRecordByID(record._id);
+                await deleteRecord(record._id);
                 savedRecords = savedRecords.filter(r => r._id !== record._id);
                 renderAllRecords();
                 updateCount();
-                savedRecords.length || listSection.classList.add('hidden');
+                if (!savedRecords.length) listSection.classList.add('hidden');
                 showToast('Đã xóa ✅');
             };
             
@@ -544,9 +517,9 @@
         // Nút XÓA TOÀN BỘ
         clearAllBtn.addEventListener('click', async () => {
             if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
-            if (!confirm('⚠️ XÓA TOÀN BỘ dữ liệu?\nKhông thể phục hồi!')) return;
+            if (!confirm('⚠️ XÓA TOÀN BỘ dữ liệu?\nKhông thể phục hồi sau khi xóa!')) return;
             
-            await clearAllFromDB();
+            await clearAllRecords();
             savedRecords = [];
             entryList.innerHTML = '';
             listSection.classList.add('hidden');
@@ -554,7 +527,7 @@
             showToast('Đã xóa toàn bộ ✅');
         });
 
-        // Nút Xuất Excel
+        // Nút xuất Excel
         exportAllBtn.addEventListener('click', () => {
             if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
             
@@ -574,18 +547,23 @@
                 { wch: 25 }, { wch: 25 }
             ];
             
-            const fn = `Danh_sach_CCCD_${savedRecords.length}_${new Date().toISOString().slice(0,10)}.xlsx`;
+            const fn = `Danh_sach_CCCD_${savedRecords.length}_ban_${new Date().toISOString().slice(0,10)}.xlsx`;
             XLSX.writeFile(wb, fn);
         });
 
-        // Nút Camera
+        // Nút mở camera
         scanBtn.addEventListener('click', () => stream ? stopCamera() : startCamera());
 
         // ==============================================
-        // TRỢ GIÚP
+        // PHẦN 7: TRỢ GIÚP HIỂN THỊ
         // ==============================================
-        function showStatus(msg) { statusMsg.textContent = msg; statusText.classList.remove('hidden'); }
-        function hideStatus() { statusText.classList.add('hidden'); }
+        function showStatus(msg) {
+            statusMsg.textContent = msg;
+            statusText.classList.remove('hidden');
+        }
+        function hideStatus() {
+            statusText.classList.add('hidden');
+        }
         function showToast(msg) {
             const t = Object.assign(document.createElement('div'), {
                 className: 'fixed top-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-2 rounded-lg z-50 text-sm',
@@ -595,7 +573,7 @@
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2000);
         }
 
-        // KHỞI ĐỘNG
+        // KHỞI ĐỘNG ỨNG DỤNG
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
