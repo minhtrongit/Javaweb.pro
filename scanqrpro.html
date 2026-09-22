@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quét QR CCCD — Lưu dữ liệu vĩnh viễn</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F52BA',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        light: '#EFF6FF',
+                        dark: '#1E293B'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .scan-border {
+            background: linear-gradient(90deg, transparent, #0F52BA, transparent);
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+        video {
+            background: #1a1a1a;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
+    <header class="bg-gradient-to-r from-primary to-[#2563eb] text-white py-5 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-center gap-3">
+                <i class="fa-solid fa-id-card-clip text-2xl"></i>
+                <h1 class="text-xl font-bold">Quét QR CCCD</h1>
+            </div>
+            <p class="text-center text-blue-100 mt-2">💾 Dữ liệu lưu trên máy | 🔍 Zoom 3x | 📋 Hàng loạt</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Khu vực Quét -->
+        <section class="bg-white rounded-2xl shadow p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-primary">
+                <i class="fa-solid fa-qrcode"></i> Quét mã QR
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block mb-2 font-medium text-gray-700">Chọn ảnh từ máy</label>
+                    <div class="border-2 border-dashed border-blue-200 rounded-xl p-3 text-center hover:border-primary cursor-pointer bg-light/50">
+                        <input type="file" id="fileInput" accept="image/*" class="hidden" multiple>
+                        <label for="fileInput" class="cursor-pointer block py-3">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-primary mb-1"></i>
+                            <p class="text-gray-600 text-sm">Kéo thả hoặc chọn ảnh</p>
+                        </label>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button id="scanBtn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-camera"></i> Mở Camera Quét
+                        </button>
+                    </div>
+
+                    <div id="zoomControl" class="hidden mt-4 p-3 bg-blue-50 rounded-xl">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Độ phóng đại: <span id="zoomValue" class="font-bold text-primary">3.0x</span>
+                        </label>
+                        <input type="range" id="zoomSlider" min="1.0" max="5.0" step="0.1" value="3.0" 
+                            class="w-full h-2 bg-blue-200 rounded-lg accent-primary">
+                    </div>
+                </div>
+
+                <div>
+                    <p class="font-medium text-gray-700 mb-2">Khung quét</p>
+                    <div class="relative rounded-xl overflow-hidden aspect-square border-2 border-gray-200 bg-gray-800">
+                        <video id="video" playsinline class="hidden absolute inset-0"></video>
+                        <canvas id="canvas" class="hidden absolute inset-0 w-full h-full"></canvas>
+                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-contain bg-gray-100" alt="Xem trước QR">
+                        
+                        <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                            <i class="fa-solid fa-qrcode text-5xl mb-2"></i>
+                            <p class="text-sm">Mở camera hoặc chọn ảnh</p>
+                        </div>
+                        <div id="statusText" class="hidden absolute inset-0 flex items-center justify-center text-white bg-black/60 z-10">
+                            <span id="statusMsg">Đang khởi tạo...</span>
+                        </div>
+                        <div id="scanLine" class="hidden absolute top-0 left-0 right-0 h-1 bg-blue-500 scan-border z-20"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cài đặt -->
+        <section class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-200">
+            <h3 class="font-semibold text-amber-800 mb-3"><i class="fa-solid fa-gear"></i> Tùy chỉnh</h3>
+            <div class="space-y-3">
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <label class="text-sm font-medium">Ký tự tách cột:</label>
+                    <input type="text" id="delimiterInput" value="|" maxlength="3" 
+                        class="px-3 py-2 border border-amber-300 rounded-lg text-center font-mono font-bold w-20">
+                </div>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="autoSaveMode" class="w-5 h-5 accent-primary">
+                    <span class="font-medium">Bật chế độ quét hàng loạt</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- Danh sách dữ liệu có lưu vĩnh viễn -->
+        <section id="listSection" class="hidden bg-white rounded-2xl shadow p-5 mb-6">
+            <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+                <h2 class="text-lg font-semibold text-secondary flex items-center gap-2">
+                    <i class="fa-solid fa-database"></i> Dữ liệu đã lưu
+                    <span id="countBadge" class="bg-primary text-white text-sm px-2 py-0.5 rounded-full">0</span>
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button id="exportAllBtn" class="bg-secondary hover:bg-secondary/90 text-white px-3 py-2 rounded-lg text-sm">
+                        <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                    </button>
+                    <button id="clearAllBtn" class="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-2 rounded-lg text-sm">
+                        <i class="fa-solid fa-trash"></i> Xóa toàn bộ
+                    </button>
+                </div>
+            </div>
+            <div id="entryList" class="space-y-3 max-h-[450px] overflow-y-auto"></div>
+        </section>
+
+        <section class="bg-green-50 rounded-xl p-4 text-sm border border-green-200">
+            <h3 class="font-semibold text-green-700 mb-2">💾 Dữ liệu được lưu trên máy này</h3>
+            <ul class="text-xs text-gray-600 space-y-1">
+                <li>✅ Đóng/mở trang lại vẫn giữ nguyên dữ liệu</li>
+                <li>✅ Không cần internet, không gửi dữ liệu lên server</li>
+                <li>⚠️ Xóa dữ liệu trình duyệt sẽ mất danh sách</li>
+                <li>📄 Cột Excel: Nội dung gốc → Số CCCD → Họ tên → Ngày sinh → ...</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-gray-400 py-4 mt-8 text-center text-sm">
+        <p>© 2026 Quét QR CCCD — Lưu trên thiết bị</p>
+    </footer>
+
+    <script>
+        // ==============================================
+        // PHẦN 1: INDEXEDDB - LƯU DỮ LIỆU VĨNH VIỄN TRÊN ĐIỆN THOẠI
+        // ==============================================
+        const DB_NAME = 'QRCCCD_DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'records';
+        
+        let db = null;
+        let savedRecords = [];
+
+        // Mở cơ sở dữ liệu
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('rawQR', 'rawQR', { unique: true });
+                    }
+                };
+                
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve();
+                };
+                
+                request.onerror = (e) => {
+                    reject(new Error('Không mở được cơ sở dữ liệu'));
+                };
+            });
+        }
+
+        // Lưu 1 bản ghi vào DB
+        function addRecordToDB(record) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.add(record);
+                request.onsuccess = (e) => {
+                    record._id = e.target.result;
+                    resolve(record);
+                };
+                request.onerror = () => reject(new Error('Đã tồn tại mã này'));
+            });
+        }
+
+        // Lấy tất cả bản ghi từ DB
+        function getAllRecords() {
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+            });
+        }
+
+        // Xóa 1 bản ghi
+        function deleteRecord(id) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).delete(id);
+                tx.oncomplete = resolve;
+            });
+        }
+
+        // Xóa TOÀN BỘ dữ liệu
+        function clearAllRecords() {
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).clear();
+                tx.oncomplete = resolve;
+            });
+        }
+
+        // ==============================================
+        // PHẦN 2: CÁC BIẾN & PHẦN TỬ
+        // ==============================================
+        const FIELD_MAP = [
+            { key: 'rawQR', label: 'Nội dung QR gốc' },
+            { key: 'idNum', label: 'Số CCCD' },
+            { key: 'fullName', label: 'Họ và tên' },
+            { key: 'dob', label: 'Ngày sinh' },
+            { key: 'gender', label: 'Giới tính' },
+            { key: 'placeOfBirth', label: 'Nơi sinh' },
+            { key: 'nationality', label: 'Quốc tịch' },
+            { key: 'issueDate', label: 'Ngày cấp' },
+            { key: 'expiryDate', label: 'Ngày hết hạn' },
+            { key: 'address', label: 'Nơi thường trú' },
+            { key: 'features', label: 'Đặc điểm nhận dạng' },
+            { key: 'issuePlace', label: 'Nơi cấp' }
+        ];
+
+        const fileInput = document.getElementById('fileInput');
+        const scanBtn = document.getElementById('scanBtn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const previewImg = document.getElementById('previewImg');
+        const placeholder = document.getElementById('placeholder');
+        const statusText = document.getElementById('statusText');
+        const statusMsg = document.getElementById('statusMsg');
+        const scanLine = document.getElementById('scanLine');
+        const zoomControl = document.getElementById('zoomControl');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const delimiterInput = document.getElementById('delimiterInput');
+        const autoSaveMode = document.getElementById('autoSaveMode');
+        const listSection = document.getElementById('listSection');
+        const entryList = document.getElementById('entryList');
+        const countBadge = document.getElementById('countBadge');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const exportAllBtn = document.getElementById('exportAllBtn');
+
+        let stream = null;
+        let scanInterval = null;
+        let videoCap = null;
+        let lastScannedText = '';
+        let cooldownTimer = null;
+
+        // ==============================================
+        // PHẦN 3: KHỞI TẠO & TẢI DỮ LIỆU KHI MỞ TRANG
+        // ==============================================
+        async function initApp() {
+            try {
+                await openDB();
+                showStatus('Đang tải dữ liệu...');
+                savedRecords = await getAllRecords();
+                renderAllRecords();
+                updateCount();
+                hideStatus();
+            } catch (err) {
+                alert('Lưu ý: Trình duyệt không hỗ trợ lưu dữ liệu vĩnh viễn.\n' + err.message);
+            }
+        }
+
+        // ==============================================
+        // PHẦN 4: CAMERA & QUÉT
+        // ==============================================
+        async function startCamera() {
+            try {
+                showStatus('Đang yêu cầu quyền camera...');
+                if (stream) stopCamera();
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 }
+                    },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                
+                await new Promise(resolve => {
+                    video.onloadedmetadata = () => { video.play(); resolve(); };
+                });
+
+                showStatus('Đã sẵn sàng ✅');
+                setTimeout(hideStatus, 800);
+
+                scanLine.classList.remove('hidden');
+                zoomControl.classList.remove('hidden');
+                scanBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Dừng quét';
+                scanBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+
+                const track = stream.getVideoTracks()[0];
+                videoCap = track.getCapabilities();
+                
+                if (videoCap.zoom) {
+                    const defZoom = Math.min(Math.max(3.0, videoCap.zoom.min), videoCap.zoom.max);
+                    zoomSlider.min = videoCap.zoom.min;
+                    zoomSlider.max = videoCap.zoom.max;
+                    zoomSlider.value = defZoom;
+                    zoomValue.textContent = `${defZoom.toFixed(1)}x`;
+                    await track.applyConstraints({ advanced: [{ zoom: defZoom }] });
+                } else {
+                    zoomValue.textContent = '3.0x';
+                    video.style.transform = 'scale(3.0)';
+                    video.style.transformOrigin = 'center center';
+                }
+
+                scanInterval = setInterval(scanFrame, 400);
+            } catch (err) {
+                showStatus('Lỗi: ' + err.message);
+                alert('Không mở được camera:\n' + err.message + 
+                    '\n👉 Mở bằng Chrome/Cốc Cốc/Edge & cho phép quyền Camera');
+                stopCamera();
+            }
+        }
+
+        function stopCamera() {
+            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+            if (scanInterval) clearInterval(scanInterval);
+            scanInterval = null;
+            
+            video.classList.add('hidden');
+            video.srcObject = null;
+            scanLine.classList.add('hidden');
+            zoomControl.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            hideStatus();
+            
+            scanBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Mở Camera Quét';
+            scanBtn.classList.remove('bg-red-500');
+            video.style.transform = 'scale(1)';
+            lastScannedText = '';
+        }
+
+        zoomSlider.addEventListener('input', async () => {
+            const level = parseFloat(zoomSlider.value);
+            zoomValue.textContent = `${level.toFixed(1)}x`;
+            if (!stream) return;
+            const track = stream.getVideoTracks()[0];
+            if (videoCap?.zoom) await track.applyConstraints({ advanced: [{ zoom: level }] });
+            else video.style.transform = `scale(${level})`;
+        });
+
+        function scanFrame() {
+            if (!video.videoWidth || !video.videoHeight) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imgData.data, canvas.width, canvas.height);
+            if (code) handleQRResult(code.data);
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = new Image();
+                    img.onload = () => {
+                        previewImg.src = ev.target.result;
+                        previewImg.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                        setTimeout(() => decodeQRFromImage(img), 150);
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function decodeQRFromImage(img) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            ctx.drawImage(img, 0, 0);
+            const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+            if (code) handleQRResult(code.data);
+            else alert('⚠️ Không tìm thấy mã QR');
+        }
+
+        // ==============================================
+        // PHẦN 5: XỬ LÝ DỮ LIỆU QR & LƯU VÀO DB
+        // ==============================================
+        async function handleQRResult(rawText) {
+            if (rawText === lastScannedText) return;
+            
+            const delimiter = delimiterInput.value.trim() || '|';
+            const parts = rawText.split(delimiter).map(p => p.trim());
+            
+            const record = {
+                rawQR: rawText,
+                idNum: parts[0] || '',
+                fullName: parts[1] || '',
+                dob: parts[2] || '',
+                gender: parts[3] || '',
+                placeOfBirth: parts[4] || '',
+                nationality: parts[5] || '',
+                issueDate: parts[6] || '',
+                expiryDate: parts[7] || '',
+                address: parts[8] || '',
+                features: parts[9] || '',
+                issuePlace: parts[10] || '',
+                createdAt: new Date().toISOString()
+            };
+
+            // Kiểm tra trùng
+            const exists = savedRecords.some(r => r.rawQR === rawText);
+            if (exists) return;
+
+            lastScannedText = rawText;
+            
+            try {
+                await addRecordToDB(record);
+                savedRecords.unshift(record);
+                renderAllRecords();
+                updateCount();
+                showToast(`✅ Đã lưu: ${record.fullName || record.idNum || 'Mã mới'}`);
+                listSection.classList.remove('hidden');
+            } catch (err) {
+                // Trùng lặp thì bỏ qua
+                return;
+            }
+
+            if (!autoSaveMode.checked) {
+                if (scanInterval) clearInterval(scanInterval);
+                if (stream) setTimeout(stopCamera, 1500);
+            } else {
+                if (cooldownTimer) clearTimeout(cooldownTimer);
+                cooldownTimer = setTimeout(() => lastScannedText = '', 1500);
+            }
+        }
+
+        // ==============================================
+        // PHẦN 6: HIỂN THỊ & QUẢN LÝ DANH SÁCH
+        // ==============================================
+        function renderAllRecords() {
+            entryList.innerHTML = '';
+            savedRecords.forEach((rec, idx) => renderCard(rec, idx));
+        }
+
+        function renderCard(record, idx) {
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-gray-50 rounded-xl border flex justify-between gap-3';
+            card.innerHTML = `
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">#${idx + 1}</span>
+                        <span class="font-semibold truncate">${record.fullName || 'Không có tên'}</span>
+                    </div>
+                    <div class="text-xs text-gray-600 space-y-1">
+                        <div>Số CCCD: ${record.idNum || '—'}</div>
+                        <div>Ngày sinh: ${record.dob || '—'}</div>
+                        <div class="break-all text-gray-500 mt-1">Nội dung gốc: ${record.rawQR.substring(0, 70)}${record.rawQR.length > 70 ? '...' : ''}</div>
+                    </div>
+                </div>
+                <button class="del-btn text-gray-400 hover:text-red-500 p-1" title="Xóa mục này">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            
+            card.querySelector('.del-btn').onclick = async () => {
+                if (!confirm('Xóa mục này?')) return;
+                await deleteRecord(record._id);
+                savedRecords = savedRecords.filter(r => r._id !== record._id);
+                renderAllRecords();
+                updateCount();
+                if (!savedRecords.length) listSection.classList.add('hidden');
+                showToast('Đã xóa ✅');
+            };
+            
+            entryList.appendChild(card);
+        }
+
+        function updateCount() {
+            countBadge.textContent = savedRecords.length;
+        }
+
+        // Nút XÓA TOÀN BỘ
+        clearAllBtn.addEventListener('click', async () => {
+            if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
+            if (!confirm('⚠️ XÓA TOÀN BỘ dữ liệu?\nKhông thể phục hồi sau khi xóa!')) return;
+            
+            await clearAllRecords();
+            savedRecords = [];
+            entryList.innerHTML = '';
+            listSection.classList.add('hidden');
+            countBadge.textContent = '0';
+            showToast('Đã xóa toàn bộ ✅');
+        });
+
+        // Nút xuất Excel
+        exportAllBtn.addEventListener('click', () => {
+            if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
+            
+            const rows = savedRecords.map(r => {
+                const row = {};
+                FIELD_MAP.forEach(f => row[f.label] = r[f.key] || '');
+                return row;
+            });
+            
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Danh_sach_CCCD');
+            
+            ws['!cols'] = [
+                { wch: 50 }, { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 10 },
+                { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 35 },
+                { wch: 25 }, { wch: 25 }
+            ];
+            
+            const fn = `Danh_sach_CCCD_${savedRecords.length}_ban_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fn);
+        });
+
+        // Nút mở camera
+        scanBtn.addEventListener('click', () => stream ? stopCamera() : startCamera());
+
+        // ==============================================
+        // PHẦN 7: TRỢ GIÚP HIỂN THỊ
+        // ==============================================
+        function showStatus(msg) {
+            statusMsg.textContent = msg;
+            statusText.classList.remove('hidden');
+        }
+        function hideStatus() {
+            statusText.classList.add('hidden');
+        }
+        function showToast(msg) {
+            const t = Object.assign(document.createElement('div'), {
+                className: 'fixed top-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-2 rounded-lg z-50 text-sm',
+                textContent: msg
+            });
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2000);
+        }
+
+        // KHỞI ĐỘNG ỨNG DỤNG
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
