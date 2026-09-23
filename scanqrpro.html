@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét QR CCCD — Đã sửa quét + Hiện danh sách</title>
+    <title>Quét QR CCCD — Sửa méo ảnh</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -35,7 +35,29 @@
             0% { transform: translateY(0); }
             100% { transform: translateY(100%); }
         }
-        video { background: #1a1a1a; object-fit: cover; width: 100%; height: 100%; }
+        /* ✅ SỬA: Giữ tỷ lệ ảnh, không méo */
+        .camera-frame {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            border-radius: 0.75rem;
+            border: 2px solid #e5e7eb;
+            background-color: #1f2937;
+        }
+        .camera-frame video,
+        .camera-frame img,
+        .camera-frame canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ảnh lấp đầy khung, KHÔNG co giãn méo */
+        }
+        .camera-frame video {
+            background: transparent;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
@@ -45,7 +67,7 @@
                 <i class="fa-solid fa-id-card-clip text-2xl"></i>
                 <h1 class="text-xl font-bold">Quét QR CCCD</h1>
             </div>
-            <p class="text-center text-blue-100 mt-2">💾 Lưu vĩnh viễn | 📷 Quét ảnh & Camera | 📄 Xuất Excel</p>
+            <p class="text-center text-blue-100 mt-2">💾 Lưu vĩnh viễn | 📷 Ảnh không méo | 📄 Xuất Excel</p>
         </div>
     </header>
 
@@ -84,19 +106,20 @@
 
                 <div>
                     <p class="font-medium text-gray-700 mb-2">Khung xem</p>
-                    <div class="relative rounded-xl overflow-hidden aspect-square border-2 border-gray-200 bg-gray-800">
-                        <video id="video" playsinline class="hidden absolute inset-0"></video>
-                        <canvas id="canvas" class="absolute inset-0 w-full h-full"></canvas>
-                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-contain bg-gray-900" alt="Xem ảnh QR">
+                    <!-- ✅ Khung camera đã sửa CSS không méo ảnh -->
+                    <div class="camera-frame">
+                        <video id="video" playsinline class="hidden"></video>
+                        <canvas id="canvas" class="opacity-0 absolute inset-0"></canvas>
+                        <img id="previewImg" class="hidden" alt="Xem ảnh QR">
                         
-                        <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                        <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50 z-10">
                             <i class="fa-solid fa-qrcode text-5xl mb-2"></i>
                             <p class="text-sm">Mở camera hoặc chọn ảnh</p>
                         </div>
-                        <div id="statusText" class="hidden absolute inset-0 flex items-center justify-center text-white bg-black/60 z-10">
+                        <div id="statusText" class="hidden absolute inset-0 flex items-center justify-center text-white bg-black/60 z-20">
                             <span id="statusMsg">Đang xử lý...</span>
                         </div>
-                        <div id="scanLine" class="hidden absolute top-0 left-0 right-0 h-1 bg-blue-500 scan-border z-20"></div>
+                        <div id="scanLine" class="hidden absolute top-0 left-0 right-0 h-1 bg-blue-500 scan-border z-30"></div>
                     </div>
                 </div>
             </div>
@@ -141,8 +164,8 @@
             <h3 class="font-semibold text-green-700 mb-2">💾 Dữ liệu lưu trên thiết bị</h3>
             <ul class="text-xs text-gray-600 space-y-1">
                 <li>✅ Mở trang → thấy ngay danh sách đã lưu</li>
+                <li>✅ Ảnh camera luôn vuông, không méo</li>
                 <li>✅ Đóng/mở lại vẫn giữ nguyên dữ liệu</li>
-                <li>✅ Quét từ ảnh & camera đều lưu chung</li>
                 <li>⚠️ Không dùng chế độ Ẩn danh — dữ liệu sẽ mất khi đóng</li>
             </ul>
         </section>
@@ -295,7 +318,7 @@
         }
 
         // ==============================================
-        // PHẦN 4: CAMERA - ĐÃ SỬA QUÉT NHẠY TRỞ LẠI
+        // PHẦN 4: CAMERA - ẢNH KHÔNG MÉO
         // ==============================================
         async function startCamera() {
             try {
@@ -340,12 +363,10 @@
                     await track.applyConstraints({ advanced: [{ zoom: defZoom }] });
                 } else {
                     zoomValue.textContent = '3.0x';
-                    video.style.transform = 'scale(3.0)';
-                    video.style.transformOrigin = 'center center';
+                    video.style.transform = 'translate(-50%, -50%) scale(3.0)';
                 }
 
-                // ✅ SỬA: Bắt quét ngay sau khi camera sẵn sàng
-                scanInterval = setInterval(scanFrame, 300); // Nhanh hơn 300ms/lần
+                scanInterval = setInterval(scanFrame, 300);
             } catch (err) {
                 alert('❌ Không mở được camera:\n' + err.message);
                 stopCamera();
@@ -366,7 +387,7 @@
             
             scanBtn.innerHTML = '<i class="fa-solid fa-camera"></i> Mở Camera Quét';
             scanBtn.classList.remove('bg-red-500');
-            video.style.transform = 'scale(1)';
+            video.style.transform = 'translate(-50%, -50%) scale(1)';
             lastScannedText = '';
         }
 
@@ -375,11 +396,13 @@
             zoomValue.textContent = `${level.toFixed(1)}x`;
             if (!stream) return;
             const track = stream.getVideoTracks()[0];
-            if (videoCap?.zoom) await track.applyConstraints({ advanced: [{ zoom: level }] });
-            else video.style.transform = `scale(${level})`;
+            if (videoCap?.zoom) {
+                await track.applyConstraints({ advanced: [{ zoom: level }] });
+            } else {
+                video.style.transform = `translate(-50%, -50%) scale(${level})`;
+            }
         });
 
-        // ✅ SỬA: Hàm quét khung hình chính xác
         function scanFrame() {
             if (!video.videoWidth || !video.videoHeight) return;
             
@@ -389,10 +412,7 @@
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imgData.data, canvas.width, canvas.height, {
-                shouldInvertLuminance: true,
-                shouldBinarize: true
-            });
+            const code = jsQR(imgData.data, canvas.width, canvas.height);
             
             if (code) {
                 handleQRResult(code.data);
