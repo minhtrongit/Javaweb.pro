@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét QR CCCD — Tiêu đề A B C D</title>
+    <title>Quét QR — Tách động theo dấu |</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -56,27 +56,39 @@
         }
         .camera-frame video { background: transparent; }
         
-        /* Bảng dữ liệu */
-        .data-table { display: grid; gap: 0.5rem; font-size: 0.75rem; }
-        .table-row { display: grid; grid-template-columns: 2.5fr repeat(11, 1fr); gap: 0.5rem; align-items: center; }
-        .table-header { background: #0F52BA; color: white; font-weight: bold; padding: 0.6rem 0.4rem; border-radius: 0.5rem; position: sticky; top: 0; z-index: 10; }
-        .table-cell { padding: 0.5rem 0.4rem; border-bottom: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .table-row:hover { background: #f0f7ff; border-radius: 0.5rem; }
-        .del-col { width: 2rem; text-align: center; }
+        /* Bảng hiển thị trên web */
+        .web-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .web-table th, .web-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .web-table th {
+            background: #0F52BA;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .col-qr { width: 85%; }
+        .col-action { width: 15%; text-align: center; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
     <header class="bg-gradient-to-r from-primary to-[#2563eb] text-white py-5 shadow-lg">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-center gap-3">
-                <i class="fa-solid fa-id-card-clip text-2xl"></i>
-                <h1 class="text-xl font-bold">Quét QR CCCD</h1>
+                <i class="fa-solid fa-qrcode text-2xl"></i>
+                <h1 class="text-xl font-bold">Quét QR — Tách động theo dấu |</h1>
             </div>
-            <p class="text-center text-blue-100 mt-2">💾 Lưu vĩnh viễn | Cột A→K | 📄 Xuất Excel</p>
+            <p class="text-center text-blue-100 mt-2">💾 Lưu mã gốc | Xuất Excel tự tách đủ cột</p>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-6 max-w-5xl">
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
         <!-- Khu vực Quét -->
         <section class="bg-white rounded-2xl shadow p-5 mb-6">
             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-primary">
@@ -145,7 +157,7 @@
             </div>
         </section>
 
-        <!-- Danh sách dữ liệu - BẢNG CỘT A B C D... -->
+        <!-- Danh sách dữ liệu - Chỉ hiển thị Mã QR gốc -->
         <section id="listSection" class="rounded-2xl shadow p-5 mb-6" style="display: none;">
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <h2 class="text-lg font-semibold text-secondary flex items-center gap-2">
@@ -162,48 +174,36 @@
                 </div>
             </div>
             
-            <!-- ✅ DÒNG TIÊU ĐỀ CỐ ĐỊNH: Cột 1 = Mã QR gốc, sau đó A B C D... -->
-            <div class="data-table max-h-[500px] overflow-y-auto border rounded-xl">
-                <div class="table-row table-header sticky top-0">
-                    <div class="table-cell">Mã QR gốc</div>
-                    <div class="table-cell">A</div>
-                    <div class="table-cell">B</div>
-                    <div class="table-cell">C</div>
-                    <div class="table-cell">D</div>
-                    <div class="table-cell">E</div>
-                    <div class="table-cell">F</div>
-                    <div class="table-cell">G</div>
-                    <div class="table-cell">H</div>
-                    <div class="table-cell">I</div>
-                    <div class="table-cell">J</div>
-                    <div class="table-cell del-col">Xóa</div>
-                </div>
-                <div id="entryList"></div>
+            <div class="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-xl">
+                <table class="web-table">
+                    <thead>
+                        <tr>
+                            <th class="col-qr">Nội dung mã QR gốc</th>
+                            <th class="col-action">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entryList"></tbody>
+                </table>
             </div>
         </section>
 
         <section class="bg-green-50 rounded-xl p-4 text-sm border border-green-200">
-            <h3 class="font-semibold text-green-700 mb-2">💾 Thông tin</h3>
+            <h3 class="font-semibold text-green-700 mb-2">💾 Cách hoạt động</h3>
             <ul class="text-xs text-gray-600 space-y-1">
-                <li>✅ Cột 1: Mã QR gốc | Cột 2:A | 3:B | 4:C | 5:D | 6:E | 7:F | 8:G | 9:H | 10:I | 11:J</li>
-                <li✅ Mở trang → thấy ngay danh sách cũ</li>
-                <li>✅ Xuất Excel cùng cấu trúc</li>
+                <li>✅ Trên web: Chỉ hiển thị mã QR gốc, không tách cột</li>
+                <li>✅ Xuất Excel: Tự tách theo dấu | → bao nhiêu phần tạo bấy nhiêu cột</li>
+                <li>✅ Cột 1: Mã QR gốc | Cột 2: A | Cột 3: B | ... tiếp theo tự động</li>
+                <li>✅ Mở lại trang vẫn thấy danh sách đã lưu</li>
                 <li>⚠️ Không dùng chế độ Ẩn danh — dữ liệu sẽ mất khi đóng</li>
             </ul>
         </section>
     </main>
 
     <footer class="bg-dark text-gray-400 py-4 mt-8 text-center text-sm">
-        <p>© 2026 Quét QR CCCD</p>
+        <p>© 2026 Quét QR — Tách động theo dấu phân cách</p>
     </footer>
 
     <script>
-        // ==============================================
-        // CẤU HÌNH CỘT
-        // ==============================================
-        const COL_LABELS = ['Mã QR gốc', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-        const COL_COUNT = COL_LABELS.length; // 11 cột: 1 mã gốc + 10 cột A-J
-
         // ==============================================
         // INDEXEDDB
         // ==============================================
@@ -419,29 +419,14 @@
         });
 
         // ==============================================
-        // XỬ LÝ QR → LƯU CỘT
+        // XỬ LÝ QR → CHỈ LƯU MÃ GỐC
         // ==============================================
         async function handleQRResult(rawText) {
             if (rawText === lastScannedText) return;
-            const delimiter = delimiterInput.value.trim() || '|';
-            const parts = rawText.split(delimiter).map(p => p.trim());
             
-            // Lưu: cột 0 = mã gốc, 1=A, 2=B, ..., 10=J
+            // Chỉ lưu mã gốc, không tách cột ở đây
             const record = {
                 rawQR: rawText,
-                cols: [
-                    rawText,        // Cột 0: Mã QR gốc
-                    parts[0] || '', // A
-                    parts[1] || '', // B
-                    parts[2] || '', // C
-                    parts[3] || '', // D
-                    parts[4] || '', // E
-                    parts[5] || '', // F
-                    parts[6] || '', // G
-                    parts[7] || '', // H
-                    parts[8] || '', // I
-                    parts[9] || ''  // J
-                ],
                 scannedAt: new Date().toISOString()
             };
 
@@ -454,7 +439,7 @@
                 renderAllRecords();
                 updateCount();
                 listSection.style.display = 'block';
-                showToast(`✅ Đã lưu: ${(parts[1] || parts[0] || 'Mã mới').substring(0, 20)}`);
+                showToast(`✅ Đã lưu: ${rawText.substring(0, 25)}...`);
             } catch (err) { return; }
 
             if (!autoSaveMode.checked) {
@@ -467,22 +452,21 @@
         }
 
         // ==============================================
-        // HIỂN THỊ BẢNG
+        // HIỂN THỊ BẢNG TRÊN WEB
         // ==============================================
         function renderAllRecords() {
             entryList.innerHTML = '';
-            savedRecords.forEach((rec, idx) => {
-                const row = document.createElement('div');
-                row.className = 'table-row hover:bg-blue-50';
-                row.innerHTML = `
-                    ${rec.cols.map((val, i) => `<div class="table-cell text-xs" title="${val}">${val || '—'}</div>`).join('')}
-                    <div class="table-cell del-col">
-                        <button class="del-btn text-gray-400 hover:text-red-500" data-id="${rec._id}">
-                            <i class="fa-solid fa-times"></i>
+            savedRecords.forEach((rec) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="break-all text-xs">${rec.rawQR}</td>
+                    <td class="text-center">
+                        <button class="del-btn text-gray-400 hover:text-red-500 p-1" data-id="${rec._id}" title="Xóa">
+                            <i class="fa-solid fa-trash"></i>
                         </button>
-                    </div>
+                    </td>
                 `;
-                entryList.appendChild(row);
+                entryList.appendChild(tr);
             });
 
             // Gắn sự kiện xóa
@@ -505,8 +489,49 @@
         }
 
         // ==============================================
-        // NÚT XÓA & XUẤT EXCEL
+        // XUẤT EXCEL → TÁCH ĐỘNG THEO DẤU |
         // ==============================================
+        exportAllBtn.addEventListener('click', () => {
+            if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
+            
+            const delimiter = delimiterInput.value.trim() || '|';
+            
+            // Tìm số cột tối đa trong tất cả các bản ghi
+            let maxParts = 0;
+            savedRecords.forEach(r => {
+                const parts = r.rawQR.split(delimiter);
+                if (parts.length > maxParts) maxParts = parts.length;
+            });
+
+            // Tạo tiêu đề: Cột 1 = Mã QR gốc, sau đó A, B, C...
+            const headers = ['Mã QR gốc'];
+            for (let i = 0; i < maxParts; i++) {
+                headers.push(String.fromCharCode(65 + i)); // A, B, C...
+            }
+
+            // Tạo từng dòng dữ liệu
+            const rows = savedRecords.map(r => {
+                const parts = r.rawQR.split(delimiter);
+                const row = { 'Mã QR gốc': r.rawQR };
+                parts.forEach((val, idx) => {
+                    row[String.fromCharCode(65 + idx)] = val.trim();
+                });
+                return row;
+            });
+
+            // Tạo và xuất file Excel
+            const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Danh_sach_QR');
+            
+            // Độ rộng cột tự động
+            ws['!cols'] = headers.map(h => ({ wch: h === 'Mã QR gốc' ? 50 : 20 }));
+            
+            const fn = `Danh_sach_QR_${savedRecords.length}_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fn);
+            showToast(`✅ Đã xuất: ${maxParts} cột dữ liệu`);
+        });
+
         clearAllBtn.addEventListener('click', async () => {
             if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
             if (!confirm('⚠️ XÓA TOÀN BỘ dữ liệu? Không thể phục hồi!')) return;
@@ -516,27 +541,6 @@
             listSection.style.display = 'none';
             countBadge.textContent = '0';
             showToast('Đã xóa toàn bộ ✅');
-        });
-
-        exportAllBtn.addEventListener('click', () => {
-            if (!savedRecords.length) return alert('Chưa có dữ liệu nào!');
-            
-            // ✅ Xuất Excel: tiêu đề = Mã QR gốc, A, B, C...
-            const rows = savedRecords.map(r => {
-                const row = {};
-                COL_LABELS.forEach((label, i) => row[label] = r.cols[i] || '');
-                return row;
-            });
-            
-            const ws = XLSX.utils.json_to_sheet(rows, { header: COL_LABELS });
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Danh_sach_QR');
-            
-            ws['!cols'] = COL_LABELS.map(l => ({ wch: l === 'Mã QR gốc' ? 45 : 18 }));
-            
-            const fn = `Danh_sach_QR_${savedRecords.length}_${new Date().toISOString().slice(0,10)}.xlsx`;
-            XLSX.writeFile(wb, fn);
-            showToast('Đã xuất Excel ✅');
         });
 
         scanBtn.addEventListener('click', () => stream ? stopCamera() : startCamera());
@@ -552,7 +556,7 @@
                 textContent: msg
             });
             document.body.appendChild(t);
-            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2000);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
         }
 
         document.addEventListener('DOMContentLoaded', initApp);
