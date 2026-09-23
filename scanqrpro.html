@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét QR CCCD — Hiện danh sách ngay</title>
+    <title>Quét QR CCCD — Đã sửa quét + Hiện danh sách</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -86,7 +86,7 @@
                     <p class="font-medium text-gray-700 mb-2">Khung xem</p>
                     <div class="relative rounded-xl overflow-hidden aspect-square border-2 border-gray-200 bg-gray-800">
                         <video id="video" playsinline class="hidden absolute inset-0"></video>
-                        <canvas id="canvas" class="hidden absolute inset-0 w-full h-full"></canvas>
+                        <canvas id="canvas" class="absolute inset-0 w-full h-full"></canvas>
                         <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-contain bg-gray-900" alt="Xem ảnh QR">
                         
                         <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
@@ -143,8 +143,7 @@
                 <li>✅ Mở trang → thấy ngay danh sách đã lưu</li>
                 <li>✅ Đóng/mở lại vẫn giữ nguyên dữ liệu</li>
                 <li>✅ Quét từ ảnh & camera đều lưu chung</li>
-                <li>⚠️ Xóa dữ liệu trình duyệt sẽ mất danh sách</li>
-                <li>💡 Nên Xuất Excel để sao lưu dữ liệu quan trọng</li>
+                <li>⚠️ Không dùng chế độ Ẩn danh — dữ liệu sẽ mất khi đóng</li>
             </ul>
         </section>
     </main>
@@ -281,16 +280,11 @@
                 await openDB();
                 savedRecords = await loadAllRecords();
                 
-                // ✅ SỬA: Hiển thị danh sách ngay nếu có dữ liệu
                 renderAllRecords();
                 updateCount();
                 
                 if (savedRecords.length > 0) {
-                    listSection.style.display = 'block'; // Hiện ngay khối danh sách
-                    console.log(`✅ Đã tải ${savedRecords.length} bản ghi — hiển thị danh sách`);
-                } else {
-                    listSection.style.display = 'none';
-                    console.log('Chưa có dữ liệu nào');
+                    listSection.style.display = 'block';
                 }
                 
                 hideStatus();
@@ -301,7 +295,7 @@
         }
 
         // ==============================================
-        // PHẦN 4: CAMERA
+        // PHẦN 4: CAMERA - ĐÃ SỬA QUÉT NHẠY TRỞ LẠI
         // ==============================================
         async function startCamera() {
             try {
@@ -310,9 +304,9 @@
 
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        facingMode: { ideal: 'environment' },
-                        width: { min: 640, ideal: 1280 },
-                        height: { min: 480, ideal: 720 }
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     },
                     audio: false
                 });
@@ -347,9 +341,11 @@
                 } else {
                     zoomValue.textContent = '3.0x';
                     video.style.transform = 'scale(3.0)';
+                    video.style.transformOrigin = 'center center';
                 }
 
-                scanInterval = setInterval(scanFrame, 400);
+                // ✅ SỬA: Bắt quét ngay sau khi camera sẵn sàng
+                scanInterval = setInterval(scanFrame, 300); // Nhanh hơn 300ms/lần
             } catch (err) {
                 alert('❌ Không mở được camera:\n' + err.message);
                 stopCamera();
@@ -383,14 +379,24 @@
             else video.style.transform = `scale(${level})`;
         });
 
+        // ✅ SỬA: Hàm quét khung hình chính xác
         function scanFrame() {
             if (!video.videoWidth || !video.videoHeight) return;
+            
             const ctx = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
-            if (code) handleQRResult(code.data);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imgData.data, canvas.width, canvas.height, {
+                shouldInvertLuminance: true,
+                shouldBinarize: true
+            });
+            
+            if (code) {
+                handleQRResult(code.data);
+            }
         }
 
         // ==============================================
@@ -423,7 +429,8 @@
                 canvas.height = img.naturalHeight || img.height;
                 ctx.drawImage(img, 0, 0);
                 
-                const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imgData.data, canvas.width, canvas.height);
                 
                 if (code) {
                     await handleQRResult(code.data);
@@ -471,7 +478,7 @@
                 savedRecords.unshift(record);
                 renderAllRecords();
                 updateCount();
-                listSection.style.display = 'block'; // Hiện danh sách khi thêm mã đầu tiên
+                listSection.style.display = 'block';
                 showToast(`✅ Đã lưu: ${record.fullName || record.idNum || 'Mã mới'}`);
             } catch (err) {
                 return;
@@ -584,7 +591,6 @@
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2000);
         }
 
-        // KHỞI ĐỘNG NGAY KHI TRANG TẢI XONG
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
