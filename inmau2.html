@@ -842,7 +842,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     currentRecord = isBlank ? buildBlankRecord() : buildEditableRecord(row);
     $("drawerName").textContent = isBlank ? "Tờ khai mới (nhập tay)" : (currentRecord.hoTen || "(chưa có tên)");
     $("drawerSub").textContent = isBlank ? "Điền các trường cần thiết, để trống nếu không có" : ("Mã số BHXH: " + (currentRecord.maSoBHXH || "—"));
-    drawerBody.innerHTML = renderForm(currentRecord);
+    drawerBody.innerHTML = renderForm(currentRecord, isBlank);
     bindFormInputs(isBlank);
     $("btnScanQRInDrawer").style.display = isBlank ? "" : "none";
     overlay.classList.add("open");
@@ -1007,12 +1007,23 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   }
 
   function handleCccdQrResult(text){
-    var parts = String(text).split("|");
-    if(parts.length < 6){
+    setFormFieldValue("qrRaw", text);
+    var ok = applyCccdQrText(text);
+    if(!ok){
       $("qrScanHint").textContent = "Mã QR này không đúng định dạng CCCD — thử lại.";
       qrScanRAF = requestAnimationFrame(scanQrFrame);
       return;
     }
+    closeQrScanner();
+  }
+
+  // Tách riêng phần PHÂN TÍCH chuỗi QR CCCD (dùng chung cho cả quét camera lẫn
+  // gõ/dán tay vào ô "Chuỗi QR CCCD"). Trả về true nếu chuỗi đúng định dạng và
+  // đã điền vào các ô liên quan; false nếu chưa đủ định dạng (khi đó KHÔNG
+  // đụng tới các ô khác — để không xoá nhầm lúc người dùng gõ dở tay).
+  function applyCccdQrText(text){
+    var parts = String(text).split("|");
+    if(parts.length < 6) return false;
 
     var cccdNum = (parts[0] || "").trim();
     var hoTen = (parts[2] || "").trim();
@@ -1030,8 +1041,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     setFormFieldValue("gioiTinh", gioiTinh);
     setFormFieldValue("ap", diaChi);
     setFormFieldValue("qr", cccdNum); // đồng bộ mã QR theo CCCD giống khi gõ tay
-
-    closeQrScanner();
+    return true;
   }
 
   function setFormFieldValue(key, value){
@@ -1053,6 +1063,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       tinh: cleanRef(row["tỉnh"]) || "Đồng Tháp",
       noiDungHoan: cleanRef(row["Nội dung hoàn"]),
       qr: cleanRef(row["QR"]),
+      qrRaw: "",
       inDuoiQR: cleanRef(row["INDuoiQR"]) || cleanRef(row["QR"]),
       stt: cleanRef(getCol(row, "STT")),
       fitOnePage: !state.fitOff.has(rowKey(row)),
@@ -1082,6 +1093,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       tinh: "Đồng Tháp",
       noiDungHoan: "Đề nghị cấp lại thẻ BHYT do thay đổi thông tin",
       qr: "",
+      qrRaw: "",
       inDuoiQR: "",
       stt: "",
       fitOnePage: true,
@@ -1100,12 +1112,16 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     return "Sa Đéc, ngày " + d.getDate() + " tháng " + (d.getMonth() + 1) + " năm " + d.getFullYear();
   }
 
-  function renderForm(rec){
+  function renderForm(rec, isBlank){
     function f(id, label, val, required){
       return '<div class="field"><label>'+label+(required?' <span class="req">*</span>':'')+'</label>' +
         '<input type="text" id="f_'+id+'" value="'+escapeAttr(val)+'"></div>';
     }
     return ''
+      + (isBlank ? (
+        '<div class="section-label">Quét hoặc dán mã QR CCCD</div>'
+        + f("qrRaw","Chuỗi QR CCCD (quét bằng nút 📷 hoặc dán tay vào đây)",rec.qrRaw,false)
+      ) : '')
       + '<div class="section-label">Thông tin người tham gia</div>'
       + '<div class="field-grid">'
         + f("hoTen","Họ và tên",rec.hoTen,true)
@@ -1151,15 +1167,26 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       el.addEventListener("input", function(){ currentRecord[key] = el.value; });
     });
 
-    // Chế độ "In mới": khi người dùng gõ số CCCD, tự đồng bộ luôn vào ô mã QR
-    // (người dùng vẫn có thể tự sửa lại ô mã QR sau đó nếu muốn khác đi).
     if(isBlank){
+      // Gõ số CCCD tay: tự đồng bộ luôn vào ô mã QR (vẫn sửa lại được sau đó).
       var cccdEl = $("f_cccd");
       var qrEl = $("f_qr");
       if(cccdEl && qrEl){
         cccdEl.addEventListener("input", function(){
           qrEl.value = cccdEl.value;
           currentRecord.qr = cccdEl.value;
+        });
+      }
+
+      // Ô "Chuỗi QR CCCD": người dùng có thể dán/gõ tay chuỗi quét được từ
+      // QR CCCD vào đây (giống hệt kết quả quét bằng camera) — mỗi khi chuỗi
+      // đủ định dạng (đủ số dấu "|"), ứng dụng tự tách và điền vào các ô
+      // tương ứng, y hệt như khi quét bằng camera.
+      var qrRawEl = $("f_qrRaw");
+      if(qrRawEl){
+        qrRawEl.addEventListener("input", function(){
+          currentRecord.qrRaw = qrRawEl.value;
+          applyCccdQrText(qrRawEl.value);
         });
       }
     }
