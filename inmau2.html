@@ -240,8 +240,15 @@
     display:flex; justify-content:space-between; align-items:center;
     padding:14px 16px; border-bottom:1px solid var(--line); background:#fafbfc;
   }
-  #qrScanVideo{width:100%; max-height:60vh; display:block; background:#111;}
-  .qr-scan-hint{padding:12px 16px; font-size:.85rem; color:var(--ink-soft); text-align:center;}
+  .qr-scan-viewport{width:100%; max-height:60vh; overflow:hidden; background:#111;}
+  #qrScanVideo{width:100%; display:block; transform-origin:center center;}
+  .qr-scan-zoom-row{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 16px 0; font-size:.85rem; color:var(--ink-soft);
+  }
+  .qr-scan-zoom-row input[type=range]{flex:1;}
+  .qr-scan-zoom-row #qrZoomValue{min-width:36px; text-align:right; color:var(--ink); font-weight:600;}
+  .qr-scan-hint{padding:8px 16px 14px; font-size:.85rem; color:var(--ink-soft); text-align:center;}
   .drawer-body{padding:18px 22px; overflow-y:auto; flex:1;}
   .drawer-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; background:#fafbfc;}
 
@@ -451,8 +458,15 @@
     <strong>Quét mã QR mặt sau CCCD</strong>
     <button class="drawer-close" id="qrScanClose">✕</button>
   </div>
-  <video id="qrScanVideo" playsinline muted></video>
+  <div class="qr-scan-viewport" id="qrScanViewport">
+    <video id="qrScanVideo" playsinline muted></video>
+  </div>
   <canvas id="qrScanCanvas" style="display:none;"></canvas>
+  <div class="qr-scan-zoom-row">
+    <span>🔍 Zoom</span>
+    <input type="range" id="qrZoomRange" min="1" max="5" step="0.5" value="3">
+    <span id="qrZoomValue">3.0x</span>
+  </div>
   <div class="qr-scan-hint" id="qrScanHint">Đưa mã QR mặt sau CCCD vào khung hình…</div>
 </div>
 
@@ -855,18 +869,40 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   //   <CCCD>|<CMND cũ>|<Họ tên>|<Ngày sinh ddMMyyyy>|<Giới tính>|<Địa chỉ>|<Ngày cấp>|...
   // Ví dụ: 087084002203|341191442|Huỳnh Văn Lực|06071984|Nam|Tổ 1, Ấp Hòa
   // Bình, Hòa Tân, Châu Thành, Đồng Tháp|18122024||||
+  //
+  // ZOOM: QR trên CCCD khá nhỏ so với cả khung hình camera nên khó nhận diện.
+  //  - Nếu camera máy hỗ trợ zoom quang/zoom phần cứng (track có
+  //    getCapabilities().zoom), dùng luôn zoom thật của camera — ảnh nét,
+  //    không mất chất lượng.
+  //  - Nếu máy KHÔNG hỗ trợ (rất phổ biến, nhất là máy tính/webcam), tự cắt
+  //    vùng giữa khung hình rồi phóng to lên trước khi đưa vào bộ giải mã —
+  //    đồng thời phóng to luôn hình xem trước (CSS transform) để người dùng
+  //    thấy đúng những gì đang được quét.
   var qrScanStream = null;
   var qrScanRAF = null;
+  var qrZoomFactor = 3;
+  var qrNativeZoomSupported = false;
 
   $("btnScanQRInDrawer").addEventListener("click", openQrScanner);
   $("qrScanClose").addEventListener("click", closeQrScanner);
   $("qrScanOverlay").addEventListener("click", closeQrScanner);
+
+  $("qrZoomRange").addEventListener("input", function(){
+    qrZoomFactor = parseFloat($("qrZoomRange").value) || 1;
+    $("qrZoomValue").textContent = qrZoomFactor.toFixed(1) + "x";
+    applyQrZoom();
+  });
 
   function openQrScanner(){
     if(typeof jsQR === "undefined"){
       alert("Không tải được bộ quét mã QR. Vui lòng tải lại trang.");
       return;
     }
+    qrZoomFactor = 3;
+    qrNativeZoomSupported = false;
+    $("qrZoomRange").value = "3";
+    $("qrZoomValue").textContent = "3.0x";
+    $("qrScanVideo").style.transform = "scale(1)";
     $("qrScanHint").textContent = "Đang mở camera…";
     $("qrScanOverlay").classList.add("open");
     $("qrScanModal").classList.add("open");
@@ -882,12 +918,51 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         video.srcObject = stream;
         video.play();
         $("qrScanHint").textContent = "Đưa mã QR mặt sau CCCD vào khung hình…";
+        setupZoomCapability(stream);
         qrScanRAF = requestAnimationFrame(scanQrFrame);
       })
       .catch(function(err){
         console.error(err);
         $("qrScanHint").textContent = "Không mở được camera: " + err.message;
       });
+  }
+
+  // Dò khả năng zoom thật của camera; áp dụng ngay mức zoom mặc định (3x)
+  // nếu máy hỗ trợ, và giới hạn thanh trượt theo đúng khoảng zoom của camera.
+  function setupZoomCapability(stream){
+    try{
+      var track = stream.getVideoTracks()[0];
+      var caps = track && track.getCapabilities ? track.getCapabilities() : null;
+      if(caps && caps.zoom){
+        qrNativeZoomSupported = true;
+        var range = $("qrZoomRange");
+        range.min = caps.zoom.min;
+        range.max = caps.zoom.max;
+        range.step = caps.zoom.step || 0.1;
+        qrZoomFactor = Math.min(Math.max(qrZoomFactor, caps.zoom.min), caps.zoom.max);
+        range.value = qrZoomFactor;
+        $("qrZoomValue").textContent = qrZoomFactor.toFixed(1) + "x";
+        applyQrZoom();
+      }
+    }catch(err){
+      console.error("Không dò được khả năng zoom camera:", err);
+    }
+  }
+
+  function applyQrZoom(){
+    if(qrNativeZoomSupported && qrScanStream){
+      var track = qrScanStream.getVideoTracks()[0];
+      if(track && track.applyConstraints){
+        track.applyConstraints({ advanced: [{ zoom: qrZoomFactor }] }).catch(function(err){
+          console.error("Không áp dụng được zoom camera:", err);
+        });
+      }
+      $("qrScanVideo").style.transform = "scale(1)"; // camera tự zoom, không cần CSS
+    } else {
+      // Máy không hỗ trợ zoom thật — phóng to hình xem trước bằng CSS cho
+      // khớp với vùng ảnh thực sự được cắt-phóng to khi giải mã bên dưới.
+      $("qrScanVideo").style.transform = "scale(" + qrZoomFactor + ")";
+    }
   }
 
   function closeQrScanner(){
@@ -904,10 +979,23 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     var video = $("qrScanVideo");
     var canvas = $("qrScanCanvas");
     if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      var vw = video.videoWidth, vh = video.videoHeight;
+      canvas.width = vw;
+      canvas.height = vh;
       var ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if(!qrNativeZoomSupported && qrZoomFactor > 1){
+        // Cắt vùng giữa khung hình (kích thước = 1/zoom) rồi phóng to lên
+        // đúng bằng kích thước canvas gốc trước khi đưa vào bộ giải mã.
+        var cropW = vw / qrZoomFactor;
+        var cropH = vh / qrZoomFactor;
+        var cropX = (vw - cropW) / 2;
+        var cropY = (vh - cropH) / 2;
+        ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, vw, vh);
+      } else {
+        ctx.drawImage(video, 0, 0, vw, vh);
+      }
+
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       var code = jsQR(imageData.data, imageData.width, imageData.height);
       if(code && code.data){
