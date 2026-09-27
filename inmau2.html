@@ -250,7 +250,7 @@
   .qr-scan-zoom-row #qrZoomValue{min-width:36px; text-align:right; color:var(--ink); font-weight:600;}
   .qr-scan-hint{padding:8px 16px 14px; font-size:.85rem; color:var(--ink-soft); text-align:center;}
   .drawer-body{padding:18px 22px; overflow-y:auto; flex:1;}
-  .drawer-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; background:#fafbfc;}
+  .drawer-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; background:#fafbfc;}
 
   .field{margin-bottom:14px;}
   .field label{
@@ -322,11 +322,22 @@
   .doc-row .c1.narrow{flex:0.7;}
   .doc-row .c2.wide{flex:1.7;}
   .doc-para{margin-top:1.5mm;}
-  .fillval{border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-width:6mm; display:inline-block;}
+  /* Đường chấm cho các ô/dòng để trống: vẽ bằng background lặp lại với
+     khoảng cách chấm CỐ ĐỊNH (không dùng border-bottom:dotted) — vì kiểu
+     border dotted khi in ở độ phân giải cao có thể bị dồn khít trông như
+     một đường liền nét thay vì rời rạc từng chấm. */
+  .fillval, .doc-fillrow .fillrest, .fillval-line{
+    background-image: linear-gradient(to right, #333 0, #333 1.4px, transparent 1.4px, transparent 4.5px);
+    background-repeat: repeat-x;
+    background-position: bottom left;
+    background-size: 4.5px 1.4px;
+    padding-bottom: 1.5px;
+  }
+  .fillval{padding-left:2px; padding-right:2px; font-weight:600; min-width:6mm; display:inline-block;}
   .fillval-tel{min-width:38mm;}
   .doc-fillrow{display:flex; align-items:flex-end; gap:2mm;}
   .doc-fillrow .flabel{white-space:nowrap;}
-  .doc-fillrow .fillrest{flex:1; border-bottom:1px dotted #333; padding:0 2px; font-weight:600; min-height:1em;}
+  .doc-fillrow .fillrest{flex:1; padding-left:2px; padding-right:2px; font-weight:600; min-height:1em;}
   .checkbox{display:inline-block; width:4mm; height:4mm; border:1px solid #111; vertical-align:-0.7mm; margin:0 1mm;}
   .doc-footer-grid{
     margin-top:5mm;
@@ -336,7 +347,7 @@
   .doc-footer-grid .left, .doc-footer-grid .right{width:48%; text-align:center;}
   .doc-footer-grid .right .date-line{font-style:italic; margin-bottom:1.5mm;}
   .doc-sign-name{margin-top:20mm; font-weight:700;}
-  .fillval-line{display:block; width:100%; height:5mm; border-bottom:1px dotted #333;}
+  .fillval-line{display:block; width:100%; height:5mm;}
   /* Khối QR neo cố định ở góc dưới-trái của trang in */
   .doc-qr-block{position:absolute; left:15mm; bottom:8mm; text-align:left;}
   .doc-stt-block{position:absolute; right:15mm; bottom:8mm; text-align:right; font-size:14pt;}
@@ -353,6 +364,16 @@
     #printRoot{display:block;}
     .doc-page{margin:0; box-shadow:none; page-break-after:always;}
     .doc-page:last-child{page-break-after:auto;}
+
+    /* QUAN TRỌNG: Chrome/Edge mặc định KHÔNG in background-image/màu nền trừ
+       khi người dùng tự bật "In hình nền" ("Background graphics") trong hộp
+       thoại in — nếu không có dòng này, đường chấm vẽ bằng background (xem
+       .fillval/.fillrest/.fillval-line) sẽ biến mất khi in dù hiện rõ trên
+       màn hình. Ép luôn in nền, không phụ thuộc tuỳ chọn của người dùng. */
+    #printRoot *{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
   }
 
   @media (max-width:720px){
@@ -405,7 +426,8 @@
     </div>
     <select id="filterDiemThu"><option value="">Tất cả mã điểm thu</option></select>
     <button class="btn btn-ghost" id="btnReload">↻ Tải lại</button>
-    <button class="btn btn-seal" id="btnBatchPrint" disabled>🖨 In đã chọn (0)</button>
+    <button class="btn btn-seal" id="btnBatchPrint" disabled>🖨 In Mẫu 2 (0)</button>
+    <button class="btn btn-seal" id="btnBatchPrintTk1" disabled>🖨 In Mẫu TK1 (0)</button>
   </div>
 
   <div class="status-line" id="statusLine">Chưa có dữ liệu — bấm “📄 Chọn file Excel” hoặc “⚙ Kết nối Google Sheet”.</div>
@@ -447,7 +469,8 @@
   <div class="drawer-body" id="drawerBody"></div>
   <div class="drawer-foot">
     <button class="btn btn-ghost" id="drawerCancel">Đóng</button>
-    <button class="btn btn-seal" id="drawerPrint">🖨 Xem trước &amp; In / Xuất PDF</button>
+    <button class="btn btn-seal" id="drawerPrint">🖨 In Mẫu 2</button>
+    <button class="btn btn-seal" id="drawerPrintTk1">🖨 In Mẫu TK1</button>
   </div>
 </div>
 
@@ -804,8 +827,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   });
 
   function updateBatchButton(){
-    btnBatchPrint.textContent = "🖨 In đã chọn (" + state.selected.size + ")";
+    btnBatchPrint.textContent = "🖨 In Mẫu 2 (" + state.selected.size + ")";
     btnBatchPrint.disabled = state.selected.size === 0;
+    var btnTk1 = $("btnBatchPrintTk1");
+    btnTk1.textContent = "🖨 In Mẫu TK1 (" + state.selected.size + ")";
+    btnTk1.disabled = state.selected.size === 0;
   }
 
   function rowKey(r){
@@ -1071,6 +1097,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       email: "",
       noiKCB: "",
       hoSoKemTheo: "",
+      // Các trường riêng cho Mẫu TK1-TS (Mức đóng lấy từ cột "Mức đóng" nếu
+      // sheet có; các trường còn lại không có cột tương ứng nên để trống).
+      mucDong: cleanRef(row["Mức đóng"]),
+      phuongThucDong: "",
+      ngheNghiep: "",
+      doiTuongThamGia: "",
       // Nếu file/sheet có cột "ngayky" (hoặc "Ngày ký") có dữ liệu thì dùng
       // luôn giá trị đó cho dòng ngày kê khai; trống thì để trống — khi in,
       // dòng trống sẽ tự hiện "……, ngày…… tháng…… năm ……" để ghi tay.
@@ -1101,6 +1133,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       email: "",
       noiKCB: "",
       hoSoKemTheo: "",
+      mucDong: "",
+      phuongThucDong: "",
+      ngheNghiep: "",
+      doiTuongThamGia: "",
       ngayKeKhai: defaultKeKhaiDate()
     };
   }
@@ -1148,6 +1184,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       + '<div class="section-label">Điều chỉnh thông tin trên thẻ BHYT</div>'
       + f("noiDungHoan","Nội dung đề nghị điều chỉnh",rec.noiDungHoan,false)
       + f("hoSoKemTheo","Hồ sơ kèm theo (nếu có)",rec.hoSoKemTheo,false)
+
+      + '<div class="section-label">Thông tin bổ sung (dùng cho Mẫu TK1-TS)</div>'
+      + '<div class="field-grid">'
+        + f("mucDong","Mức tiền đóng",rec.mucDong,false)
+        + f("phuongThucDong","Phương thức đóng",rec.phuongThucDong,false)
+      + '</div>'
+      + f("ngheNghiep","Nghề, công việc, thời gian và nơi làm việc",rec.ngheNghiep,false)
+      + f("doiTuongThamGia","Đối tượng tham gia",rec.doiTuongThamGia,false)
 
       + '<div class="section-label">Mã tra cứu / QR</div>'
       + f("qr","Chuỗi mã QR",rec.qr,false)
@@ -1227,7 +1271,21 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         alert("Chưa chọn hồ sơ nào để in. Vui lòng bấm vào một dòng trong bảng trước.");
         return;
       }
-      renderPrintDocs([currentRecord]);
+      renderPrintDocs([currentRecord], "mau2");
+      doPrint();
+    }catch(err){
+      console.error(err);
+      alert("Không thể tạo bản in: " + err.message);
+    }
+  });
+
+  $("drawerPrintTk1").addEventListener("click", function(){
+    try{
+      if(!currentRecord){
+        alert("Chưa chọn hồ sơ nào để in. Vui lòng bấm vào một dòng trong bảng trước.");
+        return;
+      }
+      renderPrintDocs([currentRecord], "tk1");
       doPrint();
     }catch(err){
       console.error(err);
@@ -1245,7 +1303,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         alert("Vui lòng chọn ít nhất một dòng để in.");
         return;
       }
-      renderPrintDocs(records);
+      renderPrintDocs(records, "mau2");
       doPrint();
     }catch(err){
       console.error(err);
@@ -1253,12 +1311,30 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     }
   });
 
-  function renderPrintDocs(records){
+  $("btnBatchPrintTk1").addEventListener("click", function(){
+    try{
+      var keys = Array.from(state.selected);
+      var records = state.rows
+        .filter(function(r){ return keys.indexOf(rowKey(r)) !== -1; })
+        .map(buildEditableRecord);
+      if(!records.length){
+        alert("Vui lòng chọn ít nhất một dòng để in.");
+        return;
+      }
+      renderPrintDocs(records, "tk1");
+      doPrint();
+    }catch(err){
+      console.error(err);
+      alert("Không thể tạo bản in: " + err.message);
+    }
+  });
+
+  function renderPrintDocs(records, template){
     var printRoot = $("printRoot");
     printRoot.innerHTML = "";
     records.forEach(function(rec, i){
       var pageId = "docPage" + i;
-      printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId));
+      printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId, template));
     });
     applyFitScaling(records);
   }
@@ -1322,7 +1398,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     return '<div class="doc-para doc-fillrow"><span class="flabel">'+label+'</span><span class="fillrest"></span></div>';
   }
 
-  function renderDocPage(rec, pageId){
+  function renderDocPage(rec, pageId, template){
+    return template === "tk1" ? renderTk1Page(rec, pageId) : renderMau2Page(rec, pageId);
+  }
+
+  function renderMau2Page(rec, pageId){
     var gioiTinhTxt = rec.gioiTinh || "";
     var pageClass = "doc-page" + (rec.fitOnePage ? " doc-page-fit" : "");
     return '' +
@@ -1374,6 +1454,76 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
         '<div class="right">' +
           '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
+          '<strong>NGƯỜI KÊ KHAI</strong>' +
+          '<div class="doc-sign-name">&nbsp;</div>' +
+        '</div>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="doc-qr-block">' +
+        (rec.qr ? '<div class="doc-qr-img">'+renderQrSvg(rec.qr)+'</div>' : '') +
+        '<div class="doc-qr-code">'+escapeHtml(rec.inDuoiQR)+'</div>' +
+      '</div>' +
+
+      (rec.stt ? '<div class="doc-stt-block">'+escapeHtml(rec.stt)+'</div>' : '') +
+    '</div>';
+  }
+
+  // Mẫu TK1-TS — Tờ khai đăng ký, điều chỉnh thông tin tham gia BHXH, BHYT.
+  // Dùng lại toàn bộ các class CSS/hàm trợ giúp đã có của Mẫu 2 (doc-page,
+  // doc-section, fillLine, renderQrSvg…) để hai mẫu có phong cách nhất quán.
+  function renderTk1Page(rec, pageId){
+    var pageClass = "doc-page" + (rec.fitOnePage ? " doc-page-fit" : "");
+    return '' +
+    '<div class="'+pageClass+'" id="'+pageId+'">' +
+      '<div class="doc-content" id="'+pageId+'_content">' +
+      '<div class="doc-topline"><span>Mẫu TK1-TS</span></div>' +
+      '<div class="doc-national">' +
+        'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM' +
+        '<div class="line2">Độc lập - Tự do - Hạnh phúc</div>' +
+        '<div class="rule"></div>' +
+      '</div>' +
+      '<div class="doc-title">' +
+        'TỜ KHAI' +
+        '<div class="line2" style="font-size:12.5pt; white-space:nowrap;">ĐĂNG KÝ, ĐIỀU CHỈNH THÔNG TIN THAM GIA BẢO HIỂM XÃ HỘI, BẢO HIỂM Y TẾ</div>' +
+      '</div>' +
+      '<div class="doc-masothe">Mã số BHXH: <span class="fillval">'+escapeHtml(rec.maSoBHXH)+'</span></div>' +
+
+      '<div class="doc-section">A. Đăng ký tham gia</div>' +
+      '<div class="doc-section" style="margin-top:2mm;">I. Thông tin chung</div>' +
+      '<div class="doc-row">' +
+        '<div class="c1">[01]. Họ và tên: <span class="fillval">'+escapeHtml(rec.hoTen)+'</span></div>' +
+        '<div class="c2">[02]. Giới tính: <span class="fillval">'+escapeHtml(rec.gioiTinh || "")+'</span></div>' +
+      '</div>' +
+      '<div class="doc-row">' +
+        '<div class="c1">[04]. Số CCCD/ĐDCN/hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "")+'</span></div>' +
+        '<div class="c2">[03]. Ngày sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "")+'</span></div>' +
+      '</div>' +
+      '<div class="doc-para">[05]. Dân tộc: Kinh &nbsp;&nbsp;&nbsp; [06]. Quốc tịch: Việt Nam &nbsp;&nbsp;&nbsp; [07]. Số điện thoại: <span class="fillval">'+escapeHtml(rec.dienThoai || "")+'</span></div>' +
+      fillLine("[08]. Địa chỉ email:", rec.email) +
+      fillLine("[09]. Nơi đăng ký khám, chữa bệnh ban đầu:", rec.noiKCB) +
+      '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính: - Bản điện tử<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Bản giấy<span class="checkbox"></span></div>' +
+      '<div class="doc-para">[11]. Địa chỉ nhận bản giấy:</div>' +
+      fillLine("[11.1]. Số nhà, đường/phố, thôn/xóm:", rec.ap) +
+      '<div class="doc-row">' +
+        '<div class="c1">[11.2]. Xã, phường, đặc khu: <span class="fillval">'+escapeHtml(rec.xa)+'</span></div>' +
+        '<div class="c2">[11.3]. Tỉnh, thành phố: <span class="fillval">'+escapeHtml(rec.tinh)+'</span></div>' +
+      '</div>' +
+
+      '<div class="doc-section">II. Thông tin bổ sung</div>' +
+      '<div class="doc-para">[12]. Mức tiền đóng: <span class="fillval">'+escapeHtml(rec.mucDong || "")+'</span> &nbsp;&nbsp; [13]. Phương thức đóng: <span class="fillval">'+escapeHtml(rec.phuongThucDong || "")+'</span></div>' +
+      fillLine("[14]. Nghề, công việc, thời gian và nơi làm việc:", rec.ngheNghiep) +
+      fillLine("[15]. Đối tượng tham gia:", rec.doiTuongThamGia) +
+
+      '<div class="doc-section">B. Điều chỉnh thông tin</div>' +
+      fillLine("[16]. Nội dung đề nghị:", rec.noiDungHoan) +
+      fillLine("[17]. Giấy tờ kèm theo (nếu có):", rec.hoSoKemTheo) +
+
+      '<div class="doc-footer-grid">' +
+        '<div class="left"><strong>XÁC NHẬN CỦA ĐƠN VỊ</strong></div>' +
+        '<div class="right">' +
+          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
+          '<div style="font-size:10.5pt;">Tôi chịu trách nhiệm trước pháp luật về nội dung kê khai.</div>' +
           '<strong>NGƯỜI KÊ KHAI</strong>' +
           '<div class="doc-sign-name">&nbsp;</div>' +
         '</div>' +
