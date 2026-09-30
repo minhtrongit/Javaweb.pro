@@ -249,6 +249,39 @@
   .qr-scan-zoom-row input[type=range]{flex:1;}
   .qr-scan-zoom-row #qrZoomValue{min-width:36px; text-align:right; color:var(--ink); font-weight:600;}
   .qr-scan-hint{padding:8px 16px 14px; font-size:.85rem; color:var(--ink-soft); text-align:center;}
+
+  /* ---------- Ảnh đính kèm (chụp/CCCD) ---------- */
+  .photo-thumbs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+  .photo-thumb{position:relative; width:78px; height:78px; border:1px solid var(--line); border-radius:4px; overflow:hidden; background:#f5f6f8;}
+  .photo-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-thumb-remove{
+    position:absolute; top:2px; right:2px;
+    background:rgba(15,24,40,.65); color:#fff; border:none; border-radius:50%;
+    width:20px; height:20px; font-size:12px; line-height:1; cursor:pointer;
+  }
+  .photo-thumbs-empty{font-size:.82rem; color:var(--ink-soft); margin-bottom:8px;}
+  .photo-add-actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;}
+  .photo-cam-actions{display:flex; justify-content:center; gap:10px; padding:12px 16px 16px;}
+
+  .crop-modal{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(480px, 94vw);
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+    z-index:60;
+    display:none;
+    overflow:hidden;
+  }
+  .crop-modal.open{display:block;}
+  .crop-stage{position:relative; width:100%; max-height:60vh; overflow:auto; background:#111; line-height:0;}
+  #cropImage{display:block; width:100%; height:auto; -webkit-user-drag:none; user-select:none;}
+  #cropOverlayCanvas{position:absolute; top:0; left:0; touch-action:none; cursor:crosshair;}
+
+  /* Trang ảnh đính kèm khi in */
+  .photo-grid{display:flex; flex-wrap:wrap; gap:8mm; justify-content:center; align-items:flex-start; margin-top:10mm;}
+  .photo-item{width:85mm;}
+  .photo-item img{width:100%; display:block; border:1px solid #999;}
   .drawer-body{padding:18px 22px; overflow-y:auto; flex:1;}
   .drawer-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; background:#fafbfc;}
 
@@ -491,6 +524,41 @@
     <span id="qrZoomValue">3.0x</span>
   </div>
   <div class="qr-scan-hint" id="qrScanHint">Đưa mã QR mặt sau CCCD vào khung hình…</div>
+</div>
+
+<!-- ============ CHỤP ẢNH (CCCD mặt trước/sau, giấy tờ khác…) ============ -->
+<div class="overlay" id="photoCamOverlay"></div>
+<div class="qr-scan-modal" id="photoCamModal">
+  <div class="qr-scan-head">
+    <strong>Chụp ảnh</strong>
+    <button class="drawer-close" id="photoCamClose">✕</button>
+  </div>
+  <div class="qr-scan-viewport">
+    <video id="photoCamVideo" playsinline muted></video>
+  </div>
+  <div class="qr-scan-hint" id="photoCamHint">Canh ảnh vào khung hình rồi bấm Chụp</div>
+  <div class="photo-cam-actions">
+    <button class="btn btn-seal" id="photoCamShutter" type="button">📸 Chụp</button>
+  </div>
+</div>
+<input type="file" id="photoFileInput" accept="image/*" style="display:none">
+
+<!-- ============ CẮT ẢNH ============ -->
+<div class="overlay" id="cropOverlay"></div>
+<div class="crop-modal" id="cropModal">
+  <div class="qr-scan-head">
+    <strong>Cắt ảnh</strong>
+    <button class="drawer-close" id="cropClose">✕</button>
+  </div>
+  <div class="crop-stage" id="cropStage">
+    <img id="cropImage" alt="Ảnh cần cắt">
+    <canvas id="cropOverlayCanvas"></canvas>
+  </div>
+  <div class="qr-scan-hint">Kéo để chọn vùng cần giữ lại — kéo góc trắng để chỉnh kích thước, kéo bên trong để di chuyển</div>
+  <div class="photo-cam-actions">
+    <button class="btn btn-ghost" id="cropReset" type="button">↺ Chọn lại toàn ảnh</button>
+    <button class="btn btn-seal" id="cropConfirm" type="button">✓ Cắt &amp; Lưu ảnh</button>
+  </div>
 </div>
 
 <!-- ============ PRINT-ONLY AREA ============ -->
@@ -1103,6 +1171,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       phuongThucDong: "",
       ngheNghiep: "",
       doiTuongThamGia: "",
+      attachedPhotos: [],
       // Nếu file/sheet có cột "ngayky" (hoặc "Ngày ký") có dữ liệu thì dùng
       // luôn giá trị đó cho dòng ngày kê khai; trống thì để trống — khi in,
       // dòng trống sẽ tự hiện "……, ngày…… tháng…… năm ……" để ghi tay.
@@ -1137,6 +1206,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       phuongThucDong: "",
       ngheNghiep: "",
       doiTuongThamGia: "",
+      attachedPhotos: [],
       ngayKeKhai: defaultKeKhaiDate()
     };
   }
@@ -1201,7 +1271,15 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       + '<div class="field-grid">'
         + f("ngayKeKhai","Ngày… tháng… năm 2026 (để trống nếu ghi tay)",rec.ngayKeKhai,false)
         + f("stt","STT (góc dưới-phải trang in)",rec.stt,false)
-      + '</div>';
+      + '</div>'
+
+      + '<div class="section-label">Ảnh đính kèm (CCCD mặt trước/sau, giấy tờ khác…)</div>'
+      + '<div id="photoThumbs" class="photo-thumbs"></div>'
+      + '<div class="photo-add-actions">'
+        + '<button class="btn btn-ghost" id="btnAddPhotoCam" type="button">📷 Chụp ảnh</button>'
+        + '<button class="btn btn-ghost" id="btnAddPhotoFile" type="button">🖼️ Chọn ảnh từ máy</button>'
+      + '</div>'
+      + '<div class="settings-hint" style="margin-top:2px;">Ảnh sẽ được in thêm ở trang riêng ngay sau tờ khai (chỉ áp dụng khi in 1 người này, không áp dụng khi in hàng loạt).</div>';
   }
 
   function bindFormInputs(isBlank){
@@ -1234,7 +1312,283 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         });
       }
     }
+
+    // Ảnh đính kèm — có ở cả hai chế độ (bản ghi có sẵn lẫn "In mới").
+    if(!currentRecord.attachedPhotos) currentRecord.attachedPhotos = [];
+    renderPhotoThumbs();
+    $("btnAddPhotoCam").addEventListener("click", openPhotoCamera);
+    $("btnAddPhotoFile").addEventListener("click", function(){ $("photoFileInput").click(); });
   }
+
+  // -------- Ảnh đính kèm: hiển thị, chụp camera, chọn file, cắt ảnh --------
+  function renderPhotoThumbs(){
+    var host = $("photoThumbs");
+    if(!host) return;
+    var photos = (currentRecord && currentRecord.attachedPhotos) || [];
+    if(!photos.length){
+      host.innerHTML = '<div class="photo-thumbs-empty">Chưa có ảnh nào.</div>';
+      return;
+    }
+    host.innerHTML = photos.map(function(src, i){
+      return '<div class="photo-thumb">' +
+        '<img src="'+src+'" alt="Ảnh '+(i+1)+'">' +
+        '<button class="photo-thumb-remove" data-idx="'+i+'" type="button">✕</button>' +
+      '</div>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".photo-thumb-remove"), function(btn){
+      btn.addEventListener("click", function(){
+        currentRecord.attachedPhotos.splice(Number(btn.dataset.idx), 1);
+        renderPhotoThumbs();
+      });
+    });
+  }
+
+  // ---- Chụp ảnh bằng camera ----
+  var photoCamStream = null;
+
+  $("photoCamClose").addEventListener("click", closePhotoCamera);
+  $("photoCamOverlay").addEventListener("click", closePhotoCamera);
+  $("photoCamShutter").addEventListener("click", capturePhotoFromCamera);
+
+  function openPhotoCamera(){
+    $("photoCamHint").textContent = "Đang mở camera…";
+    $("photoCamOverlay").classList.add("open");
+    $("photoCamModal").classList.add("open");
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      $("photoCamHint").textContent = "Trình duyệt này không hỗ trợ truy cập camera.";
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function(stream){
+        photoCamStream = stream;
+        var video = $("photoCamVideo");
+        video.srcObject = stream;
+        video.play();
+        $("photoCamHint").textContent = "Canh ảnh vào khung hình rồi bấm Chụp";
+      })
+      .catch(function(err){
+        console.error(err);
+        $("photoCamHint").textContent = "Không mở được camera: " + err.message;
+      });
+  }
+
+  function closePhotoCamera(){
+    $("photoCamOverlay").classList.remove("open");
+    $("photoCamModal").classList.remove("open");
+    if(photoCamStream){
+      photoCamStream.getTracks().forEach(function(t){ t.stop(); });
+      photoCamStream = null;
+    }
+  }
+
+  function capturePhotoFromCamera(){
+    var video = $("photoCamVideo");
+    if(!video.videoWidth){ return; }
+    var canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    var dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    closePhotoCamera();
+    openCropModal(dataUrl);
+  }
+
+  // ---- Chọn ảnh có sẵn từ máy ----
+  $("photoFileInput").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){ openCropModal(ev.target.result); };
+    reader.onerror = function(){ alert("Không đọc được file ảnh."); };
+    reader.readAsDataURL(file);
+  });
+
+  // ---- Cắt ảnh (kéo-chọn vùng, kéo góc để chỉnh) ----
+  var cropRect = { x: 0, y: 0, w: 0, h: 0 };
+  var cropDragMode = null;   // 'new' | 'move' | 'resize-tl' | 'resize-tr' | 'resize-bl' | 'resize-br'
+  var cropDragFrom = null;
+  var CROP_HANDLE = 16;
+  var CROP_MIN = 24;
+
+  function openCropModal(dataUrl){
+    var img = $("cropImage");
+    img.onload = function(){
+      initCropStage();
+    };
+    img.src = dataUrl;
+    $("cropOverlay").classList.add("open");
+    $("cropModal").classList.add("open");
+  }
+
+  function closeCropModal(){
+    $("cropOverlay").classList.remove("open");
+    $("cropModal").classList.remove("open");
+  }
+  $("cropClose").addEventListener("click", closeCropModal);
+  $("cropOverlay").addEventListener("click", closeCropModal);
+
+  function initCropStage(){
+    var img = $("cropImage");
+    var canvas = $("cropOverlayCanvas");
+    var w = img.clientWidth, h = img.clientHeight;
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    cropRect = { x: w * 0.06, y: h * 0.06, w: w * 0.88, h: h * 0.88 };
+    drawCropOverlay();
+  }
+  $("cropReset").addEventListener("click", initCropStage);
+
+  function drawCropOverlay(){
+    var canvas = $("cropOverlayCanvas");
+    var ctx = canvas.getContext("2d");
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0, 0, w, h);
+    ctx.clearRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+    var hs = CROP_HANDLE;
+    var corners = [
+      [cropRect.x, cropRect.y],
+      [cropRect.x + cropRect.w, cropRect.y],
+      [cropRect.x, cropRect.y + cropRect.h],
+      [cropRect.x + cropRect.w, cropRect.y + cropRect.h]
+    ];
+    ctx.fillStyle = "#fff";
+    ctx.strokeStyle = "#333";
+    corners.forEach(function(c){
+      ctx.fillRect(c[0] - hs/2, c[1] - hs/2, hs, hs);
+      ctx.strokeRect(c[0] - hs/2, c[1] - hs/2, hs, hs);
+    });
+  }
+
+  function getCropPos(e){
+    var canvas = $("cropOverlayCanvas");
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(canvas.width, e.clientX - rect.left)),
+      y: Math.max(0, Math.min(canvas.height, e.clientY - rect.top))
+    };
+  }
+
+  function hitTestCropHandle(pos){
+    var hs = CROP_HANDLE;
+    var handles = {
+      tl: [cropRect.x, cropRect.y],
+      tr: [cropRect.x + cropRect.w, cropRect.y],
+      bl: [cropRect.x, cropRect.y + cropRect.h],
+      br: [cropRect.x + cropRect.w, cropRect.y + cropRect.h]
+    };
+    for(var key in handles){
+      var c = handles[key];
+      if(Math.abs(pos.x - c[0]) <= hs && Math.abs(pos.y - c[1]) <= hs) return key;
+    }
+    return null;
+  }
+
+  function pointInCropRect(pos){
+    return pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
+           pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h;
+  }
+
+  function clampCropToCanvas(){
+    var canvas = $("cropOverlayCanvas");
+    cropRect.x = Math.max(0, Math.min(cropRect.x, canvas.width - cropRect.w));
+    cropRect.y = Math.max(0, Math.min(cropRect.y, canvas.height - cropRect.h));
+  }
+
+  (function bindCropPointerEvents(){
+    var canvas = $("cropOverlayCanvas");
+    canvas.addEventListener("pointerdown", function(e){
+      var pos = getCropPos(e);
+      var handle = hitTestCropHandle(pos);
+      if(handle){
+        cropDragMode = "resize-" + handle;
+      } else if(pointInCropRect(pos)){
+        cropDragMode = "move";
+      } else {
+        cropDragMode = "new";
+        cropRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
+      }
+      cropDragFrom = pos;
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", function(e){
+      if(!cropDragMode) return;
+      var pos = getCropPos(e);
+
+      if(cropDragMode === "new"){
+        cropRect = {
+          x: Math.min(cropDragFrom.x, pos.x),
+          y: Math.min(cropDragFrom.y, pos.y),
+          w: Math.abs(pos.x - cropDragFrom.x),
+          h: Math.abs(pos.y - cropDragFrom.y)
+        };
+      } else if(cropDragMode === "move"){
+        cropRect.x += pos.x - cropDragFrom.x;
+        cropRect.y += pos.y - cropDragFrom.y;
+        cropDragFrom = pos;
+        clampCropToCanvas();
+      } else if(cropDragMode.indexOf("resize-") === 0){
+        resizeCropByHandle(cropDragMode.slice(7), pos);
+      }
+      drawCropOverlay();
+    });
+
+    function endDrag(){ cropDragMode = null; }
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+  })();
+
+  function resizeCropByHandle(corner, pos){
+    var r = cropRect;
+    var x2 = r.x + r.w, y2 = r.y + r.h; // góc đối diện cố định
+    if(corner === "tl"){
+      r.x = Math.min(pos.x, x2 - CROP_MIN);
+      r.y = Math.min(pos.y, y2 - CROP_MIN);
+      r.w = x2 - r.x; r.h = y2 - r.y;
+    } else if(corner === "tr"){
+      r.y = Math.min(pos.y, y2 - CROP_MIN);
+      r.w = Math.max(CROP_MIN, pos.x - r.x);
+      r.h = y2 - r.y;
+    } else if(corner === "bl"){
+      r.x = Math.min(pos.x, x2 - CROP_MIN);
+      r.w = x2 - r.x;
+      r.h = Math.max(CROP_MIN, pos.y - r.y);
+    } else if(corner === "br"){
+      r.w = Math.max(CROP_MIN, pos.x - r.x);
+      r.h = Math.max(CROP_MIN, pos.y - r.y);
+    }
+    clampCropToCanvas();
+  }
+
+  $("cropConfirm").addEventListener("click", function(){
+    var img = $("cropImage");
+    var canvas = $("cropOverlayCanvas");
+    if(cropRect.w < 4 || cropRect.h < 4){
+      alert("Vùng chọn quá nhỏ, vui lòng chọn lại.");
+      return;
+    }
+    var scale = img.naturalWidth / canvas.width;
+    var sx = cropRect.x * scale, sy = cropRect.y * scale;
+    var sw = cropRect.w * scale, sh = cropRect.h * scale;
+
+    var out = document.createElement("canvas");
+    out.width = Math.max(1, Math.round(sw));
+    out.height = Math.max(1, Math.round(sh));
+    out.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, out.width, out.height);
+
+    if(!currentRecord.attachedPhotos) currentRecord.attachedPhotos = [];
+    currentRecord.attachedPhotos.push(out.toDataURL("image/jpeg", 0.9));
+    closeCropModal();
+    renderPhotoThumbs();
+  });
 
   // -------- Print rendering --------
   // QUAN TRỌNG: window.print() phải được gọi ĐỒNG BỘ, ngay trong hàm xử lý click.
@@ -1336,7 +1690,26 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       var pageId = "docPage" + i;
       printRoot.insertAdjacentHTML("beforeend", renderDocPage(rec, pageId, template));
     });
+    // Trang ảnh đính kèm: chỉ áp dụng khi in ĐÚNG 1 người (ảnh gắn theo từng
+    // người cụ thể nên không có ý nghĩa khi in hàng loạt nhiều người).
+    if(records.length === 1 && records[0].attachedPhotos && records[0].attachedPhotos.length){
+      printRoot.insertAdjacentHTML("beforeend", renderPhotoPage(records[0].attachedPhotos));
+    }
     applyFitScaling(records);
+  }
+
+  // Trang riêng in ảnh đính kèm (CCCD mặt trước/sau…) ngay sau tờ khai.
+  function renderPhotoPage(photos){
+    var items = photos.map(function(src, i){
+      return '<div class="photo-item"><img src="'+src+'" alt="Ảnh đính kèm '+(i+1)+'"></div>';
+    }).join("");
+    return '' +
+    '<div class="doc-page">' +
+      '<div class="doc-content">' +
+        '<div class="doc-section" style="text-align:center;">ẢNH ĐÍNH KÈM (CCCD/GIẤY TỜ TUỲ THÂN)</div>' +
+        '<div class="photo-grid">' + items + '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   // "Vừa 1 trang": đo chiều cao thật (chưa co) của phần nội dung từng trang
