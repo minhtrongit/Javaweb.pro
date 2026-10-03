@@ -1246,6 +1246,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     }
     setFormFieldValue("soTaiKhoan", parsed.accountNumber);
     setFormFieldValue("tenNganHang", parsed.bankName);
+    if(currentIsBlank) recomputeBlankQr();
     closeQrScanner();
   }
 
@@ -1325,7 +1326,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     setFormFieldValue("ap", addr.ap);
     setFormFieldValue("xa", addr.xa);
     setFormFieldValue("tinh", addr.tinh);
-    setFormFieldValue("qr", cccdNum); // đồng bộ mã QR theo CCCD giống khi gõ tay
+    if(currentIsBlank){
+      recomputeBlankQr(); // ghép lại đủ 7 trường (CCCD|SĐT|STK|Ngân hàng|Họ tên|Ngày sinh|Giới tính)
+    } else {
+      setFormFieldValue("qr", cccdNum);
+    }
     return true;
   }
 
@@ -1358,6 +1363,22 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     currentRecord[key] = value;
     var el = $("f_" + key);
     if(el) el.value = value;
+  }
+
+  // "In mới": ghép chuỗi mã QR từ 7 trường theo đúng thứ tự
+  // CCCD|Điện thoại|Số tài khoản|Tên ngân hàng|Họ tên|Ngày sinh|Giới tính
+  function recomputeBlankQr(){
+    if(!currentRecord) return;
+    var composed = [
+      currentRecord.cccd || "",
+      currentRecord.dienThoai || "",
+      currentRecord.soTaiKhoan || "",
+      currentRecord.tenNganHang || "",
+      currentRecord.hoTen || "",
+      currentRecord.ngaySinh || "",
+      currentRecord.gioiTinh || ""
+    ].join("|");
+    setFormFieldValue("qr", composed);
   }
 
   function buildEditableRecord(row){
@@ -1517,7 +1538,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       + '<div class="settings-hint" style="margin-top:2px;">Ảnh sẽ được in thêm ở trang riêng ngay sau tờ khai (chỉ áp dụng khi in 1 người này, không áp dụng khi in hàng loạt).</div>';
   }
 
+  var currentIsBlank = false;
+
   function bindFormInputs(isBlank){
+    currentIsBlank = !!isBlank;
     Object.keys(currentRecord).forEach(function(key){
       var el = $("f_" + key);
       if(!el) return;
@@ -1525,15 +1549,16 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     });
 
     if(isBlank){
-      // Gõ số CCCD tay: tự đồng bộ luôn vào ô mã QR (vẫn sửa lại được sau đó).
-      var cccdEl = $("f_cccd");
-      var qrEl = $("f_qr");
-      if(cccdEl && qrEl){
-        cccdEl.addEventListener("input", function(){
-          qrEl.value = cccdEl.value;
-          currentRecord.qr = cccdEl.value;
-        });
-      }
+      // "In mới": chuỗi mã QR luôn tự ghép lại từ 7 trường theo đúng thứ tự
+      // CCCD|Điện thoại|Số tài khoản|Tên ngân hàng|Họ tên|Ngày sinh|Giới tính
+      // mỗi khi một trong các trường này thay đổi (gõ tay hoặc do quét QR
+      // CCCD/QR ngân hàng điền vào) — người dùng vẫn sửa lại được ô mã QR
+      // sau đó nếu muốn khác đi.
+      ["cccd","dienThoai","soTaiKhoan","tenNganHang","hoTen","ngaySinh","gioiTinh"].forEach(function(key){
+        var el = $("f_" + key);
+        if(el) el.addEventListener("input", recomputeBlankQr);
+      });
+      recomputeBlankQr(); // đồng bộ ngay khi vừa mở khung "In mới"
 
       // Ô "Chuỗi QR CCCD": người dùng có thể dán/gõ tay chuỗi quét được từ
       // QR CCCD vào đây (giống hệt kết quả quét bằng camera) — mỗi khi chuỗi
