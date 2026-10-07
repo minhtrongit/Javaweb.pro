@@ -223,6 +223,45 @@
   .drawer-close{background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--ink-soft); line-height:1;}
   .drawer-head-actions{display:flex; align-items:center; gap:10px;}
 
+  /* Trên máy tính (màn hình rộng): hiện khung nhập liệu như một hộp thoại
+     lớn, canh giữa màn hình — chuyên nghiệp và thoải mái nhập liệu hơn là
+     một dải nhỏ trượt từ bên phải (vẫn giữ kiểu trượt-từ-phải trên điện
+     thoại vì màn hình hẹp, trượt cạnh phù hợp hơn). */
+  @media (min-width: 900px){
+    .drawer{
+      top:50%; left:50%; right:auto; bottom:auto;
+      width:min(1300px, 95vw);
+      max-height:88vh;
+      border-radius:var(--radius);
+      box-shadow:0 24px 70px rgba(15,24,40,.3);
+      transform:translate(-50%,-50%) scale(0.97);
+      opacity:0;
+      pointer-events:none;
+      transition:transform .18s ease, opacity .18s ease;
+    }
+    .drawer.open{
+      transform:translate(-50%,-50%) scale(1);
+      opacity:1;
+      pointer-events:auto;
+    }
+    /* 3 ô nhập mỗi dòng thay vì xếp chồng 1 cột — đỡ phải lăn chuột xuống
+       khi khung đã đủ rộng. Mỗi "section-label" tự kéo hết hàng để tách
+       nhóm; vài khối không phải ô nhập (ảnh đính kèm, ghi chú…) cũng kéo
+       hết hàng cho khỏi vỡ bố cục. */
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:0 14px;
+      align-items:start;
+    }
+    .form-grid > .section-label,
+    .form-grid > #photoThumbs,
+    .form-grid > .photo-add-actions,
+    .form-grid > .settings-hint{
+      grid-column:1 / -1;
+    }
+  }
+
   /* ---------- QR scanner (quét QR CCCD bằng camera) ---------- */
   #qrScanOverlay{z-index:55;}
   .qr-scan-modal{
@@ -1466,33 +1505,30 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       return '<div class="field"><label>'+label+(required?' <span class="req">*</span>':'')+'</label>' +
         '<input type="text" id="f_'+id+'" value="'+escapeAttr(val)+'"></div>';
     }
-    return ''
+    // Lưu ý: KHÔNG còn bọc các ô theo từng cặp trong "field-grid" nữa — mọi
+    // ô nhập giờ là item ngang hàng, chảy tự do trong lưới chung của
+    // ".form-grid" (CSS). Trên máy tính, ".form-grid" tự chia 3 ô/dòng; trên
+    // điện thoại thì xếp thành 1 cột như trước. Mỗi "section-label" tự kéo
+    // dài hết chiều ngang để ngắt sang dòng mới đúng theo từng nhóm.
+    return '<div class="form-grid">'
       + (isBlank ? (
         '<div class="section-label">Quét hoặc dán mã QR CCCD</div>'
         + f("qrRaw","Chuỗi QR CCCD (quét bằng nút 📷 hoặc dán tay vào đây)",rec.qrRaw,false)
       ) : '')
       + '<div class="section-label">Thông tin người tham gia</div>'
-      + '<div class="field-grid">'
-        + f("hoTen","Họ và tên",rec.hoTen,true)
-        + f("gioiTinh","Giới tính",rec.gioiTinh,true)
-      + '</div>'
-      + '<div class="field-grid">'
-        + f("ngaySinh","Ngày, tháng, năm sinh",rec.ngaySinh,true)
-        + f("cccd","Số CCCD/ĐDCN/Hộ chiếu",rec.cccd,true)
-      + '</div>'
+      + f("hoTen","Họ và tên",rec.hoTen,true)
+      + f("gioiTinh","Giới tính",rec.gioiTinh,true)
+      + f("ngaySinh","Ngày, tháng, năm sinh",rec.ngaySinh,true)
+      + f("cccd","Số CCCD/ĐDCN/Hộ chiếu",rec.cccd,true)
       + f("maSoBHXH","Mã số bảo hiểm xã hội",rec.maSoBHXH,true)
-      + '<div class="field-grid">'
-        + f("dienThoai","Điện thoại",rec.dienThoai,false)
-        + f("email","Email (nếu có)",rec.email,false)
-      + '</div>'
+      + f("dienThoai","Điện thoại",rec.dienThoai,false)
+      + f("email","Email (nếu có)",rec.email,false)
       + f("noiKCB","Nơi đăng ký khám, chữa bệnh ban đầu",rec.noiKCB,false)
 
       + '<div class="section-label">Địa chỉ nhận thẻ BHYT bản giấy</div>'
       + f("ap","Số nhà, đường/phố, thôn/xóm (ấp)",rec.ap,false)
-      + '<div class="field-grid">'
-        + f("xa","Xã, phường",rec.xa,false)
-        + f("tinh","Tỉnh",rec.tinh,false)
-      + '</div>'
+      + f("xa","Xã, phường",rec.xa,false)
+      + f("tinh","Tỉnh",rec.tinh,false)
 
       + '<div class="section-label">Điều chỉnh thông tin trên thẻ BHYT</div>'
       + f("noiDungHoan","Nội dung đề nghị điều chỉnh",rec.noiDungHoan,false)
@@ -1504,18 +1540,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
             '<button class="btn btn-ghost" id="btnScanBankQR" type="button">📷 Quét QR</button>' +
           '</div>' +
         '</div>'
-      + '<div class="field-grid">'
-        + f("tenNganHang","Tên ngân hàng",rec.tenNganHang,false)
-        + f("chuTaiKhoan","Chủ tài khoản",rec.chuTaiKhoan,false)
-      + '</div>'
+      + f("tenNganHang","Tên ngân hàng",rec.tenNganHang,false)
+      + f("chuTaiKhoan","Chủ tài khoản",rec.chuTaiKhoan,false)
 
       + f("hoSoKemTheo","Hồ sơ kèm theo (nếu có)",rec.hoSoKemTheo,false)
 
       + '<div class="section-label">Thông tin bổ sung (dùng cho Mẫu TK1-TS)</div>'
-      + '<div class="field-grid">'
-        + f("mucDong","Mức tiền đóng",rec.mucDong,false)
-        + f("phuongThucDong","Phương thức đóng",rec.phuongThucDong,false)
-      + '</div>'
+      + f("mucDong","Mức tiền đóng",rec.mucDong,false)
+      + f("phuongThucDong","Phương thức đóng",rec.phuongThucDong,false)
       + f("ngheNghiep","Nghề, công việc, thời gian và nơi làm việc",rec.ngheNghiep,false)
       + f("doiTuongThamGia","Đối tượng tham gia",rec.doiTuongThamGia,false)
 
@@ -1524,10 +1556,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       + f("inDuoiQR","Dòng chữ in dưới QR",rec.inDuoiQR,false)
 
       + '<div class="section-label">Ngày kê khai &amp; số thứ tự</div>'
-      + '<div class="field-grid">'
-        + f("ngayKeKhai","Ngày… tháng… năm 2026 (để trống nếu ghi tay)",rec.ngayKeKhai,false)
-        + f("stt","STT (góc dưới-phải trang in)",rec.stt,false)
-      + '</div>'
+      + f("ngayKeKhai","Ngày… tháng… năm 2026 (để trống nếu ghi tay)",rec.ngayKeKhai,false)
+      + f("stt","STT (góc dưới-phải trang in)",rec.stt,false)
 
       + '<div class="section-label">Ảnh đính kèm (CCCD mặt trước/sau, giấy tờ khác…)</div>'
       + '<div id="photoThumbs" class="photo-thumbs"></div>'
@@ -1535,7 +1565,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         + '<button class="btn btn-ghost" id="btnAddPhotoCam" type="button">📷 Chụp ảnh</button>'
         + '<button class="btn btn-ghost" id="btnAddPhotoFile" type="button">🖼️ Chọn ảnh từ máy</button>'
       + '</div>'
-      + '<div class="settings-hint" style="margin-top:2px;">Ảnh sẽ được in thêm ở trang riêng ngay sau tờ khai (chỉ áp dụng khi in 1 người này, không áp dụng khi in hàng loạt).</div>';
+      + '<div class="settings-hint" style="margin-top:2px;">Ảnh sẽ được in thêm ở trang riêng ngay sau tờ khai (chỉ áp dụng khi in 1 người này, không áp dụng khi in hàng loạt).</div>'
+      + '</div>';
   }
 
   var currentIsBlank = false;
@@ -2040,10 +2071,13 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   // Dòng "tuỳ chọn": nếu KHÔNG có dữ liệu thì BỎ HẲN dòng này khi in (không
   // hiện gạch chấm) — chỉ in ra khi người dùng đã nhập gì đó (kể cả chỉ gõ
   // khoảng trắng cũng tính là "có nhập", vì value khi đó là chuỗi khác rỗng).
+  // Khi CÓ dữ liệu, vẫn thêm dấu chấm kéo dài đến hết dòng sau giá trị
+  // (dùng chung khung .fillrest — chấm vẽ nền trải suốt chiều rộng, nên vừa
+  // hiện dưới giá trị vừa kéo dài tiếp phần còn trống tới hết dòng).
   // Dùng cho Số tài khoản / Tên ngân hàng / Chủ tài khoản.
   function optionalLine(label, value){
     if(!value) return "";
-    return '<div class="doc-para">'+label+' <strong>'+escapeHtml(value)+'</strong></div>';
+    return '<div class="doc-para doc-fillrow"><span class="flabel">'+label+'</span><span class="fillrest">'+escapeHtml(value)+'</span></div>';
   }
 
   function renderDocPage(rec, pageId, template){
