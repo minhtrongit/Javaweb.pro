@@ -2079,6 +2079,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       if(!page || !content) return;
 
       content.style.transform = "none";
+      content.style.width = ""; // đưa về mặc định (100% khổ giấy) trước khi đo lại
       var cs = window.getComputedStyle(page);
       var padTop = parseFloat(cs.paddingTop) || 0;
       var padBottom = parseFloat(cs.paddingBottom) || 0;
@@ -2087,6 +2088,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
       if(available > 0 && natural > available){
         var scale = available / natural;
+        // QUAN TRỌNG: transform:scale() co đều CẢ 2 chiều (rộng lẫn cao).
+        // Nếu chỉ co theo chiều cao bị tràn mà không bù lại chiều rộng, nội
+        // dung sẽ bị co luôn theo chiều ngang, để lại khoảng trống lớn bên
+        // phải trang giấy dù giấy vẫn đúng khổ A4. Cách khắc phục chuẩn: nới
+        // rộng khung nội dung ra đúng tỉ lệ nghịch (100/scale) TRƯỚC khi co
+        // lại — sau khi co, phần hiển thị ra sẽ vừa khít lại đúng 100% chiều
+        // rộng trang như ban đầu, chỉ có chiều cao là thực sự được thu nhỏ.
+        content.style.width = (100 / scale) + "%";
         content.style.transform = "scale(" + scale + ")";
       }
     });
