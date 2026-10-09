@@ -422,7 +422,7 @@
     justify-content:space-between;
   }
   .doc-footer-grid .left, .doc-footer-grid .right{width:48%; text-align:center;}
-  .doc-footer-grid .right .date-line{font-style:italic; margin-bottom:1.5mm;}
+  .date-line{font-style:italic; margin-bottom:1.5mm;}
   .doc-sign-name{margin-top:20mm; font-weight:700;}
   .fillval-line{display:block; width:100%; height:5mm;}
   /* Khối QR neo cố định ở góc dưới-trái của trang in */
@@ -2342,14 +2342,16 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       fillLine("Địa chỉ nhận:", rec.diaChiLienHe) +
       fillLine("[5]. Nơi đăng ký KCB ban đầu:", rec.noiKCB) +
 
-      '<div class="doc-footer-grid">' +
-        '<div class="left">&nbsp;</div>' +
-        '<div class="right">' +
-          '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
-          '<strong>Người đề nghị</strong>' +
-          '<div style="font-size:10.5pt;">(Ký, ghi rõ họ tên hoặc ký số)</div>' +
-          '<div class="doc-sign-name">&nbsp;</div>' +
-        '</div>' +
+      // Mẫu 14-HSB KHÔNG có khung "Xác nhận của đơn vị" như Mẫu 2/TK1 — chỉ
+      // có phần ký tên người đề nghị, nên KHÔNG dùng bố cục 2 cột trái/phải
+      // (sẽ để trống hẳn nửa trang bên trái, trông như thiếu nội dung). Chỉ
+      // in một khối chữ ký duy nhất, đặt ở nửa bên phải trang theo đúng quy
+      // ước trình bày thường thấy.
+      '<div style="margin-top:6mm; width:50%; margin-left:auto; text-align:center;">' +
+        '<div class="date-line">'+(rec.ngayKeKhai ? escapeHtml(rec.ngayKeKhai) : "……, ngày…… tháng…… năm ……")+'</div>' +
+        '<strong>Người đề nghị</strong>' +
+        '<div style="font-size:10.5pt;">(Ký, ghi rõ họ tên hoặc ký số)</div>' +
+        '<div class="doc-sign-name">&nbsp;</div>' +
       '</div>' +
       '</div>' +
 
