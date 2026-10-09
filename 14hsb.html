@@ -432,6 +432,16 @@
   .doc-qr-img svg{display:block; width:100%; height:100%;}
   .doc-qr-code{font-size:11pt; margin-top:1mm; letter-spacing:.2px; text-align:left;}
 
+  /* Ép rõ khổ giấy A4, lề 0 — nếu không khai báo, trình duyệt/thiết bị sẽ tự
+     dùng khổ giấy mặc định của máy in/hệ điều hành (có thể khác A4, ví dụ
+     Letter hoặc khổ tuỳ chỉnh), khiến nội dung (vốn tính theo đúng 210mm)
+     bị lọt thỏm, dư khoảng trắng bên phải/dưới trang như khổ giấy rộng hơn
+     thực tế trang in. */
+  @page{
+    size: A4;
+    margin: 0;
+  }
+
   @media print{
     /* Ẩn hẳn (display:none) mọi phần tử khác ngoài #printRoot khi in — dùng
        display:none thay vì visibility:hidden vì visibility:hidden vẫn chiếm
@@ -2293,17 +2303,17 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       '<div class="doc-para" style="margin-top:3mm;">Kính gửi: Bảo hiểm xã hội Cơ sở Sa Đéc</div>' +
 
       '<div class="doc-section">Thông tin của người đề nghị</div>' +
-      '<div class="doc-para">1. Họ và tên (1): <span class="fillval">'+escapeHtml(rec.hoTen)+'</span></div>' +
+      fillLine("1. Họ và tên (1):", rec.hoTen) +
       '<div class="doc-row">' +
         '<div class="c1">Giới tính: <span class="fillval">'+escapeHtml(rec.gioiTinh || "")+'</span></div>' +
         '<div class="c2">Ngày tháng năm sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "")+'</span></div>' +
       '</div>' +
       '<div class="doc-para">Quốc tịch: Việt Nam.</div>' +
-      '<div class="doc-para">Số Định danh cá nhân/căn cước công dân/Số Hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "")+'</span></div>' +
-      '<div class="doc-para">Số điện thoại di động (2): <span class="fillval fillval-tel">'+escapeHtml(rec.dienThoai || "")+'</span></div>' +
+      fillLine("Số Định danh cá nhân/căn cước công dân/Số Hộ chiếu:", rec.cccd) +
+      fillLine("Số điện thoại di động (2):", rec.dienThoai) +
       fillLine("Địa chỉ liên hệ (3):", rec.diaChiLienHe) +
       fillLine("Mối quan hệ với người hưởng: (4)", "") +
-      '<div class="doc-para">Mã số BHXH (5): <span class="fillval">'+escapeHtml(rec.maSoBHXH)+'</span></div>' +
+      fillLine("Mã số BHXH (5):", rec.maSoBHXH) +
 
       '<div class="doc-section">Nội dung yêu cầu giải quyết (6)</div>' +
       '<div class="doc-para">☑ BHXH một lần</div>' +
@@ -2315,16 +2325,16 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       fillLine("Yêu cầu khác:", "") +
 
       '<div class="doc-section">Thông tin nhận chế độ, trợ cấp hoặc thay đổi thông tin nhận chế độ, trợ cấp (7)</div>' +
-      '<div class="doc-para">[1]. Số điện thoại: <span class="fillval fillval-tel">'+escapeHtml(rec.dienThoai || "")+'</span></div>' +
+      fillLine("[1]. Số điện thoại:", rec.dienThoai) +
       fillLine("[2]. Số điện thoại người thân khi cần liên lạc:", "") +
       '<div class="doc-para">[3]. Hình thức nhận lương hưu, trợ cấp BHXH, trợ cấp thất nghiệp:</div>' +
       '<div class="doc-para">[3.1]. Uỷ quyền<span class="checkbox"></span> — từ ngày…… tháng…… năm…… (8)</div>' +
       '<div class="doc-para">[3.2]. Nhận bằng tiền mặt<span class="checkbox"></span> — từ ngày…… tháng…… năm……</div>' +
       '<div class="doc-para">[3.2.1]. Tại cơ quan BHXH<span class="checkbox"></span> &nbsp;&nbsp;&nbsp; [3.2.2]. Tổ chức hỗ trợ chi trả<span class="checkbox"></span></div>' +
       '<div class="doc-para">[3.3]. Nhận qua Tài khoản cá nhân: ☑ — từ ngày…… tháng…… năm……</div>' +
-      '<div class="doc-para">[3.3.1]. Tên chủ tài khoản: <span class="fillval">'+escapeHtml(rec.chuTaiKhoan || "")+'</span></div>' +
-      '<div class="doc-para">[3.3.2]. Số tài khoản: <span class="fillval">'+escapeHtml(rec.soTaiKhoan || "")+'</span></div>' +
-      '<div class="doc-para">[3.3.3]. Ngân hàng nơi mở tài khoản: <span class="fillval">'+escapeHtml(rec.tenNganHang || "")+'</span></div>' +
+      fillLine("[3.3.1]. Tên chủ tài khoản:", rec.chuTaiKhoan) +
+      fillLine("[3.3.2]. Số tài khoản:", rec.soTaiKhoan) +
+      fillLine("[3.3.3]. Ngân hàng nơi mở tài khoản:", rec.tenNganHang) +
 
       '<div class="doc-para">[4]. Hình thức nhận hồ sơ hưởng chế độ, trợ cấp BHXH</div>' +
       '<div class="doc-para">[4.1]. Bản điện tử<span class="checkbox"></span></div>' +
