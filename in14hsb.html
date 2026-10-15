@@ -414,7 +414,7 @@
   .fillval-tel{min-width:38mm;}
   .doc-fillrow{display:flex; align-items:flex-end; gap:2mm;}
   .doc-fillrow .flabel{white-space:nowrap;}
-  .doc-fillrow .fillrest{flex:1; padding-left:2px; padding-right:2px; font-weight:600; min-height:1em;}
+  .doc-fillrow .fillrest{flex:1; min-width:0; overflow-wrap:anywhere; padding-left:2px; padding-right:2px; font-weight:600; min-height:1em;}
   .checkbox{display:inline-block; width:4mm; height:4mm; border:1px solid #111; vertical-align:-0.7mm; margin:0 1mm;}
   .doc-footer-grid{
     margin-top:5mm;
@@ -2180,9 +2180,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         '<div class="c1">[06]. Số CCCD/ĐDCN/Hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "")+'</span></div>' +
         '<div class="c2">[05]. Quốc tịch: Việt Nam</div>' +
       '</div>' +
+      // [07] Điện thoại nằm cột trái (rộng), [08] Email nằm cột phải thẳng hàng
+      // với [02]/[04]/[05] — mỗi ô tự kéo dấu chấm đến hết phần cột của nó.
       '<div class="doc-row">' +
-        '<div class="c1">[07]. Điện thoại: <span class="fillval fillval-tel">'+escapeHtml(rec.dienThoai || "")+'</span> </div>'  +
-        '<div class="c2">[08]. Email (nếu có): <span class="fillval">'+escapeHtml(rec.email || "")+'</span></div>' +
+        '<div class="c1 doc-fillrow"><span class="flabel">[07]. Điện thoại:</span><span class="fillrest">'+escapeHtml(rec.dienThoai || "")+'</span></div>' +
+        '<div class="c2 doc-fillrow"><span class="flabel">[08]. Email (nếu có):</span><span class="fillrest">'+escapeHtml(rec.email || "")+'</span></div>' +
       '</div>' +
       fillLine("[09]. Nơi đăng ký khám, chữa bệnh ban đầu:", rec.noiKCB) +
       '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính:</div>' +
