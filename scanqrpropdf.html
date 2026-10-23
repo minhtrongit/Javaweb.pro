@@ -172,6 +172,20 @@
                 <div class="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
                     <div id="pdfProgressBar" class="h-2 bg-primary rounded-full transition-all" style="width:0%"></div>
                 </div>
+                <div id="pdfHitBox" class="hidden mt-3 p-3 rounded-xl bg-green-50 border border-green-200">
+                    <p class="text-sm font-semibold text-green-800 mb-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Các trang có chứa mã QR (<span id="pdfHitCount">0</span> trang • <span id="pdfHitCodes">0</span> mã)
+                    </p>
+                    <div id="pdfHitList" class="max-h-40 overflow-y-auto text-xs text-green-900 space-y-1"></div>
+                </div>
+                <div id="pdfEmptyBox" class="hidden mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <p class="text-sm font-semibold text-amber-800 mb-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Các trang không chứa mã QR (<span id="pdfEmptyCount">0</span>)
+                    </p>
+                    <div id="pdfEmptyList" class="max-h-40 overflow-y-auto text-xs text-amber-900 space-y-1"></div>
+                </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
                     <p id="pdfSummary" class="text-xs text-gray-600"></p>
                     <button id="pdfCancelBtn" type="button" class="hidden bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs">
@@ -605,6 +619,59 @@
         const pdfSummary = document.getElementById('pdfSummary');
         const pdfCancelBtn = document.getElementById('pdfCancelBtn');
         const pdfLog = document.getElementById('pdfLog');
+        const pdfEmptyBox = document.getElementById('pdfEmptyBox');
+        const pdfEmptyList = document.getElementById('pdfEmptyList');
+        const pdfEmptyCount = document.getElementById('pdfEmptyCount');
+        const pdfHitBox = document.getElementById('pdfHitBox');
+        const pdfHitList = document.getElementById('pdfHitList');
+        const pdfHitCount = document.getElementById('pdfHitCount');
+        const pdfHitCodes = document.getElementById('pdfHitCodes');
+        let emptyByFile = [];
+        let hitByFile = [];
+
+        function renderHitPages() {
+            const files = hitByFile.filter(f => f.pages.length);
+            const totalPages = files.reduce((s, f) => s + f.pages.length, 0);
+            const totalCodes = files.reduce((s, f) => s + f.codes.reduce((a, b) => a + b, 0), 0);
+            pdfHitBox.classList.toggle('hidden', totalPages === 0);
+            pdfHitCount.textContent = totalPages;
+            pdfHitCodes.textContent = totalCodes;
+            pdfHitList.innerHTML = files.map(f => {
+                // Ghi chú các trang có nhiều hơn 1 mã
+                const multi = f.pages
+                    .map((pg, i) => f.codes[i] > 1 ? `trang ${pg}: ${f.codes[i]} mã` : null)
+                    .filter(Boolean);
+                return `<div><span class="font-medium break-all">${escapeHtml(f.name)}</span>` +
+                    ` <span class="text-green-700">(${f.pages.length}/${f.numPages} trang)</span>: ` +
+                    `trang ${formatPageRanges(f.pages)}` +
+                    (multi.length ? ` <span class="text-green-700">• ${multi.join(', ')}</span>` : '') +
+                    `</div>`;
+            }).join('');
+        }
+
+        // Gom số trang liên tiếp: [1,2,3,5] -> "1-3, 5"
+        function formatPageRanges(pages) {
+            const out = [];
+            for (let i = 0; i < pages.length; i++) {
+                let j = i;
+                while (j + 1 < pages.length && pages[j + 1] === pages[j] + 1) j++;
+                out.push(j > i ? `${pages[i]}-${pages[j]}` : `${pages[i]}`);
+                i = j;
+            }
+            return out.join(', ');
+        }
+
+        function renderEmptyPages() {
+            const files = emptyByFile.filter(f => f.pages.length);
+            const total = files.reduce((s, f) => s + f.pages.length, 0);
+            pdfEmptyBox.classList.toggle('hidden', total === 0);
+            pdfEmptyCount.textContent = total;
+            pdfEmptyList.innerHTML = files.map(f =>
+                `<div><span class="font-medium break-all">${escapeHtml(f.name)}</span>` +
+                ` <span class="text-amber-700">(${f.pages.length}/${f.numPages} trang)</span>: ` +
+                `trang ${formatPageRanges(f.pages)}</div>`
+            ).join('');
+        }
 
         let pdfBusy = false;
         let pdfCancel = false;
@@ -751,6 +818,10 @@
             pdfProgressBox.classList.remove('hidden');
             pdfLog.innerHTML = '';
             pdfSummary.textContent = '';
+            emptyByFile = [];
+            hitByFile = [];
+            renderEmptyPages();
+            renderHitPages();
 
             let totalFound = 0, totalNew = 0, totalPages = 0, emptyPages = 0, failedFiles = 0;
 
@@ -763,6 +834,10 @@
                     const buf = await file.arrayBuffer();
                     pdf = await pdfjsLib.getDocument({ data: buf }).promise;
                     let fileFound = 0, fileNew = 0;
+                    const emptyEntry = { name, numPages: pdf.numPages, pages: [] };
+                    emptyByFile.push(emptyEntry);
+                    const hitEntry = { name, numPages: pdf.numPages, pages: [], codes: [] };
+                    hitByFile.push(hitEntry);
 
                     for (let p = 1; p <= pdf.numPages && !pdfCancel; p++) {
                         setPdfProgress(
@@ -774,7 +849,16 @@
                         const codes = await scanPdfPage(page);
                         page.cleanup();
                         totalPages++;
-                        if (!codes.length) emptyPages++;
+                        if (!codes.length) {
+                            emptyPages++;
+                            emptyEntry.pages.push(p);
+                            renderEmptyPages();
+                        }
+                        if (codes.length) {
+                            hitEntry.pages.push(p);
+                            hitEntry.codes.push(codes.length);
+                            renderHitPages();
+                        }
                         for (const c of codes) {
                             fileFound++;
                             if (await saveQRFromPdf(c, `${name} (trang ${p})`)) fileNew++;
