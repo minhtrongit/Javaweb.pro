@@ -74,8 +74,15 @@
             position: sticky;
             top: 0;
         }
-        .col-qr { width: 85%; }
-        .col-action { width: 15%; text-align: center; }
+        .web-table { min-width: 960px; }
+        .col-stt { width: 6%; text-align: center; }
+        .col-qr { width: 26%; }
+        .col-file { width: 14%; }
+        .col-page { width: 7%; text-align: center; }
+        .col-note, .col-acc, .col-bank { width: 13%; }
+        .col-action { width: 8%; text-align: center; }
+        .web-table tbody tr { cursor: pointer; }
+        .web-table tbody tr:hover { background: #EFF6FF; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
@@ -90,6 +97,32 @@
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Thông tin kèm theo lượt quét -->
+        <section class="bg-white rounded-2xl shadow p-5 mb-6">
+            <h2 class="font-semibold text-primary mb-3">
+                <i class="fa-solid fa-note-sticky"></i> Thông tin kèm theo lượt quét
+                <span class="text-xs font-normal text-gray-400">(tùy chọn)</span>
+            </h2>
+            <div class="grid sm:grid-cols-3 gap-3">
+                <div>
+                    <label for="noteInput" class="block text-xs font-medium text-gray-600 mb-1">Ghi chú</label>
+                    <input type="text" id="noteInput" maxlength="200" placeholder="Ghi chú..."
+                        class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label for="accountInput" class="block text-xs font-medium text-gray-600 mb-1">Số tài khoản</label>
+                    <input type="text" id="accountInput" maxlength="50" inputmode="numeric" placeholder="Số tài khoản..."
+                        class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label for="bankInput" class="block text-xs font-medium text-gray-600 mb-1">Tên ngân hàng</label>
+                    <input type="text" id="bankInput" maxlength="100" placeholder="Tên ngân hàng..."
+                        class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Nhập trước khi quét, sẽ lưu kèm mọi mã QR quét sau đó (camera, ảnh, PDF). Có thể để trống và sửa từng dòng sau khi quét.</p>
+        </section>
+
         <!-- Khu vực Quét -->
         <section class="bg-white rounded-2xl shadow p-5 mb-6">
             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-primary">
@@ -229,11 +262,18 @@
                 </div>
             </div>
             
+            <p class="text-xs text-gray-500 mb-2"><i class="fa-solid fa-pen-to-square"></i> Nhấp vào một dòng để sửa dữ liệu trước khi xuất Excel.</p>
             <div class="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-xl">
                 <table class="web-table">
                     <thead>
                         <tr>
+                            <th class="col-stt">STT</th>
                             <th class="col-qr">Nội dung mã QR gốc</th>
+                            <th class="col-file">Tên file</th>
+                            <th class="col-page">STT trang</th>
+                            <th class="col-note">Ghi chú</th>
+                            <th class="col-acc">Số tài khoản</th>
+                            <th class="col-bank">Tên ngân hàng</th>
                             <th class="col-action">Thao tác</th>
                         </tr>
                     </thead>
@@ -247,13 +287,54 @@
             <ul class="text-xs text-gray-600 space-y-1">
                 <li>✅ Trên web: Chỉ hiển thị mã QR gốc, không tách cột</li>
                 <li>✅ Xuất Excel: Tự tách theo dấu | → bao nhiêu phần tạo bấy nhiêu cột</li>
-                <li>✅ Cột 1: Mã QR gốc | Cột 2: A | Cột 3: B | ... tiếp theo tự động</li>
+                <li>✅ Cột 1: STT | Cột 2: Mã QR gốc | Cột 3: Tên file | Cột 4: STT trang | Cột 5: Ghi chú | Cột 6: Số tài khoản | Cột 7: Tên ngân hàng | Cột 8: A | Cột 9: B | ... tiếp theo tự động</li>
                 <li>✅ Mở lại trang vẫn thấy danh sách đã lưu</li>
                 <li>✅ Quét PDF: kéo thả file/thư mục, tự quét mọi trang và mọi mã QR trên trang</li>
                 <li>⚠️ Không dùng chế độ Ẩn danh — dữ liệu sẽ mất khi đóng</li>
             </ul>
         </section>
     </main>
+
+    <!-- Hộp thoại sửa dòng -->
+    <div id="editModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5">
+            <h3 class="text-lg font-semibold text-primary mb-4"><i class="fa-solid fa-pen-to-square"></i> Sửa dữ liệu</h3>
+            <div class="space-y-3">
+                <div>
+                    <label for="editQR" class="block text-xs font-medium text-gray-600 mb-1">Nội dung mã QR gốc</label>
+                    <textarea id="editQR" rows="3" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm font-mono focus:outline-none focus:border-primary"></textarea>
+                </div>
+                <div>
+                    <label for="editFile" class="block text-xs font-medium text-gray-600 mb-1">Tên file</label>
+                    <input type="text" id="editFile" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label for="editNote" class="block text-xs font-medium text-gray-600 mb-1">Ghi chú</label>
+                    <input type="text" id="editNote" maxlength="200" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label for="editPage" class="block text-xs font-medium text-gray-600 mb-1">STT trang (số trang trong file PDF)</label>
+                    <input type="number" id="editPage" min="1" step="1" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="editAcc" class="block text-xs font-medium text-gray-600 mb-1">Số tài khoản</label>
+                        <input type="text" id="editAcc" maxlength="50" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="editBank" class="block text-xs font-medium text-gray-600 mb-1">Tên ngân hàng</label>
+                        <input type="text" id="editBank" maxlength="100" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button id="editCancelBtn" type="button" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">Hủy</button>
+                <button id="editSaveBtn" type="button" class="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-medium">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
 
     <footer class="bg-dark text-gray-400 py-4 mt-8 text-center text-sm">
         <p>© 2026 Quét QR — Tách động theo dấu phân cách</p>
@@ -304,6 +385,16 @@
             });
         }
 
+        function updateRecordInDB(record) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const req = tx.objectStore(STORE_NAME).put(record);
+                req.onerror = (e) => { e.preventDefault(); reject(e.target.error); };
+                tx.oncomplete = () => resolve(record);
+                tx.onabort = () => reject(tx.error);
+            });
+        }
+
         function deleteRecordByID(id) {
             return new Promise((resolve) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -336,6 +427,18 @@
         const zoomSlider = document.getElementById('zoomSlider');
         const zoomValue = document.getElementById('zoomValue');
         const delimiterInput = document.getElementById('delimiterInput');
+        const noteInput = document.getElementById('noteInput');
+        const accountInput = document.getElementById('accountInput');
+        const bankInput = document.getElementById('bankInput');
+
+        // Thông tin người dùng nhập sẵn, gắn vào mỗi mã quét được
+        function getScanMeta() {
+            return {
+                note: noteInput.value.trim(),
+                accountNo: accountInput.value.trim(),
+                bankName: bankInput.value.trim()
+            };
+        }
         const autoSaveMode = document.getElementById('autoSaveMode');
         const listSection = document.getElementById('listSection');
         const entryList = document.getElementById('entryList');
@@ -467,7 +570,7 @@
                 ctx.drawImage(img, 0, 0);
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imgData.data, canvas.width, canvas.height);
-                if (code) await handleQRResult(code.data);
+                if (code) await handleQRResult(code.data, file.name);
                 else alert('⚠️ Không tìm thấy mã QR trong ảnh: ' + file.name);
             }
             hideStatus();
@@ -477,12 +580,15 @@
         // ==============================================
         // XỬ LÝ QR → CHỈ LƯU MÃ GỐC
         // ==============================================
-        async function handleQRResult(rawText) {
+        async function handleQRResult(rawText, fileName = '') {
             if (rawText === lastScannedText) return;
             
             // Chỉ lưu mã gốc, không tách cột ở đây
             const record = {
                 rawQR: rawText,
+                fileName: fileName,
+                page: '',
+                ...getScanMeta(),
                 scannedAt: new Date().toISOString()
             };
 
@@ -512,22 +618,30 @@
         // ==============================================
         function renderAllRecords() {
             entryList.innerHTML = '';
-            savedRecords.forEach((rec) => {
+            savedRecords.forEach((rec, idx) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td class="text-center text-xs font-semibold">${savedRecords.length - idx}</td>
                     <td class="break-all text-xs">${escapeHtml(rec.rawQR)}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.fileName || '')}</td>
+                    <td class="text-center text-xs">${rec.page || ''}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.note || '')}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.accountNo || '')}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.bankName || '')}</td>
                     <td class="text-center">
                         <button class="del-btn text-gray-400 hover:text-red-500 p-1" data-id="${rec._id}" title="Xóa">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 `;
+                tr.addEventListener('click', () => openEditModal(rec._id));
                 entryList.appendChild(tr);
             });
 
             // Gắn sự kiện xóa
             document.querySelectorAll('.del-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const id = parseInt(e.currentTarget.dataset.id);
                     if (!confirm('Xóa dòng này?')) return;
                     await deleteRecordByID(id);
@@ -545,6 +659,77 @@
         }
 
         // ==============================================
+        // SỬA DÒNG DỮ LIỆU
+        // ==============================================
+        const editModal = document.getElementById('editModal');
+        const editQR = document.getElementById('editQR');
+        const editFile = document.getElementById('editFile');
+        const editNote = document.getElementById('editNote');
+        const editPage = document.getElementById('editPage');
+        const editAcc = document.getElementById('editAcc');
+        const editBank = document.getElementById('editBank');
+        let editingId = null;
+
+        function openEditModal(id) {
+            const rec = savedRecords.find(r => r._id === id);
+            if (!rec) return;
+            editingId = id;
+            editQR.value = rec.rawQR || '';
+            editFile.value = rec.fileName || '';
+            editNote.value = rec.note || '';
+            editPage.value = rec.page || '';
+            editAcc.value = rec.accountNo || '';
+            editBank.value = rec.bankName || '';
+            editModal.classList.remove('hidden');
+            editAcc.focus();
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            editingId = null;
+        }
+
+        async function saveEdit() {
+            const rec = savedRecords.find(r => r._id === editingId);
+            if (!rec) return closeEditModal();
+
+            const newQR = editQR.value.trim();
+            if (!newQR) return alert('Nội dung mã QR không được để trống!');
+            if (savedRecords.some(r => r._id !== rec._id && r.rawQR === newQR)) {
+                return alert('⚠️ Nội dung mã QR này đã tồn tại ở dòng khác!');
+            }
+
+            const pageNum = parseInt(editPage.value, 10);
+            const updated = {
+                ...rec,
+                page: pageNum > 0 ? pageNum : '',
+                rawQR: newQR,
+                fileName: editFile.value.trim(),
+                note: editNote.value.trim(),
+                accountNo: editAcc.value.trim(),
+                bankName: editBank.value.trim()
+            };
+            try {
+                await updateRecordInDB(updated);
+            } catch (err) {
+                return alert('Không lưu được: ' + ((err && err.message) || 'lỗi CSDL'));
+            }
+            Object.assign(rec, updated);
+            renderAllRecords();
+            closeEditModal();
+            showToast('Đã lưu thay đổi ✅');
+        }
+
+        document.getElementById('editSaveBtn').addEventListener('click', saveEdit);
+        document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+        editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (editModal.classList.contains('hidden')) return;
+            if (e.key === 'Escape') closeEditModal();
+            else if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); saveEdit(); }
+        });
+
+        // ==============================================
         // XUẤT EXCEL → TÁCH ĐỘNG THEO DẤU |
         // ==============================================
         exportAllBtn.addEventListener('click', () => {
@@ -560,15 +745,26 @@
             });
 
             // Tạo tiêu đề: Cột 1 = Mã QR gốc, sau đó A, B, C...
-            const headers = ['Mã QR gốc'];
+            const FIXED_HEADERS = ['STT', 'Mã QR gốc', 'Tên file', 'STT trang', 'Ghi chú', 'Số tài khoản', 'Tên ngân hàng'];
+            const headers = [...FIXED_HEADERS];
             for (let i = 0; i < maxParts; i++) {
                 headers.push(String.fromCharCode(65 + i)); // A, B, C...
             }
 
             // Tạo từng dòng dữ liệu
-            const rows = savedRecords.map(r => {
+            // Xuất theo thứ tự quét: cũ nhất = STT 1
+            const ordered = [...savedRecords].sort((a, b) => a._id - b._id);
+            const rows = ordered.map((r, i) => {
                 const parts = r.rawQR.split(delimiter);
-                const row = { 'Mã QR gốc': r.rawQR };
+                const row = {
+                    'STT': i + 1,
+                    'Mã QR gốc': r.rawQR,
+                    'Tên file': r.fileName || '',
+                    'STT trang': r.page || '',
+                    'Ghi chú': r.note || '',
+                    'Số tài khoản': r.accountNo || '',
+                    'Tên ngân hàng': r.bankName || ''
+                };
                 parts.forEach((val, idx) => {
                     row[String.fromCharCode(65 + idx)] = val.trim();
                 });
@@ -581,11 +777,11 @@
             XLSX.utils.book_append_sheet(wb, ws, 'Danh_sach_QR');
             
             // Độ rộng cột tự động
-            ws['!cols'] = headers.map(h => ({ wch: h === 'Mã QR gốc' ? 50 : 20 }));
+            ws['!cols'] = headers.map(h => ({ wch: h === 'Mã QR gốc' ? 50 : (h === 'STT' || h === 'STT trang') ? 10 : FIXED_HEADERS.includes(h) ? 24 : 20 }));
             
             const fn = `Danh_sach_QR_${savedRecords.length}_${new Date().toISOString().slice(0,10)}.xlsx`;
             XLSX.writeFile(wb, fn);
-            showToast(`✅ Đã xuất: ${maxParts} cột dữ liệu`);
+            showToast(`✅ Đã xuất: ${maxParts} cột dữ liệu + ${FIXED_HEADERS.length - 1} cột thông tin`);
         });
 
         clearAllBtn.addEventListener('click', async () => {
@@ -783,9 +979,9 @@
         }
 
         // Lưu 1 mã QR (không render lại bảng từng mã để chạy nhanh)
-        async function saveQRFromPdf(rawText, source) {
+        async function saveQRFromPdf(rawText, fileName, page, meta) {
             if (savedRecords.some(r => r.rawQR === rawText)) return false;
-            const record = { rawQR: rawText, scannedAt: new Date().toISOString(), source };
+            const record = { rawQR: rawText, fileName, page, ...meta, scannedAt: new Date().toISOString() };
             try {
                 await addRecordToDB(record);
                 savedRecords.unshift(record);
@@ -811,6 +1007,9 @@
             if (pdfBusy) return showToast('⏳ Đang xử lý, vui lòng đợi...');
             if (!files.length) return showToast('⚠️ Không tìm thấy file PDF nào');
             if (stream) stopCamera();
+
+            // Chốt ghi chú / số tài khoản / ngân hàng tại thời điểm bắt đầu quét
+            const batchMeta = getScanMeta();
 
             pdfBusy = true; pdfCancel = false;
             pdfCancelBtn.disabled = false;
@@ -861,7 +1060,7 @@
                         }
                         for (const c of codes) {
                             fileFound++;
-                            if (await saveQRFromPdf(c, `${name} (trang ${p})`)) fileNew++;
+                            if (await saveQRFromPdf(c, file.name, p, batchMeta)) fileNew++;
                         }
                         pdfSummary.textContent = `Đã quét ${totalPages} trang • Tìm thấy ${totalFound + fileFound} mã • Mới ${totalNew + fileNew}`;
                     }
