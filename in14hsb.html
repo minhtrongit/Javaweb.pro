@@ -1435,6 +1435,21 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     setFormFieldValue("qr", composed);
   }
 
+  // Lấy số điện thoại từ cột SĐT / Số điện thoại (không phân biệt hoa/thường)
+  // của file Excel / Google Sheet. Excel hay lưu số điện thoại dạng SỐ nên mất
+  // số 0 đầu (0987654321 → 987654321) — nếu còn đúng 9 chữ số thì tự thêm lại số 0.
+  function readPhoneFromRow(row){
+    var names = ["SĐT", "Số điện thoại", "SDT", "Điện thoại"];
+    for(var i = 0; i < names.length; i++){
+      var v = cleanRef(getCol(row, names[i])).trim();
+      if(v){
+        if(/^[1-9]\d{8}$/.test(v)) v = "0" + v;
+        return v;
+      }
+    }
+    return "";
+  }
+
   function buildEditableRecord(row){
     return {
       hoTen: cleanRef(row["Họ và tên người tham gia"]),
@@ -1451,7 +1466,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       inDuoiQR: cleanRef(row["INDuoiQR"]) || cleanRef(row["QR"]),
       stt: cleanRef(getCol(row, "STT")),
       fitOnePage: !state.fitOff.has(rowKey(row)),
-      dienThoai: "",
+      dienThoai: readPhoneFromRow(row),
       email: "",
       noiKCB: "",
       hoSoKemTheo: "",
@@ -2256,7 +2271,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         '<div class="c1">[04]. Số CCCD/ĐDCN/hộ chiếu: <span class="fillval">'+escapeHtml(rec.cccd || "")+'</span></div>' +
         '<div class="c2">[03]. Ngày sinh: <span class="fillval">'+escapeHtml(rec.ngaySinh || "")+'</span></div>' +
       '</div>' +
-      '<div class="doc-para">[05]. Dân tộc: Kinh &nbsp;&nbsp;&nbsp; [06]. Quốc tịch: Việt Nam &nbsp;&nbsp;&nbsp; [07]. Số điện thoại: <span class="fillval">'+escapeHtml(rec.dienThoai || "")+'</span></div>' +
+      '<div class="doc-para">[05]. Dân tộc: Kinh &nbsp;&nbsp;&nbsp; [06]. Quốc tịch: Việt Nam</div>' +
+      fillLine("[07]. Số điện thoại:", rec.dienThoai) +
       fillLine("[08]. Địa chỉ email:", rec.email) +
       fillLine("[09]. Nơi đăng ký khám, chữa bệnh ban đầu:", rec.noiKCB) +
       '<div class="doc-para">[10]. Đăng ký nhận kết quả giải quyết thủ tục hành chính: - Bản điện tử<span class="checkbox"></span> &nbsp;&nbsp;&nbsp;&nbsp; - Bản giấy<span class="checkbox"></span></div>' +
