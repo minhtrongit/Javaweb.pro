@@ -74,13 +74,15 @@
             position: sticky;
             top: 0;
         }
-        .web-table { min-width: 960px; }
-        .col-stt { width: 6%; text-align: center; }
-        .col-qr { width: 26%; }
-        .col-file { width: 14%; }
-        .col-page { width: 7%; text-align: center; }
-        .col-note, .col-acc, .col-bank { width: 13%; }
-        .col-action { width: 8%; text-align: center; }
+        .web-table { min-width: 1180px; }
+        .col-stt { width: 5%; text-align: center; }
+        .col-qr { width: 19%; }
+        .col-file { width: 11%; }
+        .col-page { width: 6%; text-align: center; }
+        .col-cccd { width: 11%; }
+        .col-name { width: 11%; }
+        .col-note, .col-acc, .col-bank { width: 10%; }
+        .col-action { width: 7%; text-align: center; }
         .web-table tbody tr { cursor: pointer; }
         .web-table tbody tr:hover { background: #EFF6FF; }
     </style>
@@ -229,6 +231,29 @@
             </div>
         </section>
 
+        <!-- Nhập tay -->
+        <section class="bg-white rounded-2xl shadow p-5 mb-6">
+            <h2 class="text-lg font-semibold mb-1 flex items-center gap-2 text-primary">
+                <i class="fa-solid fa-keyboard"></i> Nhập tay khi không quét được QR
+            </h2>
+            <p class="text-xs text-gray-400 mb-4">Dòng nhập tay được thêm vào cùng danh sách, kèm ghi chú / số tài khoản / ngân hàng ở đầu trang.</p>
+            <div class="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                <div>
+                    <label for="manualCCCD" class="block text-xs font-medium text-gray-600 mb-1">Số CCCD</label>
+                    <input type="text" id="manualCCCD" maxlength="20" inputmode="numeric" placeholder="Số CCCD..."
+                        class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label for="manualName" class="block text-xs font-medium text-gray-600 mb-1">Họ tên</label>
+                    <input type="text" id="manualName" maxlength="100" placeholder="Họ và tên..."
+                        class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <button id="manualAddBtn" type="button" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-sm font-medium">
+                    <i class="fa-solid fa-plus"></i> Thêm
+                </button>
+            </div>
+        </section>
+
         <!-- Cài đặt -->
         <section class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-200">
             <h3 class="font-semibold text-amber-800 mb-3"><i class="fa-solid fa-gear"></i> Tùy chỉnh</h3>
@@ -271,6 +296,8 @@
                             <th class="col-qr">Nội dung mã QR gốc</th>
                             <th class="col-file">Tên file</th>
                             <th class="col-page">STT trang</th>
+                            <th class="col-cccd">Số CCCD</th>
+                            <th class="col-name">Họ tên</th>
                             <th class="col-note">Ghi chú</th>
                             <th class="col-acc">Số tài khoản</th>
                             <th class="col-bank">Tên ngân hàng</th>
@@ -287,7 +314,7 @@
             <ul class="text-xs text-gray-600 space-y-1">
                 <li>✅ Trên web: Chỉ hiển thị mã QR gốc, không tách cột</li>
                 <li>✅ Xuất Excel: Tự tách theo dấu | → bao nhiêu phần tạo bấy nhiêu cột</li>
-                <li>✅ Cột 1: STT | Cột 2: Mã QR gốc | Cột 3: Tên file | Cột 4: STT trang | Cột 5: Ghi chú | Cột 6: Số tài khoản | Cột 7: Tên ngân hàng | Cột 8: A | Cột 9: B | ... tiếp theo tự động</li>
+                <li>✅ Cột 1: STT | Cột 2: Mã QR gốc | Cột 3: Tên file | Cột 4: STT trang | Cột 5: Số CCCD | Cột 6: Họ tên | Cột 7: Ghi chú | Cột 8: Số tài khoản | Cột 9: Tên ngân hàng | Cột 10: A | Cột 11: B | ... tiếp theo tự động</li>
                 <li>✅ Mở lại trang vẫn thấy danh sách đã lưu</li>
                 <li>✅ Quét PDF: kéo thả file/thư mục, tự quét mọi trang và mọi mã QR trên trang</li>
                 <li>⚠️ Không dùng chế độ Ẩn danh — dữ liệu sẽ mất khi đóng</li>
@@ -311,6 +338,16 @@
                 <div>
                     <label for="editNote" class="block text-xs font-medium text-gray-600 mb-1">Ghi chú</label>
                     <input type="text" id="editNote" maxlength="200" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="editCCCD" class="block text-xs font-medium text-gray-600 mb-1">Số CCCD</label>
+                        <input type="text" id="editCCCD" maxlength="20" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="editName" class="block text-xs font-medium text-gray-600 mb-1">Họ tên</label>
+                        <input type="text" id="editName" maxlength="100" class="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
                 </div>
                 <div>
                     <label for="editPage" class="block text-xs font-medium text-gray-600 mb-1">STT trang (số trang trong file PDF)</label>
@@ -622,9 +659,11 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="text-center text-xs font-semibold">${savedRecords.length - idx}</td>
-                    <td class="break-all text-xs">${escapeHtml(rec.rawQR)}</td>
+                    <td class="break-all text-xs">${rec.manual ? '<span class="inline-block bg-amber-100 text-amber-800 rounded px-1.5 py-0.5 mr-1 text-[10px]">✍ nhập tay</span>' : ''}${escapeHtml(rec.rawQR)}</td>
                     <td class="break-all text-xs">${escapeHtml(rec.fileName || '')}</td>
                     <td class="text-center text-xs">${rec.page || ''}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.cccd || '')}</td>
+                    <td class="break-all text-xs">${escapeHtml(rec.fullName || '')}</td>
                     <td class="break-all text-xs">${escapeHtml(rec.note || '')}</td>
                     <td class="break-all text-xs">${escapeHtml(rec.accountNo || '')}</td>
                     <td class="break-all text-xs">${escapeHtml(rec.bankName || '')}</td>
@@ -659,6 +698,54 @@
         }
 
         // ==============================================
+        // NHẬP TAY (khi không quét được QR)
+        // ==============================================
+        const manualCCCD = document.getElementById('manualCCCD');
+        const manualName = document.getElementById('manualName');
+
+        async function addManualRecord() {
+            const cccd = manualCCCD.value.trim();
+            const fullName = manualName.value.trim();
+            if (!cccd && !fullName) {
+                showToast('⚠️ Nhập Số CCCD hoặc Họ tên');
+                return (cccd ? manualName : manualCCCD).focus();
+            }
+            // Nội dung gốc theo dạng "CCCD|Họ tên" để khi xuất Excel vẫn tách được theo dấu |
+            const rawText = `${cccd}|${fullName}`;
+            if (savedRecords.some(r => r.rawQR === rawText)) {
+                return showToast('⚠️ Dòng này đã có trong danh sách');
+            }
+            const record = {
+                rawQR: rawText,
+                fileName: '',
+                page: '',
+                cccd,
+                fullName,
+                manual: true,
+                ...getScanMeta(),
+                scannedAt: new Date().toISOString()
+            };
+            try {
+                await addRecordToDB(record);
+            } catch (err) {
+                return alert('Không lưu được: ' + ((err && err.message) || 'lỗi CSDL'));
+            }
+            savedRecords.unshift(record);
+            renderAllRecords();
+            updateCount();
+            listSection.style.display = 'block';
+            manualCCCD.value = '';
+            manualName.value = '';
+            manualCCCD.focus();
+            showToast('Đã thêm dòng nhập tay ✅');
+        }
+
+        document.getElementById('manualAddBtn').addEventListener('click', addManualRecord);
+        [manualCCCD, manualName].forEach(el => el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); addManualRecord(); }
+        }));
+
+        // ==============================================
         // SỬA DÒNG DỮ LIỆU
         // ==============================================
         const editModal = document.getElementById('editModal');
@@ -666,6 +753,8 @@
         const editFile = document.getElementById('editFile');
         const editNote = document.getElementById('editNote');
         const editPage = document.getElementById('editPage');
+        const editCCCD = document.getElementById('editCCCD');
+        const editName = document.getElementById('editName');
         const editAcc = document.getElementById('editAcc');
         const editBank = document.getElementById('editBank');
         let editingId = null;
@@ -678,6 +767,8 @@
             editFile.value = rec.fileName || '';
             editNote.value = rec.note || '';
             editPage.value = rec.page || '';
+            editCCCD.value = rec.cccd || '';
+            editName.value = rec.fullName || '';
             editAcc.value = rec.accountNo || '';
             editBank.value = rec.bankName || '';
             editModal.classList.remove('hidden');
@@ -703,6 +794,8 @@
             const updated = {
                 ...rec,
                 page: pageNum > 0 ? pageNum : '',
+                cccd: editCCCD.value.trim(),
+                fullName: editName.value.trim(),
                 rawQR: newQR,
                 fileName: editFile.value.trim(),
                 note: editNote.value.trim(),
@@ -745,7 +838,7 @@
             });
 
             // Tạo tiêu đề: Cột 1 = Mã QR gốc, sau đó A, B, C...
-            const FIXED_HEADERS = ['STT', 'Mã QR gốc', 'Tên file', 'STT trang', 'Ghi chú', 'Số tài khoản', 'Tên ngân hàng'];
+            const FIXED_HEADERS = ['STT', 'Mã QR gốc', 'Tên file', 'STT trang', 'Số CCCD', 'Họ tên', 'Ghi chú', 'Số tài khoản', 'Tên ngân hàng'];
             const headers = [...FIXED_HEADERS];
             for (let i = 0; i < maxParts; i++) {
                 headers.push(String.fromCharCode(65 + i)); // A, B, C...
@@ -761,6 +854,8 @@
                     'Mã QR gốc': r.rawQR,
                     'Tên file': r.fileName || '',
                     'STT trang': r.page || '',
+                    'Số CCCD': r.cccd || '',
+                    'Họ tên': r.fullName || '',
                     'Ghi chú': r.note || '',
                     'Số tài khoản': r.accountNo || '',
                     'Tên ngân hàng': r.bankName || ''
